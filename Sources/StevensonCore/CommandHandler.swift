@@ -12,7 +12,7 @@ public struct Command {
     }
 }
 
-public protocol CommandHandler: Service {
+public protocol CommandHandler {
     func command(from request: HTTPRequest) throws -> Command
     func result(from response: String) throws -> HTTPResponse
 }

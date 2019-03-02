@@ -1,5 +1,5 @@
 import Vapor
 
-public protocol CIService: Service {
+public protocol CIService {
     func run(command: Command, on request: Worker) -> Future<String>
 }
