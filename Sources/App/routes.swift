@@ -11,7 +11,7 @@ public func routes(
         return "It works!"
     }
 
-    router.post(PathComponent.anything) { req throws -> Future<HTTPResponse> in
+    router.post(any) { req throws -> Future<HTTPResponse> in
         let command = try commandHandler.command(from: req.http)
         if command.name == Command.helpCommandName {
             let result = try commandHandler.result(from: command.arguments[Command.helpCommandText] ?? "")
