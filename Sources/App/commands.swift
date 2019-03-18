@@ -8,7 +8,7 @@ let fastlane = SlackCommand(
     Provide options the same way as when invoking lane locally.
 
     Example:
-        `/fastlane test_babylon branch:develop`
+        `/fastlane test_babylon \(CircleCIService.branchArgument):develop`
     """,
     token: ProcessInfo.processInfo.environment["SLACK_TOKEN_FASTLANE"]!,
     parse: { content in
@@ -18,9 +18,10 @@ let fastlane = SlackCommand(
         var args = ["FASTLANE": lane, "OPTIONS": options]
 
         let branchArgument = CircleCIService.branchArgument
+        let branchOptionPrefix = "\(branchArgument):"
         let branch = components.dropFirst()
-            .first { $0.hasPrefix("\(branchArgument):") }?
-            .dropFirst("\(branchArgument):".count)
+            .first { $0.hasPrefix(branchOptionPrefix) }?
+            .dropFirst(branchOptionPrefix.count)
 
         if let branch = branch {
             args[branchArgument] = String(branch)
