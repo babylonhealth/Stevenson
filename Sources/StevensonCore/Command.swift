@@ -9,7 +9,3 @@ public struct Command {
         self.arguments = arguments
     }
 }
-
-public protocol CommandHandler {
-    func handle(commandFrom request: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse>
-}
