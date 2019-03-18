@@ -1,9 +1,10 @@
 import Vapor
 
 public typealias SlackCommand = (
+    name: String,
     help: String,
     token: String,
-    parser: (SlackCommandMetadata) throws -> Command
+    parse: (SlackCommandMetadata) throws -> Command
 )
 
 public struct SlackCommandMetadata: Decodable {
@@ -12,7 +13,7 @@ public struct SlackCommandMetadata: Decodable {
     public let text: String
 }
 
-public struct SlackCommandHandler: CommandHandler {
+public struct SlackService: CommandHandler {
     public enum Error: Swift.Error, Debuggable {
         case unknownCommand(String)
         case invalidCommand(String)
@@ -33,55 +34,58 @@ public struct SlackCommandHandler: CommandHandler {
 
     let registry: [String: SlackCommand]
     let requireChannel: String?
+    let ci: CIService
 
-    public init(commands: [String: SlackCommand], requireChannel: String?) {
-        self.registry = commands
+    public init(
+        commands: [SlackCommand],
+        requireChannel: String?,
+        ci: CIService
+    ) {
+        self.registry = .init(uniqueKeysWithValues: commands.map { ($0.name, $0) })
         self.requireChannel = requireChannel
+        self.ci = ci
     }
 
-    public func command(from request: HTTPRequest) throws -> Command {
+    public func handle(commandFrom request: HTTPRequest, on worker: Worker) throws -> EventLoopFuture<HTTPResponse> {
+        let (slackCommand, content) = try metadata(from: request)
+
+        if content.text == "help" {
+            return try worker.future(result(fromCIResponse: slackCommand.help))
+        } else {
+            return try ci
+                .run(command: slackCommand.parse(content), on: worker)
+                .map(result(fromCIResponse:))
+        }
+    }
+
+    private func metadata(from request: HTTPRequest) throws -> (SlackCommand, SlackCommandMetadata) {
         let name = request.url.path
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         let data = request.body.data ?? Data()
         let content = try decoder.decode(SlackCommandMetadata.self, from: data)
-        guard let reg = registry[name] else {
+        guard let slackCommand = registry[name] else {
             throw Error.unknownCommand(name)
         }
-        if content.token != reg.token {
+        if content.token != slackCommand.token {
             throw Error.invalidCommand("Invalid token")
         }
         if let requireChannel = requireChannel, content.channelName != requireChannel {
             throw Error.invalidCommand("Invalid channel")
         }
-
-        if content.text == Command.helpCommandName {
-            return Command.help(text: reg.help)
-        }
-        return try reg.parser(content)
+        return (slackCommand, content)
     }
 
-    public func result(from response: String) throws -> HTTPResponse {
+    private func result(fromCIResponse response: String) throws -> HTTPResponse {
         return HTTPResponse(
             status: .ok,
-            body: try JSONEncoder().encode([
-                "response_type": "in_channel",
-                "text": response
-                ])
+            body: try JSONEncoder().encode(
+                [
+                    "response_type": "in_channel",
+                    "text": response
+                ]
+            )
         )
     }
 
-}
-
-public extension Command {
-    public static let helpCommandName = "help"
-    public static let helpCommandText = "helpText"
-
-    public static func help(text: String) -> Command {
-        return Command(
-            name: Command.helpCommandName,
-            arguments: [Command.helpCommandText: text],
-            branch: nil
-        )
-    }
 }

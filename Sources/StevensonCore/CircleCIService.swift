@@ -1,6 +1,8 @@
 import Vapor
 
 public struct CircleCIService: CIService {
+    public static let branchArgument = "branch"
+
     public let hostname = "circleci.com"
     public let project: String
     public let token: String
@@ -22,7 +24,7 @@ public struct CircleCIService: CIService {
             hostname: hostname,
             on: worker
         ).flatMap { client -> Future<String> in
-            let branch = command.branch ?? self.defaultBranch
+            let branch = command.arguments[CircleCIService.branchArgument] ?? self.defaultBranch
             let path = "/api/v1.1/project/github/\(self.project)/tree/\(branch)?circle-token=\(self.token)"
             let request = HTTPRequest(
                 method: .POST,
