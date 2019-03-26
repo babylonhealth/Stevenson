@@ -9,21 +9,8 @@ public typealias SlackCommand = (
 
 public struct SlackCommandMetadata: Decodable {
     public let token: String
-    public let channelName: String
+    public let channel_name: String
     public let text: String
-
-    public init(request: HTTPRequest) throws {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let data = request.body.data ?? Data()
-        do {
-            Terminal().print(String(describing: try JSONSerialization.jsonObject(with: data, options: [])))
-        self = try decoder.decode(SlackCommandMetadata.self, from: data)
-        } catch {
-            Terminal().print(String(describing: error))
-            throw error
-        }
-    }
 }
 
 public struct SlackService {
@@ -56,23 +43,24 @@ public struct SlackService {
         self.ci = ci
     }
 
-    public func handle(command: SlackCommand, request: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse> {
-        let metadata = try SlackCommandMetadata(request: request)
+    public func handle(command: SlackCommand, request: Request, on worker: Worker) throws -> Future<HTTPResponse> {
+        return try request.content.decode(SlackCommandMetadata.self)
+            .flatMap { metadata -> Future<HTTPResponse> in
+                if metadata.token != command.token {
+                    throw Error.invalidToken
+                }
+                if let requireChannel = self.requireChannel, metadata.channel_name != requireChannel {
+                    throw Error.invalidChannel
+                }
 
-        if metadata.token != command.token {
-            throw Error.invalidToken
-        }
-        if let requireChannel = requireChannel, metadata.channelName != requireChannel {
-            throw Error.invalidChannel
-        }
-
-        if metadata.text == "help" {
-            return try worker.future(result(fromCIResponse: command.help))
-        } else {
-            return try ci
-                .run(command: command.parse(metadata), on: worker)
-                .map(result(fromCIResponse:))
-        }
+                if metadata.text == "help" {
+                    return try worker.future(self.result(fromCIResponse: command.help))
+                } else {
+                    return try self.ci
+                        .run(command: command.parse(metadata), on: worker)
+                        .map(self.result(fromCIResponse:))
+                }
+            }
     }
 
     private func result(fromCIResponse response: String) throws -> HTTPResponse {
