@@ -11,6 +11,6 @@ public func routes(
     }
 
     router.post(Commands.fastlane.name) { req in
-        try slack.handle(command: Commands.fastlane, request: req, on: req)
+        try slack.handle(command: Commands.fastlane, request: req)
     }
 }

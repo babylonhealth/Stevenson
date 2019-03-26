@@ -43,9 +43,9 @@ public struct SlackService {
         self.ci = ci
     }
 
-    public func handle(command: SlackCommand, request: Request, on worker: Worker) throws -> Future<HTTPResponse> {
+    public func handle(command: SlackCommand, request: Request) throws -> Future<HTTPResponse> {
         return try request.content.decode(SlackCommandMetadata.self)
-            .flatMap { metadata -> Future<HTTPResponse> in
+            .flatMap { (metadata: SlackCommandMetadata) -> Future<HTTPResponse> in
                 if metadata.token != command.token {
                     throw Error.invalidToken
                 }
@@ -54,10 +54,10 @@ public struct SlackService {
                 }
 
                 if metadata.text == "help" {
-                    return try worker.future(self.result(fromCIResponse: command.help))
+                    return try request.future(self.result(fromCIResponse: command.help))
                 } else {
                     return try self.ci
-                        .run(command: command.parse(metadata), on: worker)
+                        .run(command: command.parse(metadata), on: request)
                         .map(self.result(fromCIResponse:))
                 }
             }
