@@ -7,7 +7,7 @@ public typealias SlackCommand = (
     parse: (SlackCommandMetadata) throws -> Command
 )
 
-public struct SlackCommandMetadata: Decodable {
+public struct SlackCommandMetadata: Content {
     public let token: String
     public let channel_name: String
     public let text: String
