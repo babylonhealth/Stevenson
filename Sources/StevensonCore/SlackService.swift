@@ -63,6 +63,7 @@ public struct SlackService {
     private func result(fromCIResponse response: String) throws -> HTTPResponse {
         return HTTPResponse(
             status: .ok,
+            headers: ["Content-Type": "application/json"],
             body: try JSONEncoder().encode(
                 [
                     "response_type": "in_channel",

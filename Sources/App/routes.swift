@@ -10,8 +10,8 @@ public func routes(
         return "It works!"
     }
 
-    router.post(Commands.fastlane.name) { req in
-        return try req.content.decode(SlackCommandMetadata.self).map { metadata in
+    router.post(Commands.fastlane.name) { req -> Future<HTTPResponse> in
+        return try req.content.decode(SlackCommandMetadata.self).flatMap { metadata in
             try slack.handle(command: Commands.fastlane, metadata: metadata, on: req)
         }
     }
