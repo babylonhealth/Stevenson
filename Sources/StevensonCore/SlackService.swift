@@ -43,24 +43,21 @@ public struct SlackService {
         self.ci = ci
     }
 
-    public func handle(command: SlackCommand, request: Request) throws -> Future<HTTPResponse> {
-        return try request.content.decode(SlackCommandMetadata.self)
-            .flatMap { (metadata: SlackCommandMetadata) -> Future<HTTPResponse> in
-                if metadata.token != command.token {
-                    throw Error.invalidToken
-                }
-                if let requireChannel = self.requireChannel, metadata.channel_name != requireChannel {
-                    throw Error.invalidChannel
-                }
+    public func handle(command: SlackCommand, metadata: SlackCommandMetadata, on worker: Worker) throws -> Future<HTTPResponse> {
+        if metadata.token != command.token {
+            throw Error.invalidToken
+        }
+        if let requireChannel = requireChannel, metadata.channel_name != requireChannel {
+            throw Error.invalidChannel
+        }
 
-                if metadata.text == "help" {
-                    return try request.future(self.result(fromCIResponse: command.help))
-                } else {
-                    return try self.ci
-                        .run(command: command.parse(metadata), on: request)
-                        .map(self.result(fromCIResponse:))
-                }
-            }
+        if metadata.text == "help" {
+            return try worker.future(result(fromCIResponse: command.help))
+        } else {
+            return try ci
+                .run(command: command.parse(metadata), on: worker)
+                .map(result(fromCIResponse:))
+        }
     }
 
     private func result(fromCIResponse response: String) throws -> HTTPResponse {

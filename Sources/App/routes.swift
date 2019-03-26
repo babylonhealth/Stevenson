@@ -11,6 +11,8 @@ public func routes(
     }
 
     router.post(Commands.fastlane.name) { req in
-        try slack.handle(command: Commands.fastlane, request: req)
+        return try req.content.decode(SlackCommandMetadata.self).map { metadata in
+            try slack.handle(command: Commands.fastlane, metadata: metadata, on: req)
+        }
     }
 }
