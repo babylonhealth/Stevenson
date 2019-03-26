@@ -1,5 +1,6 @@
 import Foundation
 import StevensonCore
+import Vapor
 
 enum Commands {
     static let fastlane = SlackCommand(
@@ -11,7 +12,7 @@ enum Commands {
         Example:
         `/fastlane test_babylon \(CircleCIService.branchArgument):develop`
         """,
-        token: ProcessInfo.processInfo.environment["SLACK_TOKEN_FASTLANE"]!,
+        token: Environment.get("SLACK_TOKEN_FASTLANE")!,
         parse: { content in
             let components = content.text.components(separatedBy: " ")
             let lane = components[0]

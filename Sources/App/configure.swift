@@ -4,13 +4,13 @@ import StevensonCore
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let ci = CircleCIService(
-        project: ProcessInfo.processInfo.environment["GITHUB_REPO"]!,
-        token: ProcessInfo.processInfo.environment["CIRCLECI_TOKEN"]!,
+        project: Environment.get("GITHUB_REPO")!,
+        token: Environment.get("CIRCLECI_TOKEN")!,
         defaultBranch: "develop"
     )
 
     let slack = SlackService(
-        requireChannel: ProcessInfo.processInfo.environment["SLACK_CHANNEL"],
+        requireChannel: Environment.get("SLACK_CHANNEL"),
         ci: ci
     )
 
