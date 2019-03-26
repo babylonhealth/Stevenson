@@ -16,7 +16,13 @@ public struct SlackCommandMetadata: Decodable {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         let data = request.body.data ?? Data()
+        do {
+            Terminal().print(String(describing: try JSONSerialization.jsonObject(with: data, options: [])))
         self = try decoder.decode(SlackCommandMetadata.self, from: data)
+        } catch {
+            Terminal().print(String(describing: error))
+            throw error
+        }
     }
 }
 
