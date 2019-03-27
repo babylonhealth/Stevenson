@@ -13,25 +13,12 @@ public struct SlackCommandMetadata: Content {
     public let text: String
 }
 
+public struct SlackResponse: Content {
+    public let response_type = "in_channel"
+    public let text: String
+}
+
 public struct SlackService {
-    public enum Error: Swift.Error, Debuggable {
-        case invalidToken
-        case invalidChannel
-
-        public var identifier: String {
-            return ""
-        }
-
-        public var reason: String {
-            switch self {
-            case .invalidToken:
-                return "Invalid token"
-            case .invalidChannel:
-                return "Invalid channel"
-            }
-        }
-    }
-
     let requireChannel: String?
     let ci: CIService
 
@@ -43,7 +30,11 @@ public struct SlackService {
         self.ci = ci
     }
 
-    public func handle(command: SlackCommand, metadata: SlackCommandMetadata, on worker: Worker) throws -> Future<HTTPResponse> {
+    public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
+        let metadata = try attempt {
+            try request.content.syncDecode(SlackCommandMetadata.self)
+        }
+
         if metadata.token != command.token {
             throw Error.invalidToken
         }
@@ -52,25 +43,13 @@ public struct SlackService {
         }
 
         if metadata.text == "help" {
-            return try worker.future(result(fromCIResponse: command.help))
+            return try SlackResponse(text: command.help)
+                .encode(for: request)
         } else {
             return try ci
-                .run(command: command.parse(metadata), on: worker)
-                .map(result(fromCIResponse:))
+                .run(command: command.parse(metadata), on: request)
+                .map(SlackResponse.init(text:))
+                .encode(for: request)
         }
     }
-
-    private func result(fromCIResponse response: String) throws -> HTTPResponse {
-        return HTTPResponse(
-            status: .ok,
-            headers: ["Content-Type": "application/json"],
-            body: try JSONEncoder().encode(
-                [
-                    "response_type": "in_channel",
-                    "text": response
-                ]
-            )
-        )
-    }
-
 }
