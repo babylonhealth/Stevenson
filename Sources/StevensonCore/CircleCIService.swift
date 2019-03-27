@@ -14,35 +14,37 @@ public struct CircleCIService: CIService {
         self.defaultBranch = defaultBranch
     }
 
-    public struct BuildResponse: Codable {
-        public let buildUrl: String
+    struct BuildRequest: Content {
+        let buildParameters: [String: String]
     }
 
-    public func run(command: Command, on worker: Worker) throws -> Future<String> {
-        let branch = command.arguments[CircleCIService.branchArgument] ?? self.defaultBranch
-        let path = "/api/v1.1/project/github/\(project)/tree/\(branch)?circle-token=\(token)"
-        let request = HTTPRequest(
-            method: .POST,
-            url: path,
-            headers: ["Content-Type": "application/json", "Accept": "application/json"],
-            body: try attempt {
-                try JSONEncoder().encode(["build_parameters": command.arguments])
-            }
-        )
+    struct BuildResponse: Content {
+        let buildUrl: String
+    }
 
-        return HTTPClient
-            .connect(scheme: .https, hostname: hostname, on: worker)
+    public func run(command: Command, on worker: Request) throws -> Future<String> {
+        let buildRequest = BuildRequest(buildParameters: command.arguments)
+        let branch = command.arguments[CircleCIService.branchArgument] ?? self.defaultBranch
+        let path = "/api/v1.1/project/github/\(project)/tree/\(branch)"
+        let url = "https://\(hostname)\(path)"
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        return try worker.client()
+            .post(url, headers: ["Accept": "application/json"]) {
+                try $0.query.encode(["circle-token": token])
+                try $0.content.encode(buildRequest, using: encoder)
+            }
             .catchError(.capture())
-            .flatMap { client in
-                client.send(request)
-                    .catchError(.capture())
-                    .flatMap { $0.body.consumeData(on: worker) }
-                    .attemptMap { data in
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        let buildUrl = try decoder.decode(BuildResponse.self, from: data).buildUrl
-                        return "Triggered `\(command.name)` on the `\(branch)` branch.\n\(buildUrl)"
-                }
+            .flatMap {
+                try $0.content.decode(BuildResponse.self, using: decoder)
+            }
+            .catchError(.capture())
+            .map {
+                "Triggered `\(command.name)` on the `\(branch)` branch.\n\($0.buildUrl)"
         }
     }
 }

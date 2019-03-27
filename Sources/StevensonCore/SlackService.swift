@@ -31,7 +31,7 @@ public struct SlackService {
     }
 
     public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
-        let metadata = try attempt {
+        let metadata: SlackCommandMetadata = try attempt {
             try request.content.syncDecode(SlackCommandMetadata.self)
         }
 

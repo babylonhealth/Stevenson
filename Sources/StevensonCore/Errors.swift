@@ -82,17 +82,23 @@ public func attempt<T>(
     }
 }
 
-extension Future {
-    public func attemptMap<T>(to type: T.Type = T.self, _ callback: @escaping (Expectation) throws -> T) -> Future<T> {
-        return map { value in
-            try attempt {
-                try callback(value)
-            }
-        }
+public func attempt<T>(
+    file: StaticString = #file,
+    line: UInt = #line,
+    column: UInt = #column,
+    function: StaticString = #function,
+    expr: () throws -> T?
+) throws -> T? {
+    do {
+        return try expr()
+    } catch {
+        throw ThrowError(error: error, file: "\(file)", line: line, column: column, function: "\(function)")
     }
+}
 
+extension Future {
     public func catchError(_ sourceLocation: SourceLocation) -> Future<Expectation> {
-        return catchFlatMap { (error) -> (EventLoopFuture<T>) in
+        return catchFlatMap { (error) -> EventLoopFuture<T> in
             throw ThrowError(error: error, sourceLocation: sourceLocation)
         }
     }
