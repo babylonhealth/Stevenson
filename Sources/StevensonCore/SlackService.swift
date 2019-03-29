@@ -1,11 +1,23 @@
 import Vapor
 
-public typealias SlackCommand = (
-    name: String,
-    help: String,
-    token: String,
-    parse: (SlackCommandMetadata) throws -> Command
-)
+public struct SlackCommand {
+    public let name: String
+    public let help: String
+    let token: String
+    let parse: (SlackCommandMetadata) throws -> Command
+
+    public init(
+        name: String,
+        help: String,
+        token: String,
+        parse: @escaping (SlackCommandMetadata) throws -> Command
+    ) {
+        self.name = name
+        self.help = help
+        self.token = token
+        self.parse = parse
+    }
+}
 
 public struct SlackCommandMetadata: Content {
     public let token: String
