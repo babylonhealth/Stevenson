@@ -16,6 +16,10 @@ public struct SlackCommandMetadata: Content {
 public struct SlackResponse: Content {
     public let response_type = "in_channel"
     public let text: String
+
+    public init(text: String) {
+        self.text = text
+    }
 }
 
 public struct SlackService {
