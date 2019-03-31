@@ -78,7 +78,9 @@ public struct SlackService {
             return try SlackResponse(command.help)
                 .encode(for: request)
         } else {
-            return try command.run(metadata, request)
+            return try command
+                .run(metadata, request)
+                .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
                 .encode(for: request)
         }
     }
