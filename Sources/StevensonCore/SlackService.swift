@@ -32,11 +32,24 @@ public struct SlackCommandMetadata: Content {
 }
 
 public struct SlackResponse: Content {
-    public let response_type = "in_channel"
     public let text: String
+    public let visibility: Visibility
 
-    public init(_ text: String) {
+    public enum Visibility: String, Content {
+        // response message visible only to the user who triggered the command
+        case user = "ephemeral"
+        // response message visible to all members of the channel where the command was triggered
+        case channel = "in_channel"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case text
+        case visibility = "response_type"
+    }
+
+    public init(_ text: String, visibility: Visibility = .channel) {
         self.text = text
+        self.visibility = visibility
     }
 }
 
