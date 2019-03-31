@@ -46,7 +46,7 @@ public struct ThrowError: Error, Debuggable {
             self.sourceLocation = debuggable.sourceLocation ?? sourceLocation
         } else {
             self.identifier = "\(type(of: error))"
-            self.reason = "\(error)"
+            self.reason = error.localizedDescription
             self.sourceLocation = sourceLocation
         }
     }
