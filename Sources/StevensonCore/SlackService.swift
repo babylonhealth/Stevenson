@@ -4,18 +4,18 @@ public struct SlackCommand {
     public let name: String
     public let help: String
     let token: String
-    let parse: (SlackCommandMetadata) throws -> Command
+    let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
 
     public init(
         name: String,
         help: String,
         token: String,
-        parse: @escaping (SlackCommandMetadata) throws -> Command
+        run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
     ) {
         self.name = name
         self.help = help
         self.token = token
-        self.parse = parse
+        self.run = run
     }
 }
 
@@ -35,21 +35,18 @@ public struct SlackResponse: Content {
     public let response_type = "in_channel"
     public let text: String
 
-    public init(text: String) {
+    public init(_ text: String) {
         self.text = text
     }
 }
 
 public struct SlackService {
     let requireChannel: String?
-    let ci: CIService
 
     public init(
-        requireChannel: String?,
-        ci: CIService
+        requireChannel: String?
     ) {
         self.requireChannel = requireChannel
-        self.ci = ci
     }
 
     public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
@@ -65,12 +62,10 @@ public struct SlackService {
         }
 
         if metadata.text == "help" {
-            return try SlackResponse(text: command.help)
+            return try SlackResponse(command.help)
                 .encode(for: request)
         } else {
-            return try ci
-                .run(command: command.parse(metadata), on: request)
-                .map(SlackResponse.init(text:))
+            return try command.run(metadata, request)
                 .encode(for: request)
         }
     }

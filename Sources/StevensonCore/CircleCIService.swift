@@ -1,9 +1,6 @@
 import Vapor
 
 public struct CircleCIService: CIService {
-    public static let branchArgument = "branch"
-
-    public let hostname = "circleci.com"
     public let project: String
     public let token: String
     public let defaultBranch: String
@@ -22,32 +19,24 @@ public struct CircleCIService: CIService {
         }
     }
 
-    struct BuildResponse: Content {
-        let buildURL: String
-
-        enum CodingKeys: String, CodingKey {
-            case buildURL = "build_url"
-        }
+    private func buildURL(branch: String?) -> String {
+        return "https://circleci.com/api/v1.1/project/github/\(project)/tree/\(branch ?? defaultBranch)"
     }
 
-    public func run(command: Command, on worker: Request) throws -> Future<String> {
-        let buildRequest = BuildRequest(buildParameters: command.arguments)
-        let branch = command.arguments[CircleCIService.branchArgument] ?? self.defaultBranch
-        let path = "/api/v1.1/project/github/\(project)/tree/\(branch)"
-        let url = "https://\(hostname)\(path)"
-
-        return try worker.client()
-            .post(url, headers: ["Accept": "application/json"]) {
+    public func run(
+        command: Command,
+        branch: String?,
+        on request: Request
+    ) throws -> Future<BuildResponse> {
+        return try request.client()
+            .post(buildURL(branch: branch), headers: ["Accept": "application/json"]) {
                 try $0.query.encode(["circle-token": token])
-                try $0.content.encode(buildRequest)
+                try $0.content.encode(BuildRequest(buildParameters: command.arguments))
             }
             .catchError(.capture())
             .flatMap {
                 try $0.content.decode(BuildResponse.self)
             }
             .catchError(.capture())
-            .map {
-                "Triggered `\(command.name)` on the `\(branch)` branch.\n\($0.buildURL)"
-        }
     }
 }

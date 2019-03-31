@@ -10,13 +10,12 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     )
 
     let slack = SlackService(
-        requireChannel: Environment.get("SLACK_CHANNEL"),
-        ci: ci
+        requireChannel: Environment.get("SLACK_CHANNEL")
     )
 
     let router = EngineRouter.default()
     try routes(router: router, slack: slack, commands: [
-        Commands.fastlane
+        .fastlane(ci)
     ])
     services.register(router, as: Router.self)
 
