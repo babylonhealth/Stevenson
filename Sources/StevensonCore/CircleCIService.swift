@@ -16,10 +16,18 @@ public struct CircleCIService: CIService {
 
     struct BuildRequest: Content {
         let buildParameters: [String: String]
+
+        enum CodingKeys: String, CodingKey {
+            case buildParameters = "build_parameters"
+        }
     }
 
     struct BuildResponse: Content {
-        let buildUrl: String
+        let buildURL: String
+
+        enum CodingKeys: String, CodingKey {
+            case buildURL = "build_url"
+        }
     }
 
     public func run(command: Command, on worker: Request) throws -> Future<String> {
@@ -28,23 +36,18 @@ public struct CircleCIService: CIService {
         let path = "/api/v1.1/project/github/\(project)/tree/\(branch)"
         let url = "https://\(hostname)\(path)"
 
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-
         return try worker.client()
             .post(url, headers: ["Accept": "application/json"]) {
                 try $0.query.encode(["circle-token": token])
-                try $0.content.encode(buildRequest, using: encoder)
+                try $0.content.encode(buildRequest)
             }
             .catchError(.capture())
             .flatMap {
-                try $0.content.decode(BuildResponse.self, using: decoder)
+                try $0.content.decode(BuildResponse.self)
             }
             .catchError(.capture())
             .map {
-                "Triggered `\(command.name)` on the `\(branch)` branch.\n\($0.buildUrl)"
+                "Triggered `\(command.name)` on the `\(branch)` branch.\n\($0.buildURL)"
         }
     }
 }

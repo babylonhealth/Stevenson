@@ -21,8 +21,14 @@ public struct SlackCommand {
 
 public struct SlackCommandMetadata: Content {
     public let token: String
-    public let channel_name: String
+    public let channelName: String
     public let text: String
+
+    enum CodingKeys: String, CodingKey {
+        case token
+        case channelName = "channel_name"
+        case text
+    }
 }
 
 public struct SlackResponse: Content {
@@ -54,7 +60,7 @@ public struct SlackService {
         if metadata.token != command.token {
             throw Error.invalidToken
         }
-        if let requireChannel = requireChannel, metadata.channel_name != requireChannel {
+        if let requireChannel = requireChannel, metadata.channelName != requireChannel {
             throw Error.invalidChannel
         }
 
