@@ -31,24 +31,30 @@ public struct ThrowError: Error, Debuggable {
     public let identifier: String
     public let reason: String
     public let sourceLocation: SourceLocation?
-    public let stackTrace = Thread.callStackSymbols
 
     init(error: Error, sourceLocation: SourceLocation) {
         self.error = error
 
+        let _sourceLocation: SourceLocation?
         if let throwError = error as? ThrowError {
             self.identifier = throwError.identifier
             self.reason = throwError.reason
-            self.sourceLocation = throwError.sourceLocation ?? sourceLocation
+            _sourceLocation = throwError.sourceLocation
         } else if let debuggable = error as? Debuggable {
             self.identifier = "\(type(of: debuggable)).\(debuggable.identifier)"
             self.reason = debuggable.reason
-            self.sourceLocation = debuggable.sourceLocation ?? sourceLocation
+            _sourceLocation = debuggable.sourceLocation
         } else {
             self.identifier = "\(type(of: error))"
             self.reason = error.localizedDescription
-            self.sourceLocation = sourceLocation
+            _sourceLocation = sourceLocation
         }
+
+        #if DEBUG
+        self.sourceLocation = _sourceLocation ?? sourceLocation
+        #else
+        self.sourceLocation = nil
+        #endif
     }
 
     init(error: Error, file: String, line: UInt, column: UInt, function: String) {
@@ -64,6 +70,15 @@ public struct ThrowError: Error, Debuggable {
         )
     }
 }
+
+
+#if !DEBUG
+extension ThrowError: LocalizedError {
+    public var errorDescription: String? {
+        return reason
+    }
+}
+#endif
 
 public func attempt<T>(
     file: StaticString = #file,
