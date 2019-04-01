@@ -1,9 +1,6 @@
 import Vapor
 
 public struct CircleCIService: CIService {
-    public static let branchArgument = "branch"
-
-    public let hostname = "circleci.com"
     public let project: String
     public let token: String
     public let defaultBranch: String
@@ -14,33 +11,32 @@ public struct CircleCIService: CIService {
         self.defaultBranch = defaultBranch
     }
 
-    public struct BuildResponse: Codable {
-        public let buildUrl: String
+    struct BuildRequest: Content {
+        let buildParameters: [String: String]
+
+        enum CodingKeys: String, CodingKey {
+            case buildParameters = "build_parameters"
+        }
     }
 
-    public func run(command: Command, on worker: Worker) -> Future<String> {
-        return HTTPClient.connect(
-            scheme: .https,
-            hostname: hostname,
-            on: worker
-        ).flatMap { client -> Future<String> in
-            let branch = command.arguments[CircleCIService.branchArgument] ?? self.defaultBranch
-            let path = "/api/v1.1/project/github/\(self.project)/tree/\(branch)?circle-token=\(self.token)"
-            let request = HTTPRequest(
-                method: .POST,
-                url: path,
-                headers: ["Content-Type": "application/json", "Accept": "application/json"],
-                body: try JSONEncoder().encode(["build_parameters": command.arguments])
-            )
-            return client.send(request)
-                .flatMap { $0.body.consumeData(on: worker) }
-                .map { (data) throws -> String in
-                    // move creating response to another service?
-                    let decoder = JSONDecoder()
-                    decoder.keyDecodingStrategy = .convertFromSnakeCase
-                    let buildUrl = try decoder.decode(BuildResponse.self, from: data).buildUrl
-                    return "Triggered `\(command.name)` on the `\(branch)` branch.\n\(buildUrl)"
+    private func buildURL(branch: String?) -> String {
+        return "https://circleci.com/api/v1.1/project/github/\(project)/tree/\(branch ?? defaultBranch)"
+    }
+
+    public func run(
+        command: Command,
+        branch: String?,
+        on request: Request
+    ) throws -> Future<BuildResponse> {
+        return try request.client()
+            .post(buildURL(branch: branch), headers: ["Accept": "application/json"]) {
+                try $0.query.encode(["circle-token": token])
+                try $0.content.encode(BuildRequest(buildParameters: command.arguments))
             }
-        }
+            .catchError(.capture())
+            .flatMap {
+                try $0.content.decode(BuildResponse.self)
+            }
+            .catchError(.capture())
     }
 }

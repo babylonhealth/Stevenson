@@ -4,13 +4,18 @@ import StevensonCore
 /// Register your application's routes here.
 public func routes(
     router: Router,
-    slack: SlackService
+    slack: SlackService,
+    commands: [SlackCommand]
 ) throws {
     router.get { req in
         return "It works!"
     }
 
-    router.post(Commands.fastlane.name) { req in
-        try slack.handle(command: Commands.fastlane, request: req.http, on: req)
+    commands.forEach { command in
+        router.post(command.name) { req in
+            try attempt {
+                try slack.handle(command: command, on: req)
+            }
+        }
     }
 }
