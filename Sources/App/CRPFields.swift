@@ -2,26 +2,21 @@ import StevensonCore
 import Vapor
 
 public extension JiraService {
+
+    /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
+    /// CRP means "Change Request Process" and is part of our SSDLC to track upcoming releases
     public typealias CRPIssue = JiraService.Issue<JiraService.CRPIssueFields>
 
     public struct CRPIssueFields: JiraIssueFields {
 
         // MARK: Custom Field Types specific to CRP board
 
-        struct Environment: Content {
+        public struct Environment: Content {
             let id: String
 
             static let playStore = Environment(id: "12394")
             static let appStore = Environment(id: "12395")
             static let notApplicable = Environment(id: "12396")
-
-            static func list(for repo: GHRepo) -> [Environment] {
-                switch repo.key {
-                case "ios": return [.appStore]
-                case "android": return [.playStore]
-                default: return [.notApplicable]
-                }
-            }
         }
 
         struct InfoSecStatus: Content {
@@ -62,10 +57,16 @@ public extension JiraService {
 
         // MARK: Inits
 
-        public init(summary: String, release: Release, changelog: String, accountablePersonName: String) {
+        public init(
+            summary: String,
+            environments: [Environment],
+            release: GitHubService.Release,
+            changelog: String,
+            accountablePersonName: String
+        ) {
             self.summary = summary
             self.changelog = .init(text: changelog)
-            self.environments = Environment.list(for: release.repository)
+            self.environments = environments
             self.businessImpact = .init(text: "TBD")
 //            self.jiraReleaseURL = "\(jira.baseURL)/secure/Dashboard.jspa?selectPageId=15452"
 //            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.version)"

@@ -53,17 +53,20 @@ extension SlackCommand {
                 }
 
                 let repoName = components[0]
-                guard let repo = GHRepo.find(matching: repoName) else {
-                    let all = GHRepo.allRepos.map({ $0.key }).joined(separator: "|")
+                guard let repoID = RepoID.find(matching: repoName) else {
+                    let all = RepoID.allCases.map({ $0.rawValue }).joined(separator: "|")
                     throw SlackService.Error.invalidParameter(key: "repo", value: repoName, expected: all)
                 }
 
                 let branchName = components[1]
-                let release = try Release(repository: repo, branchName: branchName)
-
+                let release = try GitHubService.Release(repository: repoID.repository, branchName: branchName)
                 return try githubService.changelog(for: release, on: request)
                     .map { changelog in
-                        SlackCommand.makeJiraIssue(release: release, changelog: changelog)
+                        SlackCommand.makeCRPIssue(
+                            repoID: repoID,
+                            release: release,
+                            changelog: changelog
+                        )
                     }
                     .flatMap { issue in
                         try jiraService.create(issue: issue, on: request)
@@ -86,26 +89,16 @@ extension SlackCommand {
         return branch.map(String.init)
     }
 
-    private static func makeJiraIssue(release: Release, changelog: String) -> JiraService.CRPIssue {
+    private static func makeCRPIssue(repoID: RepoID, release: GitHubService.Release, changelog: String) -> JiraService.CRPIssue {
         let isTelus = release.appName?.caseInsensitiveCompare("Telus") == .orderedSame
         let accountablePerson = isTelus ? "eric.schnitzer" : "andreea.papillon"
         let fields = JiraService.CRPIssueFields(
-            summary: SlackCommand.jiraSummary(release: release),
+            summary: repoID.jiraSummary(release: release),
+            environments: [repoID.environment],
             release: release,
             changelog: changelog,
             accountablePersonName: accountablePerson
         )
         return fields.makeIssue()
-    }
-
-    private static func jiraSummary(release: Release) -> String {
-        switch release.repository.key {
-        case "ios":
-            return "Publish iOS \(release.appName ?? "Main") App v\(release.version) to the AppStore"
-        case "android":
-            return "Publish Android \(release.appName ?? "Main") App v\(release.version) to the PlayStore"
-        default:
-            return "Publish \(release.appName ?? "") v(release.version)"
-        }
     }
 }

@@ -42,7 +42,7 @@ public extension GitHubService {
         }
     }
 
-    public func commitList(in repo: GHRepo, from: CommitRef, to: CommitRef, on request: Request) throws -> Future<CommitList> {
+    public func commitList(in repo: Repository, from: CommitRef, to: CommitRef, on request: Request) throws -> Future<CommitList> {
         let fullURL = self.baseUrl + "/repos/\(repo.fullName)/compare/\(from)...\(to)"
         return try request.client()
             .get(fullURL, headers: self.headers)
