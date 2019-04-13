@@ -14,7 +14,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     )
 
     let jira = JiraService(
-        baseUrl: try attempt { Environment.get("JIRA_BASEURL") },
+        host: try attempt { Environment.get("JIRA_HOST") },
         username: try attempt { Environment.get("JIRA_USERNAME") },
         password: try attempt { Environment.get("JIRA_TOKEN") }
     )

@@ -2,11 +2,11 @@ import Foundation
 import Vapor
 
 public struct JiraService {
-    public let baseUrl: String
+    public let host: String
     private let headers: HTTPHeaders
 
-    public init(baseUrl: String, username: String, password: String) {
-        self.baseUrl = "\(baseUrl):443"
+    public init(host: String, username: String, password: String) {
+        self.host = host
 
         let base64Auth = Data("\(username):\(password)".utf8).base64EncodedString(options: [])
         self.headers = [
@@ -15,6 +15,10 @@ public struct JiraService {
             "Accept": "application/json"
         ]
     }
+
+    private func apiURL(path: String) -> String {
+        return "https://\(host):443/\(path)"
+    }
 }
 
 // MARK: Issue creation
@@ -22,13 +26,6 @@ public struct JiraService {
 public protocol JiraIssueFields: Content {
     var project: JiraService.FieldType.ObjectID { get }
     var issueType: JiraService.FieldType.ObjectID { get }
-    func makeIssue() -> JiraService.Issue<Self>
-}
-
-public extension JiraIssueFields {
-    func makeIssue() -> JiraService.Issue<Self> {
-        return JiraService.Issue(fields: self)
-    }
 }
 
 public extension JiraService {
@@ -51,7 +48,7 @@ public extension JiraService {
     }
 
     public func create<Fields>(issue: Issue<Fields>, on request: Request) throws -> Future<CreatedIssue> {
-        let fullURL = self.baseUrl + "/rest/api/3/issue"
+        let fullURL = apiURL(path: "rest/api/3/issue")
         return try request.client()
             .post(fullURL, headers: self.headers) {
                 try $0.content.encode(issue)

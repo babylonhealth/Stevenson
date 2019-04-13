@@ -68,7 +68,7 @@ public extension JiraService {
             self.changelog = .init(text: changelog)
             self.environments = environments
             self.businessImpact = .init(text: "TBD")
-//            self.jiraReleaseURL = "\(jira.baseURL)/secure/Dashboard.jspa?selectPageId=15452"
+//            self.jiraReleaseURL = "https://\(jira.host)/secure/Dashboard.jspa?selectPageId=15452"
 //            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.version)"
             self.testing = .init(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)

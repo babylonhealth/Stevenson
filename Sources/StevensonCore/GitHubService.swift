@@ -15,8 +15,6 @@ public struct GitHubService {
 }
 
 public extension GitHubService {
-    public typealias CommitRef = String
-
     public struct CommitList: Content {
         let total_commits: Int
         let commits: [Commit]
@@ -35,14 +33,15 @@ public extension GitHubService {
 
     public struct Commit: Content {
         let sha: String
-        let commit: CommitInfo
+        let commit: CommitMetaData
 
-        struct CommitInfo: Content {
+        struct CommitMetaData: Content {
             let message: String
         }
     }
 
-    public func commitList(in repo: Repository, from: CommitRef, to: CommitRef, on request: Request) throws -> Future<CommitList> {
+    /// `from` and `to` are expected to be commit revisions, typically either a commit SHA or a ref name (e.g. branch or tag)
+    public func commitList(in repo: Repository, from: String, to: String, on request: Request) throws -> Future<CommitList> {
         let fullURL = self.baseUrl + "/repos/\(repo.fullName)/compare/\(from)...\(to)"
         return try request.client()
             .get(fullURL, headers: self.headers)

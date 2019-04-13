@@ -99,6 +99,6 @@ extension SlackCommand {
             changelog: changelog,
             accountablePersonName: accountablePerson
         )
-        return fields.makeIssue()
+        return .init(fields: fields)
     }
 }
