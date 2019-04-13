@@ -1,6 +1,6 @@
 import Foundation
 import Vapor
-import StevensonCore
+import Stevenson
 
 extension SlackCommand {
     static let fastlane = { (ci: CIService) in
