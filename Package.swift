@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Stevenson",
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", .upToNextMinor(from: "3.0.0")),
+        .package(url: "https://github.com/vapor/vapor.git", .upToNextMajor(from: "3.0.0")),
     ],
     targets: [
         .target(name: "Stevenson", dependencies: ["Vapor"]),
