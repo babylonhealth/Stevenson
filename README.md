@@ -13,7 +13,7 @@ To develop locally on this repo:
 * [Install Vapor locally](http://docs.vapor.codes/3.0/install/macos/)
 * [Run `vapor xcode`] to create the Xcode project
 * Open the Xcode project and work in it
-* You'll need to define some environment variables in your scheme if you want to try to run locally (those variables are defined in the heroku instance as well).
+* You'll need to define some environment variables in your scheme if you want to try to run the app locally (those variables are defined in the Heroku instance as well).
   * `SLACK_TOKEN`, and optionally `SLACK_CHANNEL`
   * `GITHUB_REPO` (in the form of `OrgName/RepoName`, repo used by CIService)
   * `GITHUB_USERNAME` and `GITHUB_TOKEN`
@@ -30,17 +30,17 @@ curl -v -d "token=__SLACK_TOKEN_FASTLANE__&team_id=T0001&team_domain=example&ent
 
 ## ⚙️ Environment Variables
 
- To set the aformentionned environment variables with the real values on heroku:
+ To set the aforementioned environment variables with the real values on Heroku:
 
- * Go to your heroku dashboard
+ * Go to your Heroku dashboard
  * Navigate to Settings
  * set the environment variables like `SLACK_TOKEN` etc
 
 ## 🕹 Create a new Slack command
 
-If you need to create a new slack command:
+If you need to create a new Slack command:
 
- 1. Go to the Slack Commands config page for your team's slack app: `https://api.slack.com/apps/<YourSlackAppID>/slash-commands`
+ 1. Go to the Slack Commands config page for your team's Slack app: `https://api.slack.com/apps/<YourSlackAppID>/slash-commands`
  2. Click on "Create New Command"
    * Fill in the slash command (e.g. `/foo`)
    * Enter `https://<appname>.herokuapp.com/<command>` as the request URL, replacing `<appname>` with the name of your Heroku app instance (e.g. `stevenson-bot`) and `<command>` by the command name
@@ -48,14 +48,18 @@ If you need to create a new slack command:
    * Hit "Save"
  3. Open the project in Xcode and add a new the handler for the slack command:
    * Open `commands.swift`
-   * Add a new `static let <commandName> = SlackCommand(...)` for your new command, using the same value for its `name` as the one you chose at the last component of your Request URL on step 2
+   * Add a new `static let <commandName> = SlackCommand(...)` for your new command, using `<command>` as it's name and the `SLACK_TOKEN` environment variable
    * Open `configure.swift` and add that newly-created command to the list of handled commands
 
    ```swift
-   routes(router: router, slack: slack, commands: [.fastlane(ci), ..., <your command here>])
+   routes(router: router, slack: slack, commands: [
+       .fastlane(ci), 
+       ..., 
+       <your command here>
+   ])
    ```
 
-## 🛠 Deployment
+## 🚢 Deployment
 
 You can skip step 1 and 2 if you have already set it up locally.
 
@@ -76,17 +80,17 @@ You can skip step 1 and 2 if you have already set it up locally.
    git push heroku master
    ```
 
-Alternatively, you can deploy a specific branch manually by going to the deploy page on Heroku and using the "Manual Deploy" section at the very bottom.
+Alternatively, you can deploy a specific branch manually by going to the deploy page on Heroku dashboard and using the "Manual Deploy" section at the very bottom.
 
 Once the app is deployed, if you need to debug things, you can see the logs using `heroku logs -a <heroku-app-name>`.
 
-## 🖥 Hosting
+## 🌏 Hosting
 
-App is hosted on [Heroku](https://dashboard.heroku.com/apps).
+The app is hosted on [Heroku](https://dashboard.heroku.com/apps).
 
 ## 📖 Documentation
 
-Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use this package.
+Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use Vapor.
 
 ## 💧 Community
 
