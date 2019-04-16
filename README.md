@@ -31,7 +31,7 @@ For example to simulate `/fastlane somelane someargs`, use this (adapt the `&tex
 curl --request POST \
   --url http://localhost:8080/fastlane \
   --header 'content-type: application/x-www-form-urlencoded' \
-  --data 'token=__SLACK_TOKEN_FASTLANE__&channel_name= __SLACK_CHANNEL__&text=somelane%20someargs'
+  --data 'token=__SLACK_TOKEN__&channel_name= __SLACK_CHANNEL__&text=somelane%20someargs'
 ```
 
 ## ⚙️ Environment Variables
@@ -103,4 +103,4 @@ Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for ins
 * [Bento](https://github.com/Babylonpartners/Bento): Swift library for building component-based interfaces on top of UITableView and UICollectionView 🍱
 * [DrawerKit](https://github.com/Babylonpartners/DrawerKit): DrawerKit lets an UIViewController modally present another UIViewController in a manner similar to the way Apple's Maps app works.
 * [ReactiveFeedback](https://github.com/Babylonpartners/ReactiveFeedback): Unidirectional reactive architecture
-* [Wall-E](https://github.com/Babylonpartners/Wall-E): A bot that monitors and manages your pull requests by ensuring they are merged when they're ready and don't stack up in your repository 🤓
+* 🚧 [Wall-E](https://github.com/Babylonpartners/Wall-E): A bot that monitors and manages your pull requests by ensuring they are merged when they're ready and don't stack up in your repository 🤓
