@@ -8,7 +8,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     )
 
     let ci = CircleCIService(
-        project: try attempt { Environment.get("GITHUB_REPO") },
+        project: try attempt { Environment.get("GITHUB_REPO_IOS") },
         token: try attempt { Environment.get("CIRCLECI_TOKEN") },
         defaultBranch: "develop"
     )

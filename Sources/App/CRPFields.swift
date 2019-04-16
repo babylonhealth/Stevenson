@@ -5,7 +5,7 @@ public extension JiraService {
 
     /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
     /// CRP means "Change Request Process" and is part of our SSDLC to track upcoming releases
-    public typealias CRPIssue = JiraService.Issue<JiraService.CRPIssueFields>
+    public typealias CRPIssue = Issue<CRPIssueFields>
 
     public struct CRPIssueFields: JiraIssueFields {
 
@@ -48,6 +48,8 @@ public extension JiraService {
             case changelog = "customfield_12537"
             case environments = "customfield_12592"
             case businessImpact = "customfield_12538"
+            // [CNSMR-1318] TODO: Find a way to send those "URL" fields as well.
+            // (JIRA API seems to expect an 'object' when sending fields of type "URL")
 //            case jiraReleaseURL = "customfield_12540"
 //            case githubReleaseURL = "customfield_12541"
             case testing = "customfield_11512"
@@ -65,12 +67,12 @@ public extension JiraService {
             accountablePersonName: String
         ) {
             self.summary = summary
-            self.changelog = .init(text: changelog)
+            self.changelog = FieldType.TextArea.Document(text: changelog)
             self.environments = environments
-            self.businessImpact = .init(text: "TBD")
+            self.businessImpact = FieldType.TextArea.Document(text: "TBD")
 //            self.jiraReleaseURL = "https://\(jira.host)/secure/Dashboard.jspa?selectPageId=15452"
 //            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.version)"
-            self.testing = .init(text: "TBD")
+            self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)
             self.infoSecChecked = .no
         }

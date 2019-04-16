@@ -2,7 +2,7 @@ import Foundation
 import Vapor
 
 public struct GitHubService {
-    private let baseUrl = "https://api.github.com:443"
+    private let baseURL = "https://api.github.com:443"
     private let headers: HTTPHeaders
 
     public init(username: String, token: String) {
@@ -42,7 +42,7 @@ public extension GitHubService {
 
     /// `from` and `to` are expected to be commit revisions, typically either a commit SHA or a ref name (e.g. branch or tag)
     public func commitList(in repo: Repository, from: String, to: String, on request: Request) throws -> Future<CommitList> {
-        let fullURL = self.baseUrl + "/repos/\(repo.fullName)/compare/\(from)...\(to)"
+        let fullURL = self.baseURL + "/repos/\(repo.fullName)/compare/\(from)...\(to)"
         return try request.client()
             .get(fullURL, headers: self.headers)
             .catchError(.capture())
