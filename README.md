@@ -23,9 +23,9 @@ To develop locally on this repo:
   * `JIRA_HOST`: host name of your Jira instance (e.g. `myorg.atlassian.net`)
   * `JIRA_USERNAME` and `JIRA_TOKEN`: login and access token for the API of your Jira instance
 * Hit Cmd-R to run the Vapor server locally. It will listen at `http://localhost:8080`
-* To try out by sending fake Slack payloads mimicking a Slack slash command
+* Try it out by sending fake Slack payloads mimicking a Slack slash command
 
-For example to simiulate `/fastlane somelane someargs`, use this (adapt the `&text=` value and the `/fastlane` endpoint to your needs)
+For example to simulate `/fastlane somelane someargs`, use this (adapt the `&text=` value and the `/fastlane` endpoint to your needs)
 
 ```bash
 curl --request POST \
