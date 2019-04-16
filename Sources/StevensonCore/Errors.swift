@@ -5,6 +5,8 @@ extension SlackService {
     public enum Error: Swift.Error, Debuggable {
         case invalidToken
         case invalidChannel
+        case missingParameter(key: String)
+        case invalidParameter(key: String, value: String, expected: String)
 
         public var identifier: String {
             return ""
@@ -16,6 +18,10 @@ extension SlackService {
                 return "Invalid token"
             case .invalidChannel:
                 return "Invalid channel"
+            case .missingParameter(let key):
+                return "Missing parameter for `\(key)`"
+            case .invalidParameter(let key, let value, let expected):
+                return "Invalid parameter `\(value)` for `\(key)`. Expected \(expected)."
             }
         }
     }
