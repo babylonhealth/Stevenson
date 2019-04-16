@@ -1,4 +1,4 @@
-import StevensonCore
+import Stevenson
 import Vapor
 
 struct RepoMapping {
