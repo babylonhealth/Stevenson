@@ -1,6 +1,6 @@
 import Foundation
 import Vapor
-import StevensonCore
+import Stevenson
 
 extension SlackCommand {
     static let fastlane = { (ci: CIService) in
@@ -43,7 +43,7 @@ extension SlackCommand {
                 Creates a ticket on the CRP board from specified release branch.
 
                 Example:
-                `/crp ios branch:release/nhs111/3.13.0`
+                `/crp ios branch:release/3.13.0`
                 """,
             token: Environment.get("SLACK_TOKEN")!,
             run: { metadata, request in

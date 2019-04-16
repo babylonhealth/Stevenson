@@ -1,5 +1,5 @@
 import Vapor
-import StevensonCore
+import Stevenson
 
 /// Register your application's routes here.
 public func routes(
