@@ -124,12 +124,12 @@ extension SlackCommand {
         let accountablePerson = isTelus ? "eric.schnitzer" : "andreea.papillon"
         // Remove brackets around JIRA ticket names so that it's recognized by JIRA as a ticket reference
         // eg replace "[CNSMR-123] Do this" with "CNSMR-123 Do this"
-        let cleanChangelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
+        let changelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
         let fields = JiraService.CRPIssueFields(
             summary: repoMapping.jiraSummary(release),
             environments: [repoMapping.environment],
             release: release,
-            changelog: cleanChangelog,
+            changelog: changelog,
             accountablePersonName: accountablePerson
         )
         return JiraService.CRPIssue(fields: fields)
