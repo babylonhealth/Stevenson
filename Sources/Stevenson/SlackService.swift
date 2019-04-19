@@ -71,7 +71,7 @@ public struct SlackService {
             throw Error.invalidToken
         }
         if let requireChannel = requireChannel, metadata.channelName != requireChannel {
-            throw Error.invalidChannel
+            throw Error.invalidChannel(metadata.channelName)
         }
 
         if metadata.text == "help" {
