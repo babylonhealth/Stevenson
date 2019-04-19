@@ -80,23 +80,33 @@ public struct SlackService {
             return try SlackResponse(command.help)
                 .encode(for: request)
         } else {
-            return try SlackResponse("Ok!")
+            return try command
+                .run(metadata, request)
+                .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
                 .encode(for: request)
-                .always {
-                    _ = try? command
-                        .run(metadata, request)
-                        .mapIfError {
-                            SlackResponse($0.localizedDescription, visibility: .user)
-                        }
-                        .thenThrowing { response in
-                            try request.client()
-                                .post(metadata.responseURL, headers: ["Content-type": "application/json"]) {
-                                    try $0.content.encode(response)
-                                }
-                                .catchError(.capture())
-                                .hopTo(eventLoop: request.eventLoop)
-                        }
-                }
         }
+    }
+
+}
+
+extension Future where T == SlackResponse {
+    public func replyLater(
+        withImmediateResponse now: SlackResponse,
+        responseURL: String,
+        request: Request
+    ) -> Future<SlackResponse> {
+        _ = self
+            .mapIfError {
+                SlackResponse($0.localizedDescription, visibility: .user)
+            }
+            .flatMap { response in
+                try request.client()
+                    .post(responseURL, headers: ["Content-type": "application/json"]) {
+                        try $0.content.encode(response)
+                    }
+                    .catchError(.capture())
+        }
+
+        return request.eventLoop.newSucceededFuture(result: now)
     }
 }

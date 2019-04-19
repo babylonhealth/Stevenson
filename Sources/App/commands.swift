@@ -30,7 +30,11 @@ extension SlackCommand {
                             \($0.buildURL)
                             """
                         )
-                }
+                    }.replyLater(
+                        withImmediateResponse: SlackResponse("👍", visibility: .user),
+                        responseURL: metadata.responseURL,
+                        request: request
+                )
         })
     }
 
@@ -61,6 +65,7 @@ extension SlackCommand {
                 guard let branchName = branch(fromOptions: components) else {
                     throw SlackService.Error.missingParameter(key: "branch")
                 }
+
                 let release = try makeGitHubRelease(repo: repoMapping.repository, branch: branchName)
                 return try githubService.changelog(for: release, on: request)
                     .map { changelog in
@@ -76,11 +81,15 @@ extension SlackCommand {
                     .catchError(.capture())
                     .map { issue in
                         SlackResponse("""
-                            CRP Ticket \(issue.key) created.
+                            ✅ CRP Ticket \(issue.key) created.
                             https://\(jiraService.host)/browse/\(issue.key)
                             """
                         )
-                }
+                    }.replyLater(
+                        withImmediateResponse: SlackResponse("🎫 Creating ticket...", visibility: .user),
+                        responseURL: metadata.responseURL,
+                        request: request
+                )
         })
     }
 
