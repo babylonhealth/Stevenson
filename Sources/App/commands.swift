@@ -13,7 +13,7 @@ extension SlackCommand {
             Example:
             `/fastlane test_babylon \(branchOptionPrefix)develop`
             """,
-            token: Environment.get("SLACK_TOKEN")!,
+            allowedChannels: ["ios-build"],
             run: { metadata, request in
                 let components = metadata.text.components(separatedBy: " ")
                 let lane = components[0]
@@ -45,7 +45,7 @@ extension SlackCommand {
                 Example:
                 `/crp ios branch:release/3.13.0`
                 """,
-            token: Environment.get("SLACK_TOKEN")!,
+            allowedChannels: ["ios-build"],
             run: { metadata, request in
                 let components = metadata.text.components(separatedBy: " ")
 

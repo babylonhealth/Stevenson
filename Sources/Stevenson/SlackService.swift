@@ -1,20 +1,27 @@
 import Vapor
 
 public struct SlackCommand {
+    /// Command name
     public let name: String
+
+    /// Command usage instructions
     public let help: String
-    let token: String
+
+    /// Channels where command should be allowed.
+    /// If empty the command will be allowed in all channels
+    public let allowedChannels: Set<String>
+
     let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
 
     public init(
         name: String,
         help: String,
-        token: String,
+        allowedChannels: Set<String>,
         run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
     ) {
         self.name = name
+        self.allowedChannels = allowedChannels
         self.help = help
-        self.token = token
         self.run = run
     }
 }
@@ -54,12 +61,10 @@ public struct SlackResponse: Content {
 }
 
 public struct SlackService {
-    let requireChannel: String?
+    let token: String
 
-    public init(
-        requireChannel: String?
-    ) {
-        self.requireChannel = requireChannel
+    public init(token: String) {
+        self.token = token
     }
 
     public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
@@ -67,10 +72,10 @@ public struct SlackService {
             try request.content.syncDecode(SlackCommandMetadata.self)
         }
 
-        if metadata.token != command.token {
+        if metadata.token != token {
             throw Error.invalidToken
         }
-        if let requireChannel = requireChannel, metadata.channelName != requireChannel {
+        if !command.allowedChannels.isEmpty && !command.allowedChannels.contains(metadata.channelName) {
             throw Error.invalidChannel
         }
 
