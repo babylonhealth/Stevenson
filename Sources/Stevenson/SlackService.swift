@@ -23,11 +23,13 @@ public struct SlackCommandMetadata: Content {
     public let token: String
     public let channelName: String
     public let text: String
+    public let responseURL: String
 
     enum CodingKeys: String, CodingKey {
         case token
         case channelName = "channel_name"
         case text
+        case responseURL = "response_url"
     }
 }
 
@@ -78,10 +80,23 @@ public struct SlackService {
             return try SlackResponse(command.help)
                 .encode(for: request)
         } else {
-            return try command
-                .run(metadata, request)
-                .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
+            return try SlackResponse("Ok!")
                 .encode(for: request)
+                .always {
+                    _ = try? command
+                        .run(metadata, request)
+                        .mapIfError {
+                            SlackResponse($0.localizedDescription, visibility: .user)
+                        }
+                        .thenThrowing { response in
+                            try request.client()
+                                .post(metadata.responseURL, headers: ["Content-type": "application/json"]) {
+                                    try $0.content.encode(response)
+                                }
+                                .catchError(.capture())
+                                .hopTo(eventLoop: request.eventLoop)
+                        }
+                }
         }
     }
 }
