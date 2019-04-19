@@ -7,7 +7,7 @@ public struct SlackCommand {
     /// Command usage instructions
     public let help: String
 
-    /// Channels where command should be allowed.
+    /// Channels from which this command is allowed to be triggered.
     /// If empty the command will be allowed in all channels
     public let allowedChannels: Set<String>
 
@@ -72,10 +72,10 @@ public struct SlackService {
             try request.content.syncDecode(SlackCommandMetadata.self)
         }
 
-        if metadata.token != token {
+        guard metadata.token == token else {
             throw Error.invalidToken
         }
-        if !command.allowedChannels.isEmpty && !command.allowedChannels.contains(metadata.channelName) {
+        guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
             throw Error.invalidChannel
         }
 
