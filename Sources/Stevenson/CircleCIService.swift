@@ -1,14 +1,26 @@
 import Vapor
 
-public struct CircleCIService: CIService {
-    public let project: String
-    public let token: String
-    public let defaultBranch: String
+public struct BuildResponse: Content {
+    public let branch: String
+    public let buildURL: String
 
-    public init(project: String, token: String, defaultBranch: String) {
-        self.project = project
+    enum CodingKeys: String, CodingKey {
+        case branch
+        case buildURL = "build_url"
+    }
+}
+
+public struct CircleCIService {
+    private let baseURL = URL(string: "https://circleci.com")!
+    private let headers: HTTPHeaders = [
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    ]
+
+    public let token: String
+
+    public init(token: String) {
         self.token = token
-        self.defaultBranch = defaultBranch
     }
 
     struct BuildRequest: Content {
@@ -19,18 +31,21 @@ public struct CircleCIService: CIService {
         }
     }
 
-    private func buildURL(branch: String?) -> String {
-        return "https://circleci.com/api/v1.1/project/github/\(project)/tree/\(branch ?? defaultBranch)"
+    private func buildURL(project: String, branch: String) -> URL {
+        return URL(
+            string: "/api/v1.1/project/github/\(project)/tree/\(branch)?circle-token=\(token)",
+            relativeTo: baseURL
+        )!
     }
 
     public func run(
         command: Command,
-        branch: String?,
-        on request: Request
+        project: String,
+        branch: String,
+        request: Request
     ) throws -> Future<BuildResponse> {
         return try request.client()
-            .post(buildURL(branch: branch), headers: ["Accept": "application/json"]) {
-                try $0.query.encode(["circle-token": token])
+            .post(buildURL(project: project, branch: branch), headers: headers) {
                 try $0.content.encode(BuildRequest(buildParameters: command.arguments))
             }
             .catchError(.capture())

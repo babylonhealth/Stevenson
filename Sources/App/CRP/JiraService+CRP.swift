@@ -1,17 +1,40 @@
-import Stevenson
 import Vapor
+import Stevenson
 
-public extension JiraService {
+extension JiraService {
+    func makeCRPIssue(
+        repoMapping: RepoMapping,
+        release: GitHubService.Release,
+        changelog: String
+    ) -> CRPIssue {
+        // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
+        let isTelus = release.appName?.caseInsensitiveCompare("Telus") == .orderedSame
+        let accountablePerson = isTelus ? "eric.schnitzer" : "andreea.papillon"
+        // Remove brackets around JIRA ticket names so that it's recognized by JIRA as a ticket reference
+        // eg replace "[CNSMR-123] Do this" with "CNSMR-123 Do this"
+        let changelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
+        let fields = CRPIssueFields(
+            summary: repoMapping.crp.jiraSummary(release),
+            environments: [repoMapping.crp.environment],
+            release: release,
+            changelog: changelog,
+            accountablePersonName: accountablePerson
+        )
+        return CRPIssue(fields: fields)
+    }
+}
+
+extension JiraService {
 
     /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
     /// CRP means "Change Request Process" and is part of our SSDLC to track upcoming releases
-    public typealias CRPIssue = Issue<CRPIssueFields>
+    typealias CRPIssue = Issue<CRPIssueFields>
 
-    public struct CRPIssueFields: JiraIssueFields {
+    struct CRPIssueFields: JiraIssueFields {
 
         // MARK: Custom Field Types specific to CRP board
 
-        public struct Environment: Content {
+        struct Environment: Content {
             let id: String
 
             static let playStore = Environment(id: "12394")
@@ -27,8 +50,8 @@ public extension JiraService {
 
         // MARK: Fields
 
-        public let project = FieldType.ObjectID(id: "13402") // CRP Project
-        public let issueType = FieldType.ObjectID(id: "11439") // "CRP: Code Change Request"
+        let project = FieldType.ObjectID(id: "13402") // CRP Project
+        let issueType = FieldType.ObjectID(id: "11439") // "CRP: Code Change Request"
         let summary: String
         var changelog: FieldType.TextArea.Document
         let environments: [Environment]
@@ -59,7 +82,7 @@ public extension JiraService {
 
         // MARK: Inits
 
-        public init(
+        init(
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,

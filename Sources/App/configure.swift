@@ -4,24 +4,22 @@ import Stevenson
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let slack = SlackService(
-        token: try attempt { Environment.get("SLACK_TOKEN") }
+        token: try attempt { Environment.get(.SLACK_TOKEN) }
     )
 
     let ci = CircleCIService(
-        project: try attempt { Environment.get("GITHUB_REPO_IOS") },
-        token: try attempt { Environment.get("CIRCLECI_TOKEN") },
-        defaultBranch: "develop"
+        token: try attempt { Environment.get(.CIRCLECI_TOKEN) }
     )
 
     let jira = JiraService(
-        host: try attempt { Environment.get("JIRA_HOST") },
-        username: try attempt { Environment.get("JIRA_USERNAME") },
-        password: try attempt { Environment.get("JIRA_TOKEN") }
+        baseURL: try attempt { Environment.get(.JIRA_HOST).flatMap(URL.init(string:)) },
+        username: try attempt { Environment.get(.JIRA_USERNAME) },
+        password: try attempt { Environment.get(.JIRA_TOKEN) }
     )
 
     let github = GitHubService(
-        username: try attempt { Environment.get("GITHUB_USERNAME") },
-        token: try attempt { Environment.get("GITHUB_TOKEN") }
+        username: try attempt { Environment.get(.GITHUB_USERNAME) },
+        token: try attempt { Environment.get(.GITHUB_TOKEN) }
     )
 
     let router = EngineRouter.default()

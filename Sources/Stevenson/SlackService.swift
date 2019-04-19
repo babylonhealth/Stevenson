@@ -45,9 +45,9 @@ public struct SlackResponse: Content {
     public let visibility: Visibility
 
     public enum Visibility: String, Content {
-        // response message visible only to the user who triggered the command
+        /// Response message visible only to the user who triggered the command
         case user = "ephemeral"
-        // response message visible to all members of the channel where the command was triggered
+        /// Response message visible to all members of the channel where the command was triggered
         case channel = "in_channel"
     }
 
@@ -102,9 +102,7 @@ extension Future where T == SlackResponse {
         request: Request
     ) -> Future<SlackResponse> {
         _ = self
-            .mapIfError {
-                SlackResponse($0.localizedDescription, visibility: .user)
-            }
+            .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
             .flatMap { response in
                 try request.client()
                     .post(responseURL, headers: ["Content-type": "application/json"]) {
