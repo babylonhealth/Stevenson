@@ -76,7 +76,7 @@ public struct SlackService {
             throw Error.invalidToken
         }
         guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
-            throw Error.invalidChannel
+            throw Error.invalidChannel(metadata.channelName)
         }
 
         if metadata.text == "help" {

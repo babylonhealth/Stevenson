@@ -12,9 +12,16 @@ public func routes(
     }
 
     commands.forEach { command in
-        router.post(command.name) { req in
-            try attempt {
-                try slack.handle(command: command, on: req)
+        router.post(command.name) { req -> Future<Response> in
+            do {
+                return try attempt {
+                    try slack.handle(command: command, on: req)
+                }
+            } catch {
+                return try SlackResponse(
+                    error.localizedDescription,
+                    visibility: .user
+                ).encode(for: req)
             }
         }
     }
