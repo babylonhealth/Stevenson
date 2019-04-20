@@ -4,7 +4,7 @@ import Vapor
 extension SlackService {
     public enum Error: Swift.Error, Debuggable {
         case invalidToken
-        case invalidChannel
+        case invalidChannel(String)
         case missingParameter(key: String)
         case invalidParameter(key: String, value: String, expected: String)
 
@@ -16,11 +16,11 @@ extension SlackService {
             switch self {
             case .invalidToken:
                 return "Invalid token"
-            case .invalidChannel:
-                return "Invalid channel"
-            case .missingParameter(let key):
+            case let .invalidChannel(channel):
+                return "Invalid channel `\(channel)`"
+            case let .missingParameter(key):
                 return "Missing parameter for `\(key)`"
-            case .invalidParameter(let key, let value, let expected):
+            case let .invalidParameter(key, value, expected):
                 return "Invalid parameter `\(value)` for `\(key)`. Expected \(expected)."
             }
         }
