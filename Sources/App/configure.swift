@@ -4,7 +4,7 @@ import Stevenson
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let slack = SlackService(
-        requireChannel: Environment.get("SLACK_CHANNEL")
+        token: try attempt { Environment.get("SLACK_TOKEN") }
     )
 
     let ci = CircleCIService(
