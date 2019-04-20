@@ -30,11 +30,13 @@ public struct SlackCommandMetadata: Content {
     public let token: String
     public let channelName: String
     public let text: String
+    public let responseURL: String
 
     enum CodingKeys: String, CodingKey {
         case token
         case channelName = "channel_name"
         case text
+        case responseURL = "response_url"
     }
 }
 
@@ -89,5 +91,28 @@ public struct SlackService {
                 .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
                 .encode(for: request)
         }
+    }
+
+}
+
+extension Future where T == SlackResponse {
+    public func replyLater(
+        withImmediateResponse now: SlackResponse,
+        responseURL: String,
+        request: Request
+    ) -> Future<SlackResponse> {
+        _ = self
+            .mapIfError {
+                SlackResponse($0.localizedDescription, visibility: .user)
+            }
+            .flatMap { response in
+                try request.client()
+                    .post(responseURL, headers: ["Content-type": "application/json"]) {
+                        try $0.content.encode(response)
+                    }
+                    .catchError(.capture())
+        }
+
+        return request.eventLoop.newSucceededFuture(result: now)
     }
 }
