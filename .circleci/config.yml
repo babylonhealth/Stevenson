@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run: 
           name: Compile code
-          command: swift build -v
+          command: swift build
       - run: 
           name: Run unit tests
           command: swift test
