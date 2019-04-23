@@ -36,7 +36,7 @@ extension SlackCommand {
                     )
                     .map {
                         SlackResponse("""
-                            Triggered `\(command.name)` on the `\($0.branch)` branch.
+                            🚀 Triggered `\(command.name)` on the `\($0.branch)` branch.
                             \($0.buildURL)
                             """
                         )

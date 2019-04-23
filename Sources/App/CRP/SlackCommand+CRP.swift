@@ -56,7 +56,7 @@ extension SlackCommand {
                     .catchError(.capture())
                     .map { issue in
                         SlackResponse("""
-                            CRP Ticket \(issue.key) created.
+                            ✅ CRP Ticket \(issue.key) created.
                             \(jira.baseURL)/browse/\(issue.key)
                             """
                         )
