@@ -11,18 +11,12 @@ public func app(_ env: Environment) throws -> Application {
 }
 
 extension Environment {
-    enum Key: String {
-        case SLACK_TOKEN
-        case SLACK_CHANNEL
-        case GITHUB_USERNAME
-        case GITHUB_TOKEN
-        case CIRCLECI_TOKEN
-        case JIRA_BASEURL
-        case JIRA_USERNAME
-        case JIRA_TOKEN
-    }
-
-    static func get(_ key: Key) -> String? {
-        return get(key.rawValue)
-    }
+    static let slackToken       = Environment.get("SLACK_TOKEN")
+    static let slackChannel     = Environment.get("SLACK_CHANNEL")
+    static let githubUsername   = Environment.get("GITHUB_USERNAME")
+    static let githubToken      = Environment.get("GITHUB_TOKEN")
+    static let circleciToken    = Environment.get("CIRCLECI_TOKEN")
+    static let jiraBaseURL      = Environment.get("JIRA_BASEURL")
+    static let jiraUsername     = Environment.get("JIRA_USERNAME")
+    static let jiraToken        = Environment.get("JIRA_TOKEN")
 }
