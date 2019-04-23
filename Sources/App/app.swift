@@ -17,7 +17,7 @@ extension Environment {
         case GITHUB_USERNAME
         case GITHUB_TOKEN
         case CIRCLECI_TOKEN
-        case JIRA_HOST
+        case JIRA_BASEURL
         case JIRA_USERNAME
         case JIRA_TOKEN
     }
