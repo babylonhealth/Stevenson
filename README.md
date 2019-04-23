@@ -16,11 +16,9 @@ To develop locally on this repo:
 * You'll need to define some environment variables in your scheme if you want to try to run the app locally (those variables are defined in the Heroku instance as well).
   * `SLACK_TOKEN`: your access token for the Slack API of your team's Slack
   * `SLACK_CHANNEL` (optional): the name of the Slack channel to restrict the commands to be 
-  * `GITHUB_REPO_IOS`: name (`orgname/reponame`) of the repo to use for your iOS project
-  * `GITHUB_REPO_ANDROID`: name (`orgname/reponame`) of the repo to use for your Android project
   * `GITHUB_USERNAME` and `GITHUB_TOKEN`: login and access token of a user having read access to those repositories
   * `CIRCLECI_TOKEN`: your access token for the CircleCI API
-  * `JIRA_HOST`: host name of your Jira instance (e.g. `myorg.atlassian.net`)
+  * `JIRA_BASEURL`: host name of your Jira instance (e.g. `https://myorg.atlassian.net:443`)
   * `JIRA_USERNAME` and `JIRA_TOKEN`: login and access token for the API of your Jira instance
 * Hit Cmd-R to run the Vapor server locally. It will listen at `http://localhost:8080`
 * Try it out by sending fake Slack payloads mimicking a Slack slash command
