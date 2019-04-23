@@ -3,10 +3,12 @@ import Vapor
 
 struct RepoMapping {
     let repository: GitHubService.Repository
-    let crp: (
-        environment: JiraService.CRPIssueFields.Environment,
-        jiraSummary: (GitHubService.Release) -> String
-    )
+    let crp: CRP
+
+    struct CRP {
+        let environment: JiraService.CRPIssueFields.Environment
+        let jiraSummary: (GitHubService.Release) -> String
+    }
 }
 
 extension RepoMapping {
@@ -16,7 +18,7 @@ extension RepoMapping {
             fullName: "Babylonpartners/babylon-ios",
             baseBranch: "develop"
         ),
-        crp: (
+        crp: CRP(
             environment: .appStore,
             jiraSummary: { "Publish iOS \($0.appName ?? "Babylon") App v\($0.version) to the AppStore" }
         )
@@ -27,7 +29,7 @@ extension RepoMapping {
             fullName: "Babylonpartners/babylon-android",
             baseBranch: "master"
         ),
-        crp: (
+        crp: CRP(
             environment: .playStore,
             jiraSummary: { "Publish Android \($0.appName ?? "Babylon") App v\($0.version) to the PlayStore" }
         )
