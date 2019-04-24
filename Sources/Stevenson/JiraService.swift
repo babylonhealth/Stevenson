@@ -24,7 +24,7 @@ public protocol JiraIssueFields: Content {
     var issueType: JiraService.FieldType.ObjectID { get }
 }
 
-public extension JiraService {
+extension JiraService {
     public struct Issue<Fields: JiraIssueFields>: Content {
         let fields: Fields
         public init(fields: Fields) {
@@ -60,7 +60,7 @@ public extension JiraService {
 
 // MARK: Jira Common Field Types
 
-public extension JiraService {
+extension JiraService {
     public enum FieldType {
         public enum TextArea {
             public struct Document: Content {
