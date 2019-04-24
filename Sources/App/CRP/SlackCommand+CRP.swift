@@ -58,7 +58,8 @@ extension SlackCommand {
                         SlackResponse("""
                             ✅ CRP Ticket \(issue.key) created.
                             \(jira.baseURL)/browse/\(issue.key)
-                            """
+                            """,
+                            visibility: .channel
                         )
                     }.replyLater(
                         withImmediateResponse: SlackResponse("🎫 Creating ticket..."),
