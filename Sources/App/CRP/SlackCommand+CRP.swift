@@ -11,7 +11,7 @@ extension SlackCommand {
 
             Parameters:
             - project identifier (e.g: `ios`, `android`)
-            - branch: release branch name (e.g. `release/<version>`, `release/<app>/<version>`)
+            - `branch`: release branch name (e.g. `release/<version>`, `release/<app>/<version>`)
 
             Example:
             `/crp ios \(Option.branch):release/3.13.0`
@@ -33,7 +33,7 @@ extension SlackCommand {
                     )
                 }
 
-                guard let branch = SlackCommand.branch(fromOptions: components) else {
+                guard let branch = metadata.value(forOption: Option.branch) else {
                     throw SlackService.Error.missingParameter(key: Option.branch)
                 }
 
@@ -61,7 +61,7 @@ extension SlackCommand {
                             """
                         )
                     }.replyLater(
-                        withImmediateResponse: SlackResponse("🎫 Creating ticket...", visibility: .user),
+                        withImmediateResponse: SlackResponse("🎫 Creating ticket..."),
                         responseURL: metadata.responseURL,
                         request: request
                 )
