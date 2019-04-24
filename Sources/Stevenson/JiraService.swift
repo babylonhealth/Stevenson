@@ -2,11 +2,11 @@ import Foundation
 import Vapor
 
 public struct JiraService {
-    public let host: String
+    public let baseURL: URL
     private let headers: HTTPHeaders
 
-    public init(host: String, username: String, password: String) {
-        self.host = host
+    public init(baseURL: URL, username: String, password: String) {
+        self.baseURL = baseURL
 
         let base64Auth = Data("\(username):\(password)".utf8).base64EncodedString(options: [])
         self.headers = [
@@ -14,10 +14,6 @@ public struct JiraService {
             "Content-Type": "application/json",
             "Accept": "application/json"
         ]
-    }
-
-    private func apiURL(path: String) -> String {
-        return "https://\(host):443/\(path)"
     }
 }
 
@@ -47,8 +43,8 @@ public extension JiraService {
         }
     }
 
-    public func create<Fields>(issue: Issue<Fields>, on request: Request) throws -> Future<CreatedIssue> {
-        let fullURL = apiURL(path: "rest/api/3/issue")
+    public func create<Fields>(issue: Issue<Fields>, request: Request) throws -> Future<CreatedIssue> {
+        let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
         return try request.client()
             .post(fullURL, headers: self.headers) {
                 try $0.content.encode(issue)
