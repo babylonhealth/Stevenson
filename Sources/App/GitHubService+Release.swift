@@ -22,7 +22,7 @@ extension GitHubService {
             version = branchComponents[2]
         } else {
             throw SlackService.Error.invalidParameter(
-                key: SlackCommand.Option.branch,
+                key: SlackCommand.Option.branch.value,
                 value: branch,
                 expected: "(release|hotfix)/<app>/<version>"
             )

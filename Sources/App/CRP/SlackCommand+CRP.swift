@@ -21,20 +21,20 @@ extension SlackCommand {
                 let components = metadata.text.components(separatedBy: " ")
 
                 guard let repo = components.first else {
-                    throw SlackService.Error.missingParameter(key: Option.repo)
+                    throw SlackService.Error.missingParameter(key: Option.repo.value)
                 }
 
                 guard let repoMapping = RepoMapping.all[repo.lowercased()] else {
                     let all = RepoMapping.all.keys.joined(separator: "|")
                     throw SlackService.Error.invalidParameter(
-                        key: Option.repo,
+                        key: Option.repo.value,
                         value: repo,
                         expected: all
                     )
                 }
 
-                guard let branch = metadata.value(forOption: Option.branch) else {
-                    throw SlackService.Error.missingParameter(key: Option.branch)
+                guard let branch = metadata.value(forOption: .branch) else {
+                    throw SlackService.Error.missingParameter(key: Option.branch.value)
                 }
 
                 let release = try github.makeGitHubRelease(
