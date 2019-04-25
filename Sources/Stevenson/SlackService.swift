@@ -30,13 +30,37 @@ public struct SlackCommandMetadata: Content {
     public let token: String
     public let channelName: String
     public let text: String
+    public let textComponents: [String.SubSequence]
     public let responseURL: String
+
+    public init(
+        token: String,
+        channelName: String,
+        text: String,
+        responseURL: String
+    ) {
+        self.token = token
+        self.channelName = channelName
+        self.text = text
+        self.textComponents = text.split(separator: " ")
+        self.responseURL = responseURL
+    }
 
     enum CodingKeys: String, CodingKey {
         case token
         case channelName = "channel_name"
         case text
         case responseURL = "response_url"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self = try SlackCommandMetadata(
+            token:          container.decode(String.self, forKey: .token),
+            channelName:    container.decode(String.self, forKey: .channelName),
+            text:           container.decode(String.self, forKey: .text),
+            responseURL:    container.decode(String.self, forKey: .responseURL)
+        )
     }
 }
 
@@ -56,7 +80,7 @@ public struct SlackResponse: Content {
         case visibility = "response_type"
     }
 
-    public init(_ text: String, visibility: Visibility = .channel) {
+    public init(_ text: String, visibility: Visibility = .user) {
         self.text = text
         self.visibility = visibility
     }
@@ -88,7 +112,7 @@ public struct SlackService {
         } else {
             return try command
                 .run(metadata, request)
-                .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
+                .mapIfError { SlackResponse($0.localizedDescription) }
                 .encode(for: request)
         }
     }
@@ -102,7 +126,7 @@ extension Future where T == SlackResponse {
         request: Request
     ) -> Future<SlackResponse> {
         _ = self
-            .mapIfError { SlackResponse($0.localizedDescription, visibility: .user) }
+            .mapIfError { SlackResponse($0.localizedDescription) }
             .flatMap { response in
                 try request.client()
                     .post(responseURL, headers: ["Content-type": "application/json"]) {

@@ -14,7 +14,7 @@ public struct GitHubService {
     }
 }
 
-public extension GitHubService {
+extension GitHubService {
     public struct CommitList: Content {
         let total_commits: Int
         let commits: [Commit]
@@ -57,7 +57,7 @@ public extension GitHubService {
             .catchError(.capture())
     }
 
-    func changelog(for release: Release, request: Request) throws -> Future<String> {
+    public func changelog(for release: Release, request: Request) throws -> Future<String> {
         let repo = release.repository
         return try commitList(
             in: repo,
