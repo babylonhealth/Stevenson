@@ -30,6 +30,7 @@ public struct SlackCommandMetadata: Content {
     public let token: String
     public let channelName: String
     public let text: String
+    public let textComponents: [String.SubSequence]
     public let responseURL: String
 
     public init(
@@ -41,6 +42,7 @@ public struct SlackCommandMetadata: Content {
         self.token = token
         self.channelName = channelName
         self.text = text
+        self.textComponents = text.split(separator: " ")
         self.responseURL = responseURL
     }
 
@@ -49,6 +51,16 @@ public struct SlackCommandMetadata: Content {
         case channelName = "channel_name"
         case text
         case responseURL = "response_url"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self = try SlackCommandMetadata(
+            token:          container.decode(String.self, forKey: .token),
+            channelName:    container.decode(String.self, forKey: .channelName),
+            text:           container.decode(String.self, forKey: .text),
+            responseURL:    container.decode(String.self, forKey: .responseURL)
+        )
     }
 }
 
