@@ -1,7 +1,7 @@
 import Foundation
 import Vapor
 
-public struct GitHubService {
+public struct GitHubService: Service {
     private let baseURL = URL(string: "https://api.github.com:443")!
     private let headers: HTTPHeaders
 
@@ -38,6 +38,48 @@ extension GitHubService {
         struct CommitMetaData: Content {
             let message: String
         }
+    }
+
+    public func branch(
+        in repo: Repository,
+        name: String,
+        on container: Container
+    ) throws -> Future<String> {
+        let fullURL = URL(string: "/repos/\(repo.fullName)/git/refs/heads/\(name)", relativeTo: baseURL)!
+        var headers = self.headers
+        headers.add(name: HTTPHeaderName.contentType, value: MediaType.json.description)
+
+        return try container.client()
+            .get(fullURL, headers: self.headers)
+            .catchError(.capture())
+            .flatMap {
+                do {
+                    return try $0.content
+                        .decode(GitHubService.Reference.self)
+                        .map { $0.sha }
+                } catch {
+                    return try $0.content
+                        .decode(GitHubService.Error.self)
+                        .thenThrowing { throw $0 }
+                }
+        }
+    }
+
+    public func createBranch(
+        in repo: Repository,
+        name: String,
+        sha: String,
+        on container: Container
+    ) throws -> Future<Response> {
+        let fullURL = URL(string: "/repos/\(repo.fullName)/git/refs", relativeTo: baseURL)!
+        var headers = self.headers
+        headers.add(name: HTTPHeaderName.contentType, value: MediaType.json.description)
+
+        return try container.client()
+            .post(fullURL, headers: headers) {
+                try $0.content.encode(["ref": "refs/heads/\(name)", "sha": sha])
+            }
+            .catchError(.capture())
     }
 
     /// `from` and `to` are expected to be commit revisions, typically either a commit SHA or a ref name (e.g. branch or tag)

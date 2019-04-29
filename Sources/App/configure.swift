@@ -3,14 +3,30 @@ import Stevenson
 
 struct CreateReleaseBranchCommand: Vapor.Command {
     let arguments: [CommandArgument] = []
-
     let options: [CommandOption] = []
-
     let help: [String] = []
 
+    // TODO: refactor into slack command as well
     func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
-        print("running release command")
-        return .done(on: context.container)
+        let github: GitHubService = try context.container.make()
+        // TODO: accept repository as parameter
+        return try github.branch(
+            in: RepoMapping.ios.repository,
+            name: RepoMapping.ios.repository.baseBranch,
+            on: context.container
+            )
+            .flatMap { sha in
+                try github.createBranch(
+                    in: RepoMapping.ios.repository,
+                    // TODO: detect branch name based on tags
+                    name: "test_release/1.2.3",
+                    sha: sha,
+                    on: context.container
+                )
+            }
+            // TODO: send slack message to the webhook?
+            .map { print($0) }
+            .mapIfError { print($0) }
     }
 }
 
@@ -34,6 +50,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         username: try attempt { Environment.githubUsername },
         token: try attempt { Environment.githubToken }
     )
+    services.register(github, as: GitHubService.self)
 
     let router = EngineRouter.default()
     try routes(router: router, slack: slack, commands: [

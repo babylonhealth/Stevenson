@@ -129,7 +129,7 @@ extension Future where T == SlackResponse {
             .mapIfError { SlackResponse($0.localizedDescription) }
             .flatMap { response in
                 try request.client()
-                    .post(responseURL, headers: ["Content-type": "application/json"]) {
+                    .post(responseURL, headers: [HTTPHeaderName.contentType.description: MediaType.json.description]) {
                         try $0.content.encode(response)
                     }
                     .catchError(.capture())
