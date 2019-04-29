@@ -1,6 +1,19 @@
 import Vapor
 import Stevenson
 
+struct CreateReleaseBranchCommand: Vapor.Command {
+    let arguments: [CommandArgument] = []
+
+    let options: [CommandOption] = []
+
+    let help: [String] = []
+
+    func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+        print("running release command")
+        return .done(on: context.container)
+    }
+}
+
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let slack = SlackService(
@@ -30,6 +43,11 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         .crp(jira, github)
     ])
     services.register(router, as: Router.self)
+
+    var commandConfig = CommandConfig.default()
+    // This command is scheduled to be run every Monday at 0:00
+    commandConfig.use(CreateReleaseBranchCommand(), as: "create_release_branch")
+    services.register(commandConfig)
 
     var middlewares = MiddlewareConfig()
     middlewares.use(ErrorMiddleware.self)
