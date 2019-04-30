@@ -1,15 +1,5 @@
 import Vapor
 
-public struct BuildResponse: Content {
-    public let branch: String
-    public let buildURL: String
-
-    enum CodingKeys: String, CodingKey {
-        case branch
-        case buildURL = "build_url"
-    }
-}
-
 public struct CircleCIService {
     private let baseURL = URL(string: "https://circleci.com")!
     private let headers: HTTPHeaders = [
@@ -31,6 +21,16 @@ public struct CircleCIService {
         }
     }
 
+    public struct BuildResponse: Content {
+        public let branch: String
+        public let buildURL: String
+
+        enum CodingKeys: String, CodingKey {
+            case branch
+            case buildURL = "build_url"
+        }
+    }
+
     private func buildURL(project: String, branch: String) -> URL {
         return URL(
             string: "/api/v1.1/project/github/\(project)/tree/\(branch)?circle-token=\(token)",
@@ -42,16 +42,13 @@ public struct CircleCIService {
         command: Command,
         project: String,
         branch: String,
-        request: Request
+        on container: Container
     ) throws -> Future<BuildResponse> {
-        return try request.client()
-            .post(buildURL(project: project, branch: branch), headers: headers) {
+        let url = buildURL(project: project, branch: branch)
+        return try request(.capture()) {
+            try container.client().post(url, headers: headers) {
                 try $0.content.encode(BuildRequest(buildParameters: command.arguments))
             }
-            .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(BuildResponse.self)
-            }
-            .catchError(.capture())
+        }
     }
 }

@@ -28,8 +28,4 @@ extension GitHubService {
             self.sha = try container.decode(String.self, forKey: .sha)
         }
     }
-
-    public struct Error: Swift.Error, Decodable {
-        let message: String
-    }
 }

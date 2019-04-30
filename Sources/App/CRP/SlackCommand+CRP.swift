@@ -42,12 +42,12 @@ extension SlackCommand {
                     branch: branch
                 )
 
-                return try github.changelog(for: release, request: request)
+                return try github.changelog(for: release, on: request)
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
                             release: release,
-                            changelog: changelog
+                            changelog: changelog.joined(separator: "\n")
                         )
                     }
                     .flatMap { issue in

@@ -30,6 +30,51 @@ extension SlackService {
     }
 }
 
+protocol FailableService: Service {
+    associatedtype ServiceError: Error & Decodable & Debuggable
+}
+
+extension FailableService {
+    public func request<T: Decodable>(
+        _ sourceLocation: SourceLocation,
+        _ makeRequest: () throws -> Future<Response>
+    ) throws -> Future<T> {
+        return try makeRequest()
+            .flatMap { response in
+                try response.content
+                    .decode(T.self)
+                    .catchFlatMap { _ in
+                        try response.content
+                            .decode(ServiceError.self)
+                            .thenThrowing { throw $0 }
+                }
+            }
+            .catchError(sourceLocation)
+    }
+}
+
+extension CircleCIService: FailableService {
+    struct ServiceError: Swift.Error, Decodable, Debuggable {
+        let message: String
+        let identifier: String = "CircleCIService"
+
+        var reason: String {
+            return message
+        }
+    }
+}
+
+extension GitHubService: FailableService {
+    struct ServiceError: Swift.Error, Decodable, Debuggable {
+        let message: String
+        let identifier: String = "GitHubService"
+
+        var reason: String {
+            return message
+        }
+    }
+}
+
 public struct NilValueError: Error, Debuggable {
     public let identifier = "nilValue"
     public let reason = "Unexpected nil value"

@@ -105,7 +105,7 @@ extension SlackCommand {
                 command: command,
                 project: RepoMapping.ios.repository.fullName,
                 branch: branch ?? RepoMapping.ios.repository.baseBranch,
-                request: request
+                on: request
             )
             .map {
                 SlackResponse("""

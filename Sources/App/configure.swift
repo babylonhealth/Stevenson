@@ -15,18 +15,18 @@ struct CreateReleaseBranchCommand: Vapor.Command {
             name: RepoMapping.ios.repository.baseBranch,
             on: context.container
             )
-            .flatMap { sha in
+            .flatMap { head in
                 try github.createBranch(
                     in: RepoMapping.ios.repository,
                     // TODO: detect branch name based on tags
                     name: "test_release/1.2.3",
-                    sha: sha,
+                    from: head,
                     on: context.container
                 )
             }
             // TODO: send slack message to the webhook?
-            .map { print($0) }
-            .mapIfError { print($0) }
+            .map { print("Success: \($0)") }
+            .mapIfError { print("Error: \($0)") }
     }
 }
 
