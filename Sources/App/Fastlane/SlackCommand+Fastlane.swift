@@ -35,7 +35,7 @@ extension SlackCommand {
             Makes a new release candidate for Testflight. Shorthand for `/fastlane testflight`.
 
             Parameters:
-            - name of the target
+            - name of the target (as in the project)
             - `version`: version of the app
             - `branch`: release branch name. Default is `release/<version>`
 
@@ -65,7 +65,7 @@ extension SlackCommand {
             Makes a new beta build for HockeyApp. Shorthand for `/fastlane hockeyapp`.
 
             Parameters:
-            - name of the target
+            - name of the target (as in the project)
             - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
 
             Example:
