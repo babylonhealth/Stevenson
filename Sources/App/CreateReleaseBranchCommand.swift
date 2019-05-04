@@ -57,7 +57,7 @@ struct CreateReleaseBranchCommand: Vapor.Command {
                 }
 
                 return try context.container.client()
-                    .post(responseURL, headers: [HTTPHeaderName.contentType.description: MediaType.json.description]) {
+                    .post(responseURL) {
                         try $0.content.encode(SlackResponse(response))
                     }
                     .catchError(.capture())
