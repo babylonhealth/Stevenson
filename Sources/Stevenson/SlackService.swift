@@ -31,13 +31,13 @@ public struct SlackCommandMetadata: Content {
     public let channelName: String
     public let text: String
     public let textComponents: [String.SubSequence]
-    public let responseURL: String
+    public let responseURL: String?
 
     public init(
         token: String,
         channelName: String,
         text: String,
-        responseURL: String
+        responseURL: String?
     ) {
         self.token = token
         self.channelName = channelName
@@ -122,19 +122,23 @@ public struct SlackService {
 extension Future where T == SlackResponse {
     public func replyLater(
         withImmediateResponse now: SlackResponse,
-        responseURL: String,
-        request: Request
+        responseURL: String?,
+        on container: Container
     ) -> Future<SlackResponse> {
+        guard let responseURL = responseURL else {
+            return container.eventLoop.future(now)
+        }
+
         _ = self
             .mapIfError { SlackResponse($0.localizedDescription) }
             .flatMap { response in
-                try request.client()
+                try container.client()
                     .post(responseURL, headers: [HTTPHeaderName.contentType.description: MediaType.json.description]) {
                         try $0.content.encode(response)
                     }
                     .catchError(.capture())
         }
 
-        return request.eventLoop.newSucceededFuture(result: now)
+        return container.eventLoop.future(now)
     }
 }

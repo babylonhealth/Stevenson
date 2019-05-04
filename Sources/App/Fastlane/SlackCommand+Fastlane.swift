@@ -19,11 +19,11 @@ extension SlackCommand {
             `/fastlane test_babylon \(Option.branch):develop`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: metadata,
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
@@ -43,7 +43,7 @@ extension SlackCommand {
             `/testflight Babylon \(Option.version):3.13.0`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
@@ -53,7 +53,7 @@ extension SlackCommand {
                     ),
                     branch: metadata.value(forOption: Option.version).map { "release/\($0)" },
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
@@ -72,7 +72,7 @@ extension SlackCommand {
             `/hockeyapp Babylon \(Option.branch):develop`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
@@ -81,16 +81,16 @@ extension SlackCommand {
                         responseURL: metadata.responseURL
                     ),
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
 
-    private static func runLane(
+    static func runLane(
         metadata: SlackCommandMetadata,
         branch: String? = nil,
         ci: CircleCIService,
-        request: Request
+        on container: Container
     ) throws -> Future<SlackResponse> {
         let components = metadata.text.components(separatedBy: " ")
         let lane = components[0]
@@ -105,7 +105,7 @@ extension SlackCommand {
                 command: command,
                 project: RepoMapping.ios.repository.fullName,
                 branch: branch ?? RepoMapping.ios.repository.baseBranch,
-                on: request
+                on: container
             )
             .map {
                 SlackResponse("""
@@ -117,7 +117,7 @@ extension SlackCommand {
             }.replyLater(
                 withImmediateResponse: SlackResponse("👍"),
                 responseURL: metadata.responseURL,
-                request: request
+                on: container
         )
     }
 

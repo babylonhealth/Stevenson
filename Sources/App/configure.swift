@@ -1,43 +1,6 @@
 import Vapor
 import Stevenson
 
-struct CreateReleaseBranchCommand: Vapor.Command {
-    let arguments: [CommandArgument] = [
-        .argument(name: SlackCommand.Option.repo.value),
-        .argument(name: SlackCommand.Option.branch.value),
-    ]
-    let options: [CommandOption] = []
-    let help: [String] = []
-
-    // TODO: refactor into slack command as well
-    func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
-        let github: GitHubService = try context.container.make()
-
-        let repo: GitHubService.Repository = try attempt {
-            try RepoMapping.all[context.argument(SlackCommand.Option.repo.value)]?.repository
-        }
-        let branch = try context.argument(SlackCommand.Option.branch.value)
-
-        return try github.branch(
-            in: repo,
-            name: repo.baseBranch,
-            on: context.container
-            )
-            .flatMap { head in
-                try github.createBranch(
-                    in: repo,
-                    // TODO: detect branch name based on tags
-                    name: branch,
-                    from: head,
-                    on: context.container
-                )
-            }
-            // TODO: send slack message to the webhook?
-            .map { print("Success: \($0)") }
-            .mapIfError { print("Error: \($0)") }
-    }
-}
-
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let slack = SlackService(

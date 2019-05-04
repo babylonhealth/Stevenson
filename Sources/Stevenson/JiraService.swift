@@ -43,9 +43,9 @@ extension JiraService {
         }
     }
 
-    public func create<Fields>(issue: Issue<Fields>, request: Request) throws -> Future<CreatedIssue> {
+    public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> Future<CreatedIssue> {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
-        return try request.client()
+        return try container.client()
             .post(fullURL, headers: self.headers) {
                 try $0.content.encode(issue)
             }

@@ -17,7 +17,7 @@ extension SlackCommand {
             `/crp ios \(Option.branch):release/3.13.0`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 let components = metadata.text.components(separatedBy: " ")
 
                 guard let repo = components.first else {
@@ -42,7 +42,7 @@ extension SlackCommand {
                     branch: branch
                 )
 
-                return try github.changelog(for: release, on: request)
+                return try github.changelog(for: release, on: container)
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
@@ -51,7 +51,7 @@ extension SlackCommand {
                         )
                     }
                     .flatMap { issue in
-                        try jira.create(issue: issue, request: request)
+                        try jira.create(issue: issue, on: container)
                     }
                     .catchError(.capture())
                     .map { issue in
@@ -64,7 +64,7 @@ extension SlackCommand {
                     }.replyLater(
                         withImmediateResponse: SlackResponse("🎫 Creating ticket..."),
                         responseURL: metadata.responseURL,
-                        request: request
+                        on: container
                 )
         })
     }
