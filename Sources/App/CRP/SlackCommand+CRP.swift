@@ -37,7 +37,7 @@ extension SlackCommand {
                     throw SlackService.Error.missingParameter(key: Option.branch.value)
                 }
 
-                let release = try github.makeGitHubRelease(
+                let release = try GitHubService.Release(
                     repo: repoMapping.repository,
                     branch: branch
                 )

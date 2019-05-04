@@ -1,11 +1,11 @@
 import Vapor
 import Stevenson
 
-extension GitHubService {
-    func makeGitHubRelease(
-        repo: Repository,
+extension GitHubService.Release {
+    init(
+        repo: GitHubService.Repository,
         branch: String
-    ) throws -> Release {
+    ) throws {
         let branchComponents = branch.components(separatedBy: "/")
         // [CNSMR-1319] TODO: Use a config file to parametrise branch format
         guard branchComponents.count > 1, ["release", "hotfix"].contains(branchComponents[0]) else {
@@ -28,7 +28,7 @@ extension GitHubService {
             )
         }
 
-        return Release(
+        self.init(
             repository: repo,
             branch: branch,
             appName: appName,
