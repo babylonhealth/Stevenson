@@ -51,7 +51,7 @@ extension SlackCommand {
                         text: "testflight target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
-                    branch: metadata.value(forOption: Option.version).map { "release/\($0)" },
+                    branch: metadata.value(forOption: .version).map { "release/\($0)" },
                     ci: ci,
                     on: container
                 )
@@ -95,30 +95,30 @@ extension SlackCommand {
         let components = metadata.text.components(separatedBy: " ")
         let lane = components[0]
         let options = components.dropFirst().joined(separator: " ")
-        let branch = branch ?? metadata.value(forOption: Option.branch)
+        let branch = branch ?? metadata.value(forOption: .branch)
 
-        let args = ["FASTLANE": lane, "OPTIONS": options]
-        let command = Command(name: lane, arguments: args)
-
+        let parameters = ["FASTLANE": lane, "OPTIONS": options]
+        
         return try ci
             .run(
-                command: command,
+                parameters: parameters,
                 project: RepoMapping.ios.repository.fullName,
                 branch: branch ?? RepoMapping.ios.repository.baseBranch,
                 on: container
             )
             .map {
                 SlackResponse("""
-                    🚀 Triggered `\(command.name)` on the `\($0.branch)` branch.
+                    🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
                     visibility: .channel
                 )
-            }.replyLater(
+            }
+            .replyLater(
                 withImmediateResponse: SlackResponse("👍"),
                 responseURL: metadata.responseURL,
                 on: container
-        )
+            )
     }
 
 }

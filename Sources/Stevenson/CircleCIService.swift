@@ -39,7 +39,7 @@ public struct CircleCIService {
     }
 
     public func run(
-        command: Command,
+        parameters: [String: String],
         project: String,
         branch: String,
         on container: Container
@@ -47,7 +47,7 @@ public struct CircleCIService {
         let url = buildURL(project: project, branch: branch)
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
-                try $0.content.encode(BuildRequest(buildParameters: command.arguments))
+                try $0.content.encode(BuildRequest(buildParameters: parameters))
             }
         }
     }
