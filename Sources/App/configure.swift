@@ -32,11 +32,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     ])
     services.register(router, as: Router.self)
 
-    var commandConfig = CommandConfig.default()
-    // This command is scheduled to be run every Monday at 0:00
-    commandConfig.use(CreateReleaseBranchCommand(), as: "create_release_branch")
-    services.register(commandConfig)
-
     var middlewares = MiddlewareConfig()
     middlewares.use(ErrorMiddleware.self)
     services.register(middlewares)
