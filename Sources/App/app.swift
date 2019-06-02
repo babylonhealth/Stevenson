@@ -12,7 +12,6 @@ public func app(_ env: Environment) throws -> Application {
 
 extension Environment {
     static let slackToken       = Environment.get("SLACK_TOKEN")
-    static let slackChannel     = Environment.get("SLACK_CHANNEL")
     static let githubUsername   = Environment.get("GITHUB_USERNAME")
     static let githubToken      = Environment.get("GITHUB_TOKEN")
     static let circleciToken    = Environment.get("CIRCLECI_TOKEN")
