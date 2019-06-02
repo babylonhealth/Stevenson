@@ -22,7 +22,7 @@ import Stevenson
 ### Supported services
 
 `Stevenson` comes with implementation of Slack [slash commands](https://api.slack.com/slash-commands), GitHub, JIRA and CircleCI APIs. At the moment it does not implement complete set of these APIs but only provides bare minimum required for the functionality of the app. 
-To create these services use corrseponding types constructors providing required values. It's adviced but not required to store these values in the environment variables:
+To create these services use corresponding type constructors providing required values. It's advised but not required to store these values in the environment variables:
 
 ```swift
 let slack = SlackService(
@@ -120,7 +120,7 @@ If you need to create a new Slack command:
    
    ```swift
 extension SlackCommand {
-   static let <command> = { 
+   static func <command>(/* optional params if needed */) { 
         SlackCommand(
             name: "<command>", 
             help: "...",
