@@ -94,27 +94,27 @@ public struct SlackService {
     }
 
     public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
-        let metadata: SlackCommandMetadata = try attempt {
-            try request.content.syncDecode(SlackCommandMetadata.self)
-        }
-
-        guard metadata.token == token else {
-            throw Error.invalidToken
-        }
-
-        guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
-            throw Error.invalidChannel(metadata.channelName, allowed: command.allowedChannels)
-        }
-
-        if metadata.text == "help" {
-            return try SlackResponse(command.help)
-                .encode(for: request)
-        } else {
-            return try command
-                .run(metadata, request)
-                .mapIfError { SlackResponse($0.localizedDescription) }
-                .encode(for: request)
-        }
+        return try request.content
+            .decode(SlackCommandMetadata.self)
+            .catchError(.capture())
+            .flatMap { [token] metadata in
+                guard metadata.token == token else {
+                    throw Error.invalidToken
+                }
+                
+                guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
+                    throw Error.invalidChannel(metadata.channelName, allowed: command.allowedChannels)
+                }
+                
+                if metadata.text == "help" {
+                    return request.future(SlackResponse(command.help))
+                } else {
+                    return try command.run(metadata, request)
+                }
+            }
+            .catchError(.capture())
+            .mapIfError { SlackResponse(error: $0) }
+            .encode(for: request)
     }
 
 }
@@ -130,7 +130,7 @@ extension Future where T == SlackResponse {
         }
 
         _ = self
-            .mapIfError { SlackResponse($0.localizedDescription) }
+            .mapIfError { SlackResponse(error: $0) }
             .flatMap { response in
                 try container.client()
                     .post(responseURL) {

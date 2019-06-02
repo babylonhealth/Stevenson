@@ -9,7 +9,7 @@ extension SlackService {
         case invalidParameter(key: String, value: String, expected: String)
 
         public var identifier: String {
-            return ""
+            return "SlackService.Error"
         }
 
         public var reason: String {
@@ -125,8 +125,13 @@ public struct ThrowError: Error, Debuggable {
     }
 }
 
-
 #if !DEBUG
+extension SlackService.Error {
+    public var errorDescription: String? {
+        return reason
+    }
+}
+
 extension ThrowError: LocalizedError {
     public var errorDescription: String? {
         return reason
@@ -170,5 +175,15 @@ extension Future {
         return catchFlatMap { (error) -> EventLoopFuture<T> in
             throw ThrowError(error: error, sourceLocation: sourceLocation)
         }
+    }
+}
+
+extension SlackResponse {
+    public init(error: Error, visibility: Visibility = .user) {
+        #if DEBUG
+        self.init(String(describing: error), visibility: visibility)
+        #else
+        self.init(error.localizedDescription, visibility: visibility)
+        #endif
     }
 }
