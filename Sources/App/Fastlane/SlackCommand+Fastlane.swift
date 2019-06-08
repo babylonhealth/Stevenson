@@ -16,7 +16,7 @@ extension SlackCommand {
             - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
 
             Example:
-            `/fastlane test_babylon \(Option.branch):develop`
+            `/fastlane test_babylon \(Option.branch.value):develop`
             """,
             allowedChannels: ["ios-build"],
             run: { metadata, container in
@@ -35,12 +35,12 @@ extension SlackCommand {
             Makes a new release candidate for Testflight. Shorthand for `/fastlane testflight`.
 
             Parameters:
-            - name of the target
+            - name of the target (as in the project)
             - `version`: version of the app
             - `branch`: release branch name. Default is `release/<version>`
 
             Example:
-            `/testflight Babylon \(Option.version):3.13.0`
+            `/testflight Babylon \(Option.version.value):3.13.0`
             """,
             allowedChannels: ["ios-build"],
             run: { metadata, container in
@@ -65,11 +65,11 @@ extension SlackCommand {
             Makes a new beta build for HockeyApp. Shorthand for `/fastlane hockeyapp`.
 
             Parameters:
-            - name of the target
+            - name of the target (as in the project)
             - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
 
             Example:
-            `/hockeyapp Babylon \(Option.branch):develop`
+            `/hockeyapp Babylon \(Option.branch.value):develop`
             """,
             allowedChannels: ["ios-build"],
             run: { metadata, container in

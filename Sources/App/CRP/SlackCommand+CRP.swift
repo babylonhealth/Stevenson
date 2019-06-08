@@ -14,7 +14,7 @@ extension SlackCommand {
             - `branch`: release branch name (e.g. `release/<version>`, `release/<app>/<version>`)
 
             Example:
-            `/crp ios \(Option.branch):release/3.13.0`
+            `/crp ios \(Option.branch.value):release/3.13.0`
             """,
             allowedChannels: ["ios-build"],
             run: { metadata, container in
