@@ -115,7 +115,7 @@ extension SlackCommand {
                 )
             }
             .replyLater(
-                withImmediateResponse: SlackResponse("👍"),
+                withImmediateResponse: SlackResponse("👍", visibility: .channel),
                 responseURL: metadata.responseURL,
                 on: container
             )

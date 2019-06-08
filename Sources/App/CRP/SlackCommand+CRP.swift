@@ -62,7 +62,7 @@ extension SlackCommand {
                             visibility: .channel
                         )
                     }.replyLater(
-                        withImmediateResponse: SlackResponse("🎫 Creating ticket..."),
+                        withImmediateResponse: SlackResponse("🎫 Creating ticket...", visibility: .channel),
                         responseURL: metadata.responseURL,
                         on: container
                 )
