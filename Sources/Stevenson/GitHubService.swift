@@ -1,69 +1,103 @@
 import Foundation
 import Vapor
 
-public struct GitHubService {
-    private let baseURL = URL(string: "https://api.github.com:443")!
-    private let headers: HTTPHeaders
+public struct GitHubService: Service {
+    public let baseURL = URL(string: "https://api.github.com:443")!
+    public let headers: HTTPHeaders
 
     public init(username: String, token: String) {
-        let base64Auth = Data("\(username):\(token)".utf8).base64EncodedString(options: [])
-        self.headers = [
-            "Authorization": "Basic \(base64Auth)",
-            "Accept": "application/json"
-        ]
+        var headers = HTTPHeaders()
+        headers.add(name: HTTPHeaderName.accept, value: MediaType.json.description)
+        headers.basicAuthorization = BasicAuthorization(username: username, password: token)
+        self.headers = headers
     }
 }
 
 extension GitHubService {
-    public struct CommitList: Content {
-        let total_commits: Int
-        let commits: [Commit]
+    public struct Repository {
+        public let fullName: String
+        public let baseBranch: String
 
-        func allMessages(includeDetails: Bool) -> [String] {
-            return self.commits.map {
-                let message = $0.commit.message
-                if includeDetails {
-                    return message
-                } else {
-                    return String(message[..<(message.firstIndex(of: "\n") ?? message.endIndex)])
-                }
-            }
+        public init(
+            fullName: String,
+            baseBranch: String
+        ) {
+            self.fullName = fullName
+            self.baseBranch = baseBranch
         }
     }
 
-    public struct Commit: Content {
-        let sha: String
-        let commit: CommitMetaData
+    public struct Reference: Decodable {
+        public let sha: String
 
-        struct CommitMetaData: Content {
-            let message: String
+        enum CodingKeys: CodingKey {
+            case object
+            case sha
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder
+                .container(keyedBy: CodingKeys.self)
+                .nestedContainer(keyedBy: CodingKeys.self, forKey: .object)
+
+            self.sha = try container.decode(String.self, forKey: .sha)
         }
     }
 
-    /// `from` and `to` are expected to be commit revisions, typically either a commit SHA or a ref name (e.g. branch or tag)
-    public func commitList(
+    public struct Release {
+        public let repository: Repository
+        public let branch: String
+        public let appName: String?
+        public let version: String
+
+        public init(repository: Repository, branch: String, appName: String?, version: String) {
+            self.repository = repository
+            self.branch = branch
+            self.appName = appName
+            self.version = version
+        }
+    }
+}
+
+extension GitHubService {
+    public func branch(
         in repo: Repository,
-        from: String,
-        to: String,
-        request: Request
-    ) throws -> Future<CommitList> {
-        let fullURL = URL(string: "/repos/\(repo.fullName)/compare/\(from)...\(to)", relativeTo: baseURL)!
-        return try request.client()
-            .get(fullURL, headers: self.headers)
-            .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(CommitList.self)
-            }
-            .catchError(.capture())
+        name: String,
+        on container: Container
+    ) throws -> Future<GitHubService.Reference> {
+        let url = URL(string: "/repos/\(repo.fullName)/git/refs/heads/\(name)", relativeTo: baseURL)!
+        return try request(.capture()) {
+            try container.client().get(url, headers: headers)
+        }
     }
 
-    public func changelog(for release: Release, request: Request) throws -> Future<String> {
-        let repo = release.repository
-        return try commitList(
-            in: repo,
-            from: repo.baseBranch,
-            to: release.branch,
-            request: request
-        ).map { $0.allMessages(includeDetails: false).joined(separator: "\n") }
+    public func createBranch(
+        in repo: Repository,
+        name: String,
+        from ref: GitHubService.Reference,
+        on container: Container
+    ) throws -> Future<GitHubService.Reference> {
+        let url = URL(string: "/repos/\(repo.fullName)/git/refs", relativeTo: baseURL)!
+        return try request(.capture()) {
+            try container.client().post(url, headers: headers) {
+                try $0.content.encode(["ref": "refs/heads/\(name)", "sha": ref.sha])
+            }
+        }
+    }
+
+    public func releases(
+        in repo: Repository,
+        on container: Container
+    ) throws -> Future<[String]> {
+        struct Response: Content {
+            let tag_name: String
+        }
+        let url = URL(string: "/repos/\(repo.fullName)/releases?per_page=100", relativeTo: baseURL)!
+        return try request(.capture()) {
+            try container.client().get(url, headers: headers)
+            }
+            .map { (response: [Response]) -> [String] in
+                response.map { $0.tag_name }
+        }
     }
 }

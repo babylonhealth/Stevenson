@@ -19,11 +19,11 @@ extension SlackCommand {
             `/fastlane test_babylon \(Option.branch.value):develop`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: metadata,
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
@@ -43,7 +43,7 @@ extension SlackCommand {
             `/testflight Babylon \(Option.version.value):3.13.0`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
@@ -51,9 +51,9 @@ extension SlackCommand {
                         text: "testflight target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
-                    branch: metadata.value(forOption: Option.version).map { "release/\($0)" },
+                    branch: metadata.value(forOption: .version).map { "release/\($0)" },
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
@@ -72,7 +72,7 @@ extension SlackCommand {
             `/hockeyapp Babylon \(Option.branch.value):develop`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 try runLane(
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
@@ -81,44 +81,44 @@ extension SlackCommand {
                         responseURL: metadata.responseURL
                     ),
                     ci: ci,
-                    request: request
+                    on: container
                 )
         })
     }
 
-    private static func runLane(
+    static func runLane(
         metadata: SlackCommandMetadata,
         branch: String? = nil,
         ci: CircleCIService,
-        request: Request
+        on container: Container
     ) throws -> Future<SlackResponse> {
         let components = metadata.text.components(separatedBy: " ")
         let lane = components[0]
         let options = components.dropFirst().joined(separator: " ")
-        let branch = branch ?? metadata.value(forOption: Option.branch)
+        let branch = branch ?? metadata.value(forOption: .branch)
 
-        let args = ["FASTLANE": lane, "OPTIONS": options]
-        let command = Command(name: lane, arguments: args)
-
+        let parameters = ["FASTLANE": lane, "OPTIONS": options]
+        
         return try ci
             .run(
-                command: command,
+                parameters: parameters,
                 project: RepoMapping.ios.repository.fullName,
                 branch: branch ?? RepoMapping.ios.repository.baseBranch,
-                request: request
+                on: container
             )
             .map {
                 SlackResponse("""
-                    🚀 Triggered `\(command.name)` on the `\($0.branch)` branch.
+                    🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
                     visibility: .channel
                 )
-            }.replyLater(
-                withImmediateResponse: SlackResponse("👍"),
+            }
+            .replyLater(
+                withImmediateResponse: SlackResponse("👍", visibility: .channel),
                 responseURL: metadata.responseURL,
-                request: request
-        )
+                on: container
+            )
     }
 
 }

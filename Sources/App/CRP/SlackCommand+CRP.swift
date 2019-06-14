@@ -17,7 +17,7 @@ extension SlackCommand {
             `/crp ios \(Option.branch.value):release/3.13.0`
             """,
             allowedChannels: ["ios-build"],
-            run: { metadata, request in
+            run: { metadata, container in
                 let components = metadata.text.components(separatedBy: " ")
 
                 guard let repo = components.first else {
@@ -37,21 +37,21 @@ extension SlackCommand {
                     throw SlackService.Error.missingParameter(key: Option.branch.value)
                 }
 
-                let release = try github.makeGitHubRelease(
+                let release = try GitHubService.Release(
                     repo: repoMapping.repository,
                     branch: branch
                 )
 
-                return try github.changelog(for: release, request: request)
+                return try github.changelog(for: release, on: container)
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
                             release: release,
-                            changelog: changelog
+                            changelog: changelog.joined(separator: "\n")
                         )
                     }
                     .flatMap { issue in
-                        try jira.create(issue: issue, request: request)
+                        try jira.create(issue: issue, on: container)
                     }
                     .catchError(.capture())
                     .map { issue in
@@ -62,9 +62,9 @@ extension SlackCommand {
                             visibility: .channel
                         )
                     }.replyLater(
-                        withImmediateResponse: SlackResponse("🎫 Creating ticket..."),
+                        withImmediateResponse: SlackResponse("🎫 Creating ticket...", visibility: .channel),
                         responseURL: metadata.responseURL,
-                        request: request
+                        on: container
                 )
         })
     }

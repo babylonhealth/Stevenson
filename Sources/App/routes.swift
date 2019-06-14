@@ -18,8 +18,7 @@ public func routes(
                     try slack.handle(command: command, on: req)
                 }
             } catch {
-                return try SlackResponse(error.localizedDescription)
-                    .encode(for: req)
+                return try SlackResponse(error: error).encode(for: req)
             }
         }
     }

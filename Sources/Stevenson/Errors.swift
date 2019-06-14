@@ -9,7 +9,7 @@ extension SlackService {
         case invalidParameter(key: String, value: String, expected: String)
 
         public var identifier: String {
-            return ""
+            return "SlackService.Error"
         }
 
         public var reason: String {
@@ -26,6 +26,51 @@ extension SlackService {
             case let .invalidParameter(key, value, expected):
                 return "Invalid parameter `\(value)` for `\(key)`. Expected \(expected)."
             }
+        }
+    }
+}
+
+protocol FailableService: Service {
+    associatedtype ServiceError: Error & Decodable & Debuggable
+}
+
+extension FailableService {
+    public func request<T: Decodable>(
+        _ sourceLocation: SourceLocation,
+        _ makeRequest: () throws -> Future<Response>
+    ) throws -> Future<T> {
+        return try makeRequest()
+            .flatMap { response in
+                try response.content
+                    .decode(T.self)
+                    .catchFlatMap { _ in
+                        try response.content
+                            .decode(ServiceError.self)
+                            .thenThrowing { throw $0 }
+                }
+            }
+            .catchError(sourceLocation)
+    }
+}
+
+extension CircleCIService: FailableService {
+    struct ServiceError: Swift.Error, Decodable, Debuggable {
+        let message: String
+        let identifier: String = "CircleCIService"
+
+        var reason: String {
+            return message
+        }
+    }
+}
+
+extension GitHubService: FailableService {
+    struct ServiceError: Swift.Error, Decodable, Debuggable {
+        let message: String
+        let identifier: String = "GitHubService"
+
+        var reason: String {
+            return message
         }
     }
 }
@@ -80,8 +125,13 @@ public struct ThrowError: Error, Debuggable {
     }
 }
 
-
 #if !DEBUG
+extension SlackService.Error {
+    public var errorDescription: String? {
+        return reason
+    }
+}
+
 extension ThrowError: LocalizedError {
     public var errorDescription: String? {
         return reason
@@ -125,5 +175,15 @@ extension Future {
         return catchFlatMap { (error) -> EventLoopFuture<T> in
             throw ThrowError(error: error, sourceLocation: sourceLocation)
         }
+    }
+}
+
+extension SlackResponse {
+    public init(error: Error, visibility: Visibility = .user) {
+        #if DEBUG
+        self.init(String(describing: error), visibility: visibility)
+        #else
+        self.init(error.localizedDescription, visibility: visibility)
+        #endif
     }
 }
