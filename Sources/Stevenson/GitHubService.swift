@@ -17,18 +17,13 @@ extension GitHubService {
     public struct Repository {
         public let fullName: String
         public let baseBranch: String
-        /// Release tags for this repository should match this regular expression 
-        /// and should capture version number in the first capture group.
-        public let releaseTag: String
 
         public init(
             fullName: String,
-            baseBranch: String,
-            releaseTag: String = "^([0-9]+.[0-9]+.[0-9]+)$"
+            baseBranch: String
         ) {
             self.fullName = fullName
             self.baseBranch = baseBranch
-            self.releaseTag = releaseTag
         }
     }
 
