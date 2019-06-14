@@ -50,6 +50,6 @@ extension GitHubService {
             from: repo.baseBranch,
             to: release.branch,
             on: container
-            ).map { $0.allMessages(includeDetails: false) }
+        ).map { $0.allMessages(includeDetails: false) }
     }
 }
