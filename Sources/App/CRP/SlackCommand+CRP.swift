@@ -40,6 +40,7 @@ extension SlackCommand {
                 )
 
                 return try github.changelog(for: release, on: container)
+                    .map { filter(changelog:$0, for: release) }
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
@@ -65,4 +66,22 @@ extension SlackCommand {
                 )
         })
     }
+}
+
+private func filter(changelog: [String], for release: GitHubService.Release) -> [String] {
+    let messages = release.isSDK ? changelog.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : changelog
+    // Group the changes by JIRA boards
+    let regex = try! NSRegularExpression(pattern: #"\[([A-Z]*)-[0-9]*\]"#, options: [])
+    let grouped = Dictionary(grouping: messages) { (message: String) -> String in
+        let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
+        let match = regex.firstMatch(in: message, options: [], range: fullRange)
+        let jiraBoard = match.flatMap({ Range($0.range(at: 1), in: message) }).map({ String(message[$0]) })
+        return jiraBoard ?? "Other"
+    }
+    return grouped.reduce(into: [], { (accum: inout [String], entry: (key: String, value: [String])) in
+        accum.append("## \(entry.key) tickets")
+        accum.append("")
+        accum.append(contentsOf: entry.value)
+        accum.append("")
+    })
 }

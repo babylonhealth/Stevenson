@@ -28,7 +28,8 @@ extension GitHubService.Release {
             repository: repo,
             branch: branch,
             appName: appName,
-            version: version
+            version: version,
+            isMatchingTag: { $0.hasPrefix("\(appName)/") }
         )
     }
 

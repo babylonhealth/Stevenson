@@ -49,12 +49,14 @@ extension GitHubService {
         public let branch: String
         public let appName: String
         public let version: String
+        public let isMatchingTag: (String) -> Bool // To find a tag matching a previous version for the same app
 
-        public init(repository: Repository, branch: String, appName: String, version: String) {
+        public init(repository: Repository, branch: String, appName: String, version: String, isMatchingTag: @escaping (String) -> Bool) {
             self.repository = repository
             self.branch = branch
             self.appName = appName
             self.version = version
+            self.isMatchingTag = isMatchingTag
         }
     }
 }
