@@ -20,7 +20,7 @@ extension RepoMapping {
         ),
         crp: CRP(
             environment: .appStore,
-            jiraSummary: { "Publish iOS \($0.appName ?? "Babylon") App v\($0.version) to the AppStore" }
+            jiraSummary: { "Publish iOS \($0.appName) App v\($0.version) to the AppStore" }
         )
     )
 
@@ -31,7 +31,7 @@ extension RepoMapping {
         ),
         crp: CRP(
             environment: .playStore,
-            jiraSummary: { "Publish Android \($0.appName ?? "Babylon") App v\($0.version) to the PlayStore" }
+            jiraSummary: { "Publish Android \($0.appName) App v\($0.version) to the PlayStore" }
         )
     )
 

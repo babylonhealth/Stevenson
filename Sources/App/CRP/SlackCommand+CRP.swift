@@ -11,25 +11,22 @@ extension SlackCommand {
 
             Parameters:
             - project identifier (e.g: `ios`, `android`)
-            - `branch`: release branch name (e.g. `release/<version>`, `release/<app>/<version>`)
+            - `branch`: release branch name (typically `release/<app>/<version>`, e.g. `release/babylon/4.1.0`)
 
             Example:
-            `/crp ios \(Option.branch.value):release/3.13.0`
+            `/crp ios \(Option.branch.value):release/babylon/4.1.0`
             """,
-            allowedChannels: ["ios-build"],
+            allowedChannels: ["ios-launchpad"],
             run: { metadata, container in
-                let components = metadata.text.components(separatedBy: " ")
-
-                guard let repo = components.first else {
+                guard let repo = metadata.textComponents.first else {
                     throw SlackService.Error.missingParameter(key: Option.repo.value)
                 }
 
                 guard let repoMapping = RepoMapping.all[repo.lowercased()] else {
-                    let all = RepoMapping.all.keys.joined(separator: "|")
                     throw SlackService.Error.invalidParameter(
                         key: Option.repo.value,
-                        value: repo,
-                        expected: all
+                        value: String(repo),
+                        expected: RepoMapping.all.keys.joined(separator: "|")
                     )
                 }
 

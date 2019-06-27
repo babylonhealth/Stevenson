@@ -47,10 +47,10 @@ extension GitHubService {
     public struct Release {
         public let repository: Repository
         public let branch: String
-        public let appName: String?
+        public let appName: String
         public let version: String
 
-        public init(repository: Repository, branch: String, appName: String?, version: String) {
+        public init(repository: Repository, branch: String, appName: String, version: String) {
             self.repository = repository
             self.branch = branch
             self.appName = appName
@@ -85,6 +85,15 @@ extension GitHubService {
         }
     }
 
+    /// Return the list the tag names corresponding to all GitHub releases.
+    ///
+    /// The list is limited to the last 100 releases.
+    ///
+    /// - Parameters:
+    ///   - repo: The repository from which to get the GitHub Releases
+    ///   - container: The Vapor Container to run the request on
+    /// - Returns: List of tag names for the found GitHub releases.
+    /// - Throws: Vapor Exception if the request failed
     public func releases(
         in repo: Repository,
         on container: Container
@@ -95,8 +104,7 @@ extension GitHubService {
         let url = URL(string: "/repos/\(repo.fullName)/releases?per_page=100", relativeTo: baseURL)!
         return try request(.capture()) {
             try container.client().get(url, headers: headers)
-            }
-            .map { (response: [Response]) -> [String] in
+        }.map { (response: [Response]) -> [String] in
                 response.map { $0.tag_name }
         }
     }

@@ -37,7 +37,7 @@ extension SlackCommand {
             Parameters:
             - name of the target (as in the project)
             - `version`: version of the app
-            - `branch`: release branch name. Default is `release/<version>`
+            - `branch`: release branch name. Default is `release/<name.lowercase()>/<version>`
 
             Example:
             `/testflight Babylon \(Option.version.value):3.13.0`
@@ -51,7 +51,7 @@ extension SlackCommand {
                         text: "testflight target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
-                    branch: metadata.value(forOption: .version).map { "release/\($0)" },
+                    branch: releaseBranchName(from: metadata),
                     ci: ci,
                     on: container
                 )
@@ -92,9 +92,8 @@ extension SlackCommand {
         ci: CircleCIService,
         on container: Container
     ) throws -> Future<SlackResponse> {
-        let components = metadata.text.components(separatedBy: " ")
-        let lane = components[0]
-        let options = components.dropFirst().joined(separator: " ")
+        let lane = String(metadata.textComponents[0])
+        let options = metadata.textComponents.dropFirst().joined(separator: " ")
         let branch = branch ?? metadata.value(forOption: .branch)
 
         let parameters = ["FASTLANE": lane, "OPTIONS": options]
@@ -121,4 +120,16 @@ extension SlackCommand {
             )
     }
 
+}
+
+extension SlackCommand {
+    private static func releaseBranchName(from metadata: SlackCommandMetadata) -> String? {
+        if let branchOption = metadata.value(forOption: .branch) {
+            return branchOption
+        } else if let app = metadata.textComponents.first, let version = metadata.value(forOption: .version) {
+            return  "release/\(app.lowercased())/\(version)"
+        } else {
+            return nil
+        }
+    }
 }
