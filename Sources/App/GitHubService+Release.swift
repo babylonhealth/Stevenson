@@ -31,4 +31,8 @@ extension GitHubService.Release {
             version: version
         )
     }
+
+    var isSDK: Bool {
+        return self.appName == "sdk"
+    }
 }

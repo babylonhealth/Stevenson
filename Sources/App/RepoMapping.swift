@@ -20,7 +20,13 @@ extension RepoMapping {
         ),
         crp: CRP(
             environment: .appStore,
-            jiraSummary: { "Publish iOS \($0.appName) App v\($0.version) to the AppStore" }
+            jiraSummary: {
+                if $0.isSDK {
+                    return "Publish iOS SDK v\($0.version) to our partners"
+                } else {
+                    return "Publish iOS \($0.appName) App v\($0.version) to the AppStore"
+                }
+            }
         )
     )
 
@@ -31,7 +37,13 @@ extension RepoMapping {
         ),
         crp: CRP(
             environment: .playStore,
-            jiraSummary: { "Publish Android \($0.appName) App v\($0.version) to the PlayStore" }
+            jiraSummary: {
+                if $0.isSDK {
+                    return "Publish Android SDK v\($0.version) to our partners"
+                } else {
+                    return "Publish Android \($0.appName) App v\($0.version) to the PlayStore"
+                }
+            }
         )
     )
 
