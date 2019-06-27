@@ -8,8 +8,8 @@ extension JiraService {
         changelog: String
     ) -> CRPIssue {
         // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
-        let isTelus = release.appName?.caseInsensitiveCompare("Telus") == .orderedSame
-        let accountablePerson = isTelus ? "eric.schnitzer" : "andreea.papillon"
+        let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
+        let accountablePerson = isTelus ? "ryan.covill" : "andreea.papillon"
         // Remove brackets around JIRA ticket names so that it's recognized by JIRA as a ticket reference
         // eg replace "[CNSMR-123] Do this" with "CNSMR-123 Do this"
         let changelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
