@@ -101,7 +101,7 @@ For example to simulate `/fastlane somelane someargs`, use this (adapt the `&tex
 curl --request POST \
   --url http://localhost:8080/fastlane \
   --header 'content-type: application/x-www-form-urlencoded' \
-  --data 'token=__SLACK_TOKEN__&channel_name= __SLACK_CHANNEL__&text=somelane%20someargs'
+  --data 'token=__SLACK_TOKEN__&channel_name=__SOME_SLACK_CHANNEL__&text=somelane%20someargs'
 ```
 
 ## 🕹 Adding a new Slack command to the app

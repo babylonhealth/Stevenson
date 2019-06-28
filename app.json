@@ -11,12 +11,6 @@
     "CIRCLECI_TOKEN": {
       "required": true
     },
-    "GITHUB_REPO_ANDROID": {
-      "required": true
-    },
-    "GITHUB_REPO_IOS": {
-      "required": true
-    },
     "GITHUB_TOKEN": {
       "required": true
     },
@@ -26,16 +20,10 @@
     "JIRA_BASEURL": {
       "required": true
     },
-    "JIRA_HOST": {
-      "required": true
-    },
     "JIRA_TOKEN": {
       "required": true
     },
     "JIRA_USERNAME": {
-      "required": true
-    },
-    "SLACK_CHANNEL": {
       "required": true
     },
     "SLACK_TOKEN": {
