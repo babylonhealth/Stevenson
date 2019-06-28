@@ -107,7 +107,7 @@ extension GitHubService {
         return try request(.capture()) {
             try container.client().get(url, headers: headers)
         }.map { (response: [Response]) -> [String] in
-                response.map { $0.tag_name }
+            response.map { $0.tag_name }
         }
     }
 }

@@ -40,12 +40,13 @@ extension SlackCommand {
                 )
 
                 return try github.changelog(for: release, on: container)
-                    .map { filter(changelog:$0, for: release) }
+                    .catchError(.capture())
+                    .map { formatChangelog(using: $0, for: release) }
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
                             release: release,
-                            changelog: changelog.joined(separator: "\n")
+                            changelog: changelog
                         )
                     }
                     .flatMap { issue in
@@ -68,20 +69,40 @@ extension SlackCommand {
     }
 }
 
-private func filter(changelog: [String], for release: GitHubService.Release) -> [String] {
-    let messages = release.isSDK ? changelog.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : changelog
-    // Group the changes by JIRA boards
-    let regex = try! NSRegularExpression(pattern: #"\[([A-Z]*)-[0-9]*\]"#, options: [])
-    let grouped = Dictionary(grouping: messages) { (message: String) -> String in
-        let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
-        let match = regex.firstMatch(in: message, options: [], range: fullRange)
+/// Filter the CHANGELOG entries then orders and format the CHANGELOG text
+///
+/// - Parameters:
+///   - commits: The list of commits gathered between last release and current one
+///   - release: The release for which to build the CHANGELOG text for
+/// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
+private func formatChangelog(using commits: [String], for release: GitHubService.Release) -> String {
+    // Only keep SDK commits if release is for SDK
+    let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+
+    // Group then sort the changes by JIRA boards (unclassified last)
+    let grouped = Dictionary(grouping: filteredMessages) { ticket(from: $0)?.board }
+        .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
+
+    // Build a CHANGELOG text
+    return grouped
+        .reduce(into: [], { (accum: inout [String], entry: (key: String?, value: [String])) in
+            let title = entry.key.map { "\($0) tickets" } ?? "Other"
+            accum.append("## \(title)")
+            accum.append("")
+            accum.append(contentsOf: entry.value)
+            accum.append("")
+        })
+        .joined(separator: "\n")
+}
+
+private let jiraBoardRegex = try! NSRegularExpression(pattern: #"\b([A-Za-z]*)-[0-9]*\b"#, options: [])
+
+private func ticket(from message: String) -> (board: String, key: String)? {
+    let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
+    let match = jiraBoardRegex.firstMatch(in: message, options: [], range: fullRange)
+    guard
+        let key = match.flatMap({ Range($0.range, in: message) }).map({ String(message[$0]) }),
         let jiraBoard = match.flatMap({ Range($0.range(at: 1), in: message) }).map({ String(message[$0]) })
-        return jiraBoard ?? "Other"
-    }
-    return grouped.reduce(into: [], { (accum: inout [String], entry: (key: String, value: [String])) in
-        accum.append("## \(entry.key) tickets")
-        accum.append("")
-        accum.append(contentsOf: entry.value)
-        accum.append("")
-    })
+        else { return nil }
+    return (jiraBoard.uppercased(), key)
 }
