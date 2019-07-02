@@ -11,25 +11,22 @@ extension SlackCommand {
 
             Parameters:
             - project identifier (e.g: `ios`, `android`)
-            - `branch`: release branch name (e.g. `release/<version>`, `release/<app>/<version>`)
+            - `branch`: release branch name (typically `release/<app>/<version>`, e.g. `release/babylon/4.1.0`)
 
             Example:
-            `/crp ios \(Option.branch.value):release/3.13.0`
+            `/crp ios \(Option.branch.value):release/babylon/4.1.0`
             """,
-            allowedChannels: ["ios-build"],
+            allowedChannels: ["ios-launchpad"],
             run: { metadata, container in
-                let components = metadata.text.components(separatedBy: " ")
-
-                guard let repo = components.first else {
+                guard let repo = metadata.textComponents.first else {
                     throw SlackService.Error.missingParameter(key: Option.repo.value)
                 }
 
                 guard let repoMapping = RepoMapping.all[repo.lowercased()] else {
-                    let all = RepoMapping.all.keys.joined(separator: "|")
                     throw SlackService.Error.invalidParameter(
                         key: Option.repo.value,
-                        value: repo,
-                        expected: all
+                        value: String(repo),
+                        expected: RepoMapping.all.keys.joined(separator: "|")
                     )
                 }
 
@@ -43,11 +40,13 @@ extension SlackCommand {
                 )
 
                 return try github.changelog(for: release, on: container)
+                    .catchError(.capture())
+                    .map { formatChangelog(using: $0, for: release) }
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
                             release: release,
-                            changelog: changelog.joined(separator: "\n")
+                            changelog: changelog
                         )
                     }
                     .flatMap { issue in
@@ -69,3 +68,32 @@ extension SlackCommand {
         })
     }
 }
+
+
+/// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
+///
+/// - Parameters:
+///   - commits: The list of commits gathered between last release and current one
+///   - release: The release for which to build the CHANGELOG text for
+/// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
+private func formatChangelog(using commits: [String], for release: GitHubService.Release) -> String {
+    // Only keep SDK commits if release is for SDK
+    let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+
+    // Group then sort the changes by JIRA boards (unclassified last)
+    let grouped = Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
+        .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
+
+    // Build a CHANGELOG text
+    return grouped
+        .reduce(into: [], { (accum: inout [String], entry: (board: String?, commitMessages: [String])) in
+            let title = entry.board.map { "\($0) tickets" } ?? "Other"
+            accum.append("## \(title)")
+            accum.append("")
+            accum.append(contentsOf: entry.commitMessages)
+            accum.append("")
+        })
+        .joined(separator: "\n")
+}
+
+

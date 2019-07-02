@@ -40,16 +40,31 @@ extension GitHubService {
         }
     }
 
+    /// Return the list of commits between a release branch and the last matching tag.
+    ///
+    /// This will search for the last GitHub Release / tag matching the same app as the Release,
+    /// then get the list of commit messages (only the first line of each commit) between that tag
+    /// (representing the last version) and the release branch (representing the upcomming release)
+    ///
+    /// - Parameters:
+    ///   - release: The release we want to extract the changelog for
+    ///   - container: The Vapor Container to run the requests on
+    /// - Returns: List of commits between the release branch and the last tag matching the release.appName
     public func changelog(
         for release: Release,
         on container: Container
     ) throws -> Future<[String]> {
-        let repo = release.repository
-        return try commitList(
-            in: repo,
-            from: repo.baseBranch,
-            to: release.branch,
-            on: container
-        ).map { $0.allMessages(includeDetails: false) }
+        return try releases(in: release.repository, on: container).flatMap { (tags: [String]) -> Future<[String]> in
+            guard let latestAppTag = tags.first(where: release.isMatchingTag) else {
+                throw ServiceError(message: "Failed to find previous tag matching '\(release.appName)/*' to build the CHANGELOG")
+            }
+            let allCommits = try self.commitList(
+                in: release.repository,
+                from: latestAppTag,
+                to: release.branch,
+                on: container
+            )
+            return allCommits.map { $0.allMessages(includeDetails: false) }
+        }
     }
 }
