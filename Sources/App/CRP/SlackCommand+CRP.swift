@@ -69,7 +69,8 @@ extension SlackCommand {
     }
 }
 
-/// Filter the CHANGELOG entries then orders and format the CHANGELOG text
+
+/// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
 ///
 /// - Parameters:
 ///   - commits: The list of commits gathered between last release and current one
