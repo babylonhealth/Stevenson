@@ -81,29 +81,19 @@ private func formatChangelog(using commits: [String], for release: GitHubService
     let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
 
     // Group then sort the changes by JIRA boards (unclassified last)
-    let grouped = Dictionary(grouping: filteredMessages) { ticket(from: $0)?.board }
+    let grouped = Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
         .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
 
     // Build a CHANGELOG text
     return grouped
-        .reduce(into: [], { (accum: inout [String], entry: (key: String?, value: [String])) in
-            let title = entry.key.map { "\($0) tickets" } ?? "Other"
+        .reduce(into: [], { (accum: inout [String], entry: (board: String?, commitMessages: [String])) in
+            let title = entry.board.map { "\($0) tickets" } ?? "Other"
             accum.append("## \(title)")
             accum.append("")
-            accum.append(contentsOf: entry.value)
+            accum.append(contentsOf: entry.commitMessages)
             accum.append("")
         })
         .joined(separator: "\n")
 }
 
-private let jiraBoardRegex = try! NSRegularExpression(pattern: #"\b([A-Za-z]*)-[0-9]*\b"#, options: [])
 
-private func ticket(from message: String) -> (board: String, key: String)? {
-    let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
-    let match = jiraBoardRegex.firstMatch(in: message, options: [], range: fullRange)
-    guard
-        let key = match.flatMap({ Range($0.range, in: message) }).map({ String(message[$0]) }),
-        let jiraBoard = match.flatMap({ Range($0.range(at: 1), in: message) }).map({ String(message[$0]) })
-        else { return nil }
-    return (jiraBoard.uppercased(), key)
-}

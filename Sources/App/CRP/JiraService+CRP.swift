@@ -24,6 +24,8 @@ extension JiraService {
     }
 }
 
+
+// MARK: - Define a CRP Issue
 extension JiraService {
 
     /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
@@ -98,6 +100,54 @@ extension JiraService {
             self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)
             self.infoSecChecked = .no
+        }
+    }
+}
+
+
+
+extension JiraService {
+    /// Represents a reference to a JIRA ticket, in the form [XXX-123]
+    struct TicketID: CustomStringConvertible {
+        /// The board code, e.g. `NRX`, `AV`, `CNSMR`...
+        let board: String
+        /// The ticket number (just the part after the dash), e.g. `123`
+        let number: String
+
+        /// The full ticket name (the field 'key' in JIRA API), e.g. `CNSMR-123`
+        var key: String {
+            return "\(board)-\(number)"
+        }
+
+        var description: String {
+            return key
+        }
+
+        init(board: String, number: String) {
+            self.board = board.uppercased()
+            self.number = number
+        }
+
+        /// Extract a Ticket reference from a commit message
+        ///
+        /// - Parameter message: The commit message to extract the ticket reference from
+        init?(from message: String) {
+            let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
+            let match = TicketID.regex.firstMatch(in: message, options: [], range: fullRange)
+            guard
+                let board = TicketID.text(for: match, at: 1, in: message),
+                let number = TicketID.text(for: match, at: 2, in: message)
+                else { return nil }
+            self.init(board: board, number: number)
+        }
+
+        private static let regex = try! NSRegularExpression(pattern: #"\b([A-Za-z]*)-([0-9]*)\b"#, options: [])
+
+        private static func text(for match: NSTextCheckingResult?, at index: Int, in text: String) -> String? {
+            return match
+                .map { $0.range(at: index) }
+                .flatMap { Range($0, in: text) }
+                .map { String(text[$0]) }
         }
     }
 }
