@@ -5,14 +5,14 @@ extension JiraService {
     func makeCRPIssue(
         repoMapping: RepoMapping,
         release: GitHubService.Release,
-        changelog: String
+        changelog: FieldType.TextArea.Document
     ) -> CRPIssue {
         // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
         let accountablePerson = isTelus ? "ryan.covill" : "andreea.papillon"
         // Remove brackets around JIRA ticket names so that it's recognized by JIRA as a ticket reference
         // eg replace "[CNSMR-123] Do this" with "CNSMR-123 Do this"
-        let changelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
+        let changelog = changelog
         let fields = CRPIssueFields(
             summary: repoMapping.crp.jiraSummary(release),
             environments: [repoMapping.crp.environment],
@@ -88,11 +88,11 @@ extension JiraService {
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,
-            changelog: String,
+            changelog: FieldType.TextArea.Document,
             accountablePersonName: String
         ) {
             self.summary = summary
-            self.changelog = FieldType.TextArea.Document(text: changelog)
+            self.changelog = changelog
             self.environments = environments
             self.businessImpact = FieldType.TextArea.Document(text: "TBD")
 //            self.jiraReleaseURL = "https://\(jira.host)/secure/Dashboard.jspa?selectPageId=15452"
@@ -149,5 +149,33 @@ extension JiraService {
                 .flatMap { Range($0, in: text) }
                 .map { String(text[$0]) }
         }
+    }
+}
+
+
+extension JiraService {
+    /// Transform a list of ChangelogSection into a 'Document' field for the JIRA API
+    ///
+    /// - Parameter changelog: The list of sections to format
+    /// - Returns: The Jira Document structure ready to be inserted in a JIRA TextAre field
+    static func document(from changelog: [ChangelogSection]) -> FieldType.TextArea.Document {
+        // Transform CHANGELOG entries into JIRA Document field
+        typealias DocContent = FieldType.TextArea.DocContent
+        typealias Text = FieldType.TextArea.Text
+
+        let content: [DocContent] = changelog
+            .flatMap { (section: ChangelogSection) -> [DocContent] in
+                let header = section.board.map { "\($0) tickets" } ?? "Other"
+                let lines: [Text] = section.commits
+                    .map { $0.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil) }
+                    .flatMap { [Text($0), Text.hardbreak()] }
+                    .dropLast()
+
+                return [
+                    DocContent.heading(level: 3, title: header),
+                    DocContent.paragraph(content: lines)
+                ]
+        }
+        return FieldType.TextArea.Document(content: content)
     }
 }

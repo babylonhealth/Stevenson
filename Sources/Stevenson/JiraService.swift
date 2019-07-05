@@ -64,20 +64,45 @@ extension JiraService {
     public enum FieldType {
         public enum TextArea {
             public struct Document: Content {
-                let type: String = "doc"
-                let content: [Paragraph]
+                let type = "doc"
+                let content: [DocContent]
                 let version = 1
+                public init(content: [DocContent]) {
+                    self.content = content
+                }
                 public init(text: String) {
-                    self.content = [Paragraph(content: [Text(text: text)])]
+                    self.content = [DocContent.paragraph(content: [Text(text)])]
                 }
             }
-            struct Paragraph: Content {
-                let type = "paragraph"
-                let content: [Text]
+
+            public struct DocContent: Content {
+                let type: String
+                let attrs: [String: Int]?
+                let content: [Text]?
+
+                public static func heading(level: Int, title: String) -> DocContent {
+                    return DocContent(type: "heading", attrs: ["level": level], content: [Text(title)])
+                }
+
+                public static func paragraph(content: [Text]) -> DocContent {
+                    return DocContent(type: "paragraph", attrs: nil, content: content)
+                }
             }
-            struct Text: Content {
-                let type = "text"
-                let text: String
+
+            public struct Text: Content {
+                let type: String
+                let text: String?
+                init(type: String, text: String?) {
+                    self.type = type
+                    self.text = text
+                }
+                public init(_ text: String) {
+                    self.type = "text"
+                    self.text = text
+                }
+                public static func hardbreak() -> Text {
+                    return Text(type: "hardbreak", text: nil)
+                }
             }
         }
 

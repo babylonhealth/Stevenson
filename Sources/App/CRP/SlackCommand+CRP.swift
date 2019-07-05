@@ -41,7 +41,8 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .map { formatChangelog(using: $0, for: release) }
+                    .map { buildChangelog(using: $0, for: release) }
+                    .map { JiraService.document(from: $0) }
                     .map { changelog in
                         jira.makeCRPIssue(
                             repoMapping: repoMapping,
@@ -70,30 +71,23 @@ extension SlackCommand {
 }
 
 
+struct ChangelogSection {
+    let board: String?
+    let commits: [String]
+}
+
 /// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
 ///
 /// - Parameters:
 ///   - commits: The list of commits gathered between last release and current one
 ///   - release: The release for which to build the CHANGELOG text for
 /// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
-private func formatChangelog(using commits: [String], for release: GitHubService.Release) -> String {
+private func buildChangelog(using commits: [String], for release: GitHubService.Release) -> [ChangelogSection] {
     // Only keep SDK commits if release is for SDK
     let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
 
     // Group then sort the changes by JIRA boards (unclassified last)
-    let grouped = Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
+    return Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
         .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
-
-    // Build a CHANGELOG text
-    return grouped
-        .reduce(into: [], { (accum: inout [String], entry: (board: String?, commitMessages: [String])) in
-            let title = entry.board.map { "\($0) tickets" } ?? "Other"
-            accum.append("## \(title)")
-            accum.append("")
-            accum.append(contentsOf: entry.commitMessages)
-            accum.append("")
-        })
-        .joined(separator: "\n")
+        .map(ChangelogSection.init)
 }
-
-
