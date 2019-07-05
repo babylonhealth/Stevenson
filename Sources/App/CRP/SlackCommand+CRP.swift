@@ -41,7 +41,7 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .map { buildChangelog(using: $0, for: release) }
+                    .map { ChangelogSection.makeSections(from: $0, for: release) }
                     .map { JiraService.document(from: $0) }
                     .map { changelog in
                         jira.makeCRPIssue(
@@ -73,21 +73,22 @@ extension SlackCommand {
 
 struct ChangelogSection {
     let board: String?
-    let commits: [String]
-}
+    let commits: [(message: String, ticket: JiraService.TicketID?)]
 
-/// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
-///
-/// - Parameters:
-///   - commits: The list of commits gathered between last release and current one
-///   - release: The release for which to build the CHANGELOG text for
-/// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
-private func buildChangelog(using commits: [String], for release: GitHubService.Release) -> [ChangelogSection] {
-    // Only keep SDK commits if release is for SDK
-    let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+    /// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
+    ///
+    /// - Parameters:
+    ///   - commits: The list of commits gathered between last release and current one
+    ///   - release: The release for which to build the CHANGELOG text for
+    /// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
+    static func makeSections(from commits: [String], for release: GitHubService.Release) -> [ChangelogSection] {
+        // Only keep SDK commits if release is for SDK
+        let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+        let parsedMessages = filteredMessages.map { (message: $0, ticket: JiraService.TicketID(from: $0)) }
 
-    // Group then sort the changes by JIRA boards (unclassified last)
-    return Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
-        .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
-        .map(ChangelogSection.init)
+        // Group then sort the changes by JIRA boards (unclassified last)
+        return Dictionary(grouping: parsedMessages) { $0.ticket?.board }
+            .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
+            .map(ChangelogSection.init)
+    }
 }

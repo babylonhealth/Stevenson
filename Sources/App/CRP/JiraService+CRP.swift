@@ -167,7 +167,7 @@ extension JiraService {
             .flatMap { (section: ChangelogSection) -> [DocContent] in
                 let header = section.board.map { "\($0) tickets" } ?? "Other"
                 let lines: [Text] = section.commits
-                    .map { $0.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil) }
+                    .map { stripTicketBrackets($0.message) }
                     .flatMap { [Text($0), Text.hardbreak()] }
                     .dropLast()
 
@@ -177,5 +177,15 @@ extension JiraService {
                 ]
         }
         return FieldType.TextArea.Document(content: content)
+    }
+
+    /// Strips square brackets around JIRA ticket references, so that the JIRA UI detects them as links to tickets
+    private static func stripTicketBrackets(_ string: String) -> String {
+        return string.replacingOccurrences(
+            of: "\\[([A-Z]+-[0-9]+)\\]",
+            with: "$1",
+            options: [.regularExpression],
+            range: nil
+        )
     }
 }
