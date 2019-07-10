@@ -42,10 +42,10 @@ extension SlackCommand {
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
                     .map { ChangelogSection.makeSections(from: $0, for: release) }
-                    .map { JiraService.document(from: $0) }
+                    .map { jira.document(from: $0) }
                     .map { changelog in
-                        jira.makeCRPIssue(
-                            repoMapping: repoMapping,
+                        JiraService.makeCRPIssue(
+                            crpConfig: repoMapping.crp,
                             release: release,
                             changelog: changelog
                         )
