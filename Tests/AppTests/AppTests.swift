@@ -5,10 +5,10 @@ import XCTest
 
 final class AppTests: XCTestCase {
     static let fakeCommits = [
-        "[ABC-123] Commit 1",
-        "[DEF-234] Commit 3",
-        "[ABC-456] Commit 2",
-        "[DEF-567] Commit 4"
+        "[CNSMR-2044] Commit 1",
+        "[CRP-4141] Commit 3",
+        "[CNSMR-2045] Commit 2",
+        "[CRP-4142] Commit 4"
     ]
 
     func testJiraDocumentFromCommits() throws {
@@ -19,115 +19,23 @@ final class AppTests: XCTestCase {
 
         let entries = ChangelogSection.makeSections(from: AppTests.fakeCommits, for: release)
         XCTAssertEqual(entries.count, 2)
-        XCTAssertEqual(entries[0].board, "ABC")
-        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[ABC-123] Commit 1", "[ABC-456] Commit 2"])
-        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["ABC-123", "ABC-456"])
-        XCTAssertEqual(entries[1].board, "DEF")
-        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[DEF-234] Commit 3", "[DEF-567] Commit 4"])
-        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["DEF-234", "DEF-567"])
+        XCTAssertEqual(entries[0].board, "CNSMR")
+        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[CNSMR-2044] Commit 1", "[CNSMR-2045] Commit 2"])
+        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["CNSMR-2044", "CNSMR-2045"])
+        XCTAssertEqual(entries[1].board, "CRP")
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[CRP-4141] Commit 3", "[CRP-4142] Commit 4"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["CRP-4141", "CRP-4142"])
 
         let baseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
         let changelogDoc = JiraService.document(from: entries, jiraBaseURL: baseURL)
         
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
-        let jsonData = try encoder.encode(changelogDoc)
-        let json = String(data: jsonData, encoding: .utf8)
-        XCTAssertEqual(json, """
-            {
-              "type" : "doc",
-              "content" : [
-                {
-                  "type" : "heading",
-                  "attrs" : {
-                    "level" : 3
-                  },
-                  "content" : [
-                    {
-                      "type" : "text",
-                      "text" : "ABC tickets"
-                    }
-                  ]
-                },
-                {
-                  "type" : "paragraph",
-                  "content" : [
-                    {
-                      "type" : "inlineCard",
-                      "attrs" : {
-                        "url" : "https:\\/\\/babylonpartners.atlassian.net:443\\/browse\\/ABC-123#icft=ABC-123"
-                      }
-                    },
-                    {
-                      "type" : "text",
-                      "text" : " Commit 1"
-                    },
-                    {
-                      "type" : "hardBreak"
-                    },
-                    {
-                      "type" : "inlineCard",
-                      "attrs" : {
-                        "url" : "https:\\/\\/babylonpartners.atlassian.net:443\\/browse\\/ABC-456#icft=ABC-456"
-                      }
-                    },
-                    {
-                      "type" : "text",
-                      "text" : " Commit 2"
-                    },
-                    {
-                      "type" : "hardBreak"
-                    }
-                  ]
-                },
-                {
-                  "type" : "heading",
-                  "attrs" : {
-                    "level" : 3
-                  },
-                  "content" : [
-                    {
-                      "type" : "text",
-                      "text" : "DEF tickets"
-                    }
-                  ]
-                },
-                {
-                  "type" : "paragraph",
-                  "content" : [
-                    {
-                      "type" : "inlineCard",
-                      "attrs" : {
-                        "url" : "https:\\/\\/babylonpartners.atlassian.net:443\\/browse\\/DEF-234#icft=DEF-234"
-                      }
-                    },
-                    {
-                      "type" : "text",
-                      "text" : " Commit 3"
-                    },
-                    {
-                      "type" : "hardBreak"
-                    },
-                    {
-                      "type" : "inlineCard",
-                      "attrs" : {
-                        "url" : "https:\\/\\/babylonpartners.atlassian.net:443\\/browse\\/DEF-567#icft=DEF-567"
-                      }
-                    },
-                    {
-                      "type" : "text",
-                      "text" : " Commit 4"
-                    },
-                    {
-                      "type" : "hardBreak"
-                    }
-                  ]
-                }
-              ],
-              "version" : 1
-            }
-            """
-        )
+        let changelogJsonData = try encoder.encode(changelogDoc)
+        let changelogJson = String(data: changelogJsonData, encoding: .utf8)
+
+        XCTAssertNotNil(changelogJson)
+        add(attachment(name: "Changelog JSON", string: changelogJson))
 
         let crpConfig = RepoMapping.CRP(
             environment: .appStore,
@@ -141,7 +49,198 @@ final class AppTests: XCTestCase {
 
         let issueData = try encoder.encode(issue)
         let issueJson = String(data: issueData, encoding: .utf8)
-        print(issueJson ?? "<nil>")
+
+        add(attachment(name: "Ticket", string: issueJson))
+
+        let expectedTicketJson = #"""
+            {
+              "fields" : {
+                "customfield_12538" : {
+                  "type" : "doc",
+                  "content" : [
+                    {
+                      "type" : "paragraph",
+                      "content" : [
+                        {
+                          "type" : "text",
+                          "text" : "TBD"
+                        }
+                      ]
+                    }
+                  ],
+                  "version" : 1
+                },
+                "issuetype" : {
+                  "id" : "11439"
+                },
+                "customfield_12592" : [
+                  {
+                    "id" : "12395"
+                  }
+                ],
+                "summary" : "Fake-Publish Dummy App v1.2.3",
+                "customfield_12527" : {
+                  "id" : "11941"
+                },
+                "customfield_12537" : {
+                  "type" : "doc",
+                  "content" : [
+                    {
+                      "type" : "heading",
+                      "attrs" : {
+                        "level" : 3
+                      },
+                      "content" : [
+                        {
+                          "type" : "text",
+                          "text" : "CNSMR tickets"
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "bulletList",
+                      "content" : [
+                        {
+                          "type" : "listItem",
+                          "content" : [
+                            {
+                              "type" : "paragraph",
+                              "content" : [
+                                {
+                                  "type" : "inlineCard",
+                                  "attrs" : {
+                                    "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-2044#icft=CNSMR-2044"
+                                  }
+                                },
+                                {
+                                  "type" : "text",
+                                  "text" : " Commit 1"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type" : "listItem",
+                          "content" : [
+                            {
+                              "type" : "paragraph",
+                              "content" : [
+                                {
+                                  "type" : "inlineCard",
+                                  "attrs" : {
+                                    "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-2045#icft=CNSMR-2045"
+                                  }
+                                },
+                                {
+                                  "type" : "text",
+                                  "text" : " Commit 2"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "heading",
+                      "attrs" : {
+                        "level" : 3
+                      },
+                      "content" : [
+                        {
+                          "type" : "text",
+                          "text" : "CRP tickets"
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "bulletList",
+                      "content" : [
+                        {
+                          "type" : "listItem",
+                          "content" : [
+                            {
+                              "type" : "paragraph",
+                              "content" : [
+                                {
+                                  "type" : "inlineCard",
+                                  "attrs" : {
+                                    "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CRP-4141#icft=CRP-4141"
+                                  }
+                                },
+                                {
+                                  "type" : "text",
+                                  "text" : " Commit 3"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type" : "listItem",
+                          "content" : [
+                            {
+                              "type" : "paragraph",
+                              "content" : [
+                                {
+                                  "type" : "inlineCard",
+                                  "attrs" : {
+                                    "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CRP-4142#icft=CRP-4142"
+                                  }
+                                },
+                                {
+                                  "type" : "text",
+                                  "text" : " Commit 4"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "version" : 1
+                },
+                "customfield_11512" : {
+                  "type" : "doc",
+                  "content" : [
+                    {
+                      "type" : "paragraph",
+                      "content" : [
+                        {
+                          "type" : "text",
+                          "text" : "TBD"
+                        }
+                      ]
+                    }
+                  ],
+                  "version" : 1
+                },
+                "project" : {
+                  "id" : "13402"
+                },
+                "customfield_11505" : {
+                  "name" : "andreea.papillon"
+                }
+              }
+            }
+            """#
+
+        if (issueJson != expectedTicketJson) {
+            let lhsLines = (issueJson?.split(separator: "\n") ?? []).enumerated()
+            let rhsLines = expectedTicketJson.split(separator: "\n").enumerated()
+            let diff = zip(lhsLines, rhsLines)
+                .filter { (lhs, rhs) in lhs.element != rhs.element }
+                .map { (lhs, rhs) in "\(lhs.offset): |\(lhs.element)| <> |\(rhs.element)|"}
+            XCTFail("Ticket JSON Mismatch – see diff:\n\(diff.joined(separator: "\n"))")
+        }
+    }
+
+    private func attachment(name: String, string: String?) -> XCTAttachment {
+        let attachment = XCTAttachment(string: string ?? "<nil>")
+        attachment.name = name
+        return attachment
     }
 
     static let allTests = [

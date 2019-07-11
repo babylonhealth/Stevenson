@@ -118,13 +118,13 @@ extension JiraService {
         let content: [DocContent] = changelog
             .flatMap { (section: ChangelogSection) -> [DocContent] in
                 let header = section.board.map { "\($0) tickets" } ?? "Other"
-                let lines: [DocContent] = section.commits.flatMap {
+                let listItems: [FieldType.TextArea.ListItem] = section.commits.map {
                     formatMessageLine($0.message, jiraBaseURL: jiraBaseURL)
                 }
 
                 return [
                     DocContent.heading(level: 3, title: header),
-                    DocContent.paragraph(lines)
+                    DocContent.bulletList(items: listItems)
                 ]
         }
         return FieldType.TextArea.Document(content: content)
@@ -134,7 +134,7 @@ extension JiraService {
     ///
     /// - Parameter string: The commit message / string to extract tickets from
     /// - Returns: An array of `.text` and `.inlineCard` elements corresponding to the parsed string
-    static func formatMessageLine(_ string: String, jiraBaseURL: URL) -> [FieldType.TextArea.DocContent] {
+    static func formatMessageLine(_ string: String, jiraBaseURL: URL) -> FieldType.TextArea.ListItem {
         let fullRange = NSRange(string.startIndex..<string.endIndex, in: string)
         let matches = TicketID.regex.matches(in: string, options: [], range: fullRange)
 
@@ -157,7 +157,6 @@ extension JiraService {
         if !endText.isEmpty {
             result.append(.text(endText))
         }
-        result.append(.hardbreak())
-        return result
+        return .init(content: result)
     }
 }
