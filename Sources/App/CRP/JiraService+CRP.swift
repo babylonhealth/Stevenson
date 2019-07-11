@@ -162,3 +162,41 @@ extension JiraService {
         return .init(content: result)
     }
 }
+
+// MARK: support for "Fixed Version"
+
+extension JiraService {
+    struct FixedVersionReport: CustomStringConvertible {
+        let messages: [String]
+        init(_ message: String = "") {
+            self.messages = message.isEmpty ? [] : [message]
+        }
+        init(reports: [FixedVersionReport]) {
+            self.messages = reports.flatMap { $0.messages }
+        }
+        var description: String {
+            return messages.map({ " - \($0)" }).joined(separator: "\n")
+        }
+    }
+
+    func createAndSetFixedVersions(changelogSections: [ChangelogSection], versionName: String, on container: Container) -> Future<FixedVersionReport> {
+        return changelogSections
+            .compactMap { $0.tickets() }
+            .map { (project: (key: String, tickets: [String])) -> Future<FixedVersionReport> in
+                self.createVersion(name: versionName, projectName: project.key, on: container)
+                    .flatMap { self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
+                    .mapIfError { FixedVersionReport("Error creating JIRA version in board \(project.key) - \($0)") }
+            }
+            .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
+    }
+
+    func batchSetFixedVersions(_ version: JiraService.Version, tickets: [String], on container: Container) -> Future<FixedVersionReport> {
+        return tickets
+            .map { (ticket: String) -> Future<FixedVersionReport> in
+                self.setFixedVersion(version, for: ticket, on: container)
+                    .map { _ in FixedVersionReport() }
+                    .mapIfError { FixedVersionReport("Error setting FixedVersion for \(ticket) - \($0)") }
+            }
+            .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
+    }
+}

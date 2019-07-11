@@ -40,6 +40,7 @@ final class AppTests: XCTestCase {
 
         let crpConfig = RepoMapping.CRP(
             environment: .appStore,
+            jiraVersionName: { _ in "Dummy Version 1.2.3" },
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
         let issue = JiraService.makeCRPIssue(

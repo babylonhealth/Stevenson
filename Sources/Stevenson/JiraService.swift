@@ -190,3 +190,16 @@ extension JiraService {
         }
     }
 }
+
+extension JiraService {
+    public typealias Version = String // TODO: Create a `struct Version: Content`
+    public func createVersion(name: String, projectName: String, on container: Container) -> Future<Version> {
+        // TODO: Call JIRA API to create a JIRA Version
+        // https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-rest-api-3-version-post
+        return container.eventLoop.future("123")
+    }
+    public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) -> Future<Response> {
+        // TODO: Call JIRA API to add update issues and add value to Fixed Version field
+        return container.eventLoop.future(Response(using: container))
+    }
+}
