@@ -35,7 +35,9 @@ final class AppTests: XCTestCase {
         let changelogJson = String(data: changelogJsonData, encoding: .utf8)
 
         XCTAssertNotNil(changelogJson)
+        #if !os(Linux)
         add(attachment(name: "Changelog JSON", string: changelogJson))
+        #endif
 
         let crpConfig = RepoMapping.CRP(
             environment: .appStore,
@@ -51,7 +53,9 @@ final class AppTests: XCTestCase {
         let issueData = try encoder.encode(issue)
         let issueJson = String(data: issueData, encoding: .utf8)
 
+        #if !os(Linux)
         add(attachment(name: "Ticket", string: issueJson))
+        #endif
 
         let expectedTicketJson = #"""
             {
@@ -240,11 +244,13 @@ final class AppTests: XCTestCase {
         }
     }
 
+    #if !os(Linux)
     private func attachment(name: String, string: String?) -> XCTAttachment {
         let attachment = XCTAttachment(string: string ?? "<nil>")
         attachment.name = name
         return attachment
     }
+    #endif
 
     static let allTests = [
         ("testJiraDocumentFromCommits", testJiraDocumentFromCommits)
