@@ -26,8 +26,8 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(entries[1].commits.map { $0.message }, ["[CRP-4141] Commit 3", "[CRP-4142] Commit 4"])
         XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["CRP-4141", "CRP-4142"])
 
-        let baseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
-        let changelogDoc = JiraService.document(from: entries, jiraBaseURL: baseURL)
+        let jiraBaseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
+        let changelogDoc = JiraService.document(from: entries, jiraBaseURL: jiraBaseURL)
         
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
@@ -42,6 +42,7 @@ final class AppTests: XCTestCase {
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
         let issue = JiraService.makeCRPIssue(
+            jiraBaseURL: jiraBaseURL,
             crpConfig: crpConfig,
             release: release,
             changelog: changelogDoc
@@ -70,6 +71,7 @@ final class AppTests: XCTestCase {
                   ],
                   "version" : 1
                 },
+                "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
                 "issuetype" : {
                   "id" : "11439"
                 },
@@ -220,6 +222,7 @@ final class AppTests: XCTestCase {
                 "project" : {
                   "id" : "13402"
                 },
+                "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
                 "customfield_11505" : {
                   "name" : "andreea.papillon"
                 }

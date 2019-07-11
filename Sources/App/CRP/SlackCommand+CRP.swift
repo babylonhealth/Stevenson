@@ -45,6 +45,7 @@ extension SlackCommand {
                     .map { jira.document(from: $0) }
                     .map { changelog in
                         JiraService.makeCRPIssue(
+                            jiraBaseURL: jira.baseURL,
                             crpConfig: repoMapping.crp,
                             release: release,
                             changelog: changelog

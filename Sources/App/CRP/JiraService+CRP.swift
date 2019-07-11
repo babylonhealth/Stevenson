@@ -3,6 +3,7 @@ import Stevenson
 
 extension JiraService {
     static func makeCRPIssue(
+        jiraBaseURL: URL,
         crpConfig: RepoMapping.CRP,
         release: GitHubService.Release,
         changelog: FieldType.TextArea.Document
@@ -12,6 +13,7 @@ extension JiraService {
         let accountablePerson = isTelus ? "ryan.covill" : "andreea.papillon"
         let changelog = changelog
         let fields = CRPIssueFields(
+            jiraBaseURL: jiraBaseURL,
             summary: crpConfig.jiraSummary(release),
             environments: [crpConfig.environment],
             release: release,
@@ -56,8 +58,8 @@ extension JiraService {
         var changelog: FieldType.TextArea.Document
         var environments: [Environment]
         var businessImpact: FieldType.TextArea.Document
-//        let jiraReleaseURL: String
-//        let githubReleaseURL: String
+        let jiraReleaseURL: String
+        let githubReleaseURL: String
         var testing: FieldType.TextArea.Document
         var accountablePerson: FieldType.User
         var infoSecChecked: InfoSecStatus
@@ -71,10 +73,8 @@ extension JiraService {
             case changelog = "customfield_12537"
             case environments = "customfield_12592"
             case businessImpact = "customfield_12538"
-            // [CNSMR-1318] TODO: Find a way to send those "URL" fields as well.
-            // (JIRA API seems to expect an 'object' when sending fields of type "URL")
-//            case jiraReleaseURL = "customfield_12540"
-//            case githubReleaseURL = "customfield_12541"
+            case jiraReleaseURL = "customfield_12540"
+            case githubReleaseURL = "customfield_12541"
             case testing = "customfield_11512"
             case accountablePerson = "customfield_11505"
             case infoSecChecked = "customfield_12527"
@@ -83,6 +83,7 @@ extension JiraService {
         // MARK: Inits
 
         init(
+            jiraBaseURL: URL,
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,
@@ -93,8 +94,8 @@ extension JiraService {
             self.changelog = changelog
             self.environments = environments
             self.businessImpact = FieldType.TextArea.Document(text: "TBD")
-//            self.jiraReleaseURL = "https://\(jira.host)/secure/Dashboard.jspa?selectPageId=15452"
-//            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.version)"
+            self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
+            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)
             self.infoSecChecked = .no
