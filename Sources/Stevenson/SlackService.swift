@@ -142,19 +142,3 @@ extension Future where T == SlackResponse {
         return container.eventLoop.future(now)
     }
 }
-
-//public func send(
-//    response: SlackResponse,
-//    responseURL: String,
-//    on container: Container
-//) -> Future<Response> {
-//    do {
-//        return try container.client()
-//            .post(responseURL) {
-//                try $0.content.encode(response)
-//            }
-//            .catchError(.capture())
-//    } catch {
-//        return container.eventLoop.future(error: error)
-//    }
-//}
