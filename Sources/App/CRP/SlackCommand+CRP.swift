@@ -59,7 +59,7 @@ extension SlackCommand {
                     .catchError(.capture())
                     .flatMap { (crpIssue: JiraService.CreatedIssue, changelogSections: [ChangelogSection]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
                         // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                        let report = jira.createAndSetFixedVersions(
+                        let report = try jira.createAndSetFixedVersions(
                             changelogSections: changelogSections,
                             versionName: jiraVersionName,
                             on: container

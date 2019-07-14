@@ -1,6 +1,11 @@
 import Vapor
 import Stevenson
 
+private let jiraProjects = [
+    // TODO: Provide list of all the projects on which Stevenson is allowed to create versions
+    "FCTP": 17165
+]
+
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     let slack = SlackService(
@@ -14,7 +19,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     let jira = JiraService(
         baseURL: try attempt { Environment.jiraBaseURL.flatMap(URL.init(string:)) },
         username: try attempt { Environment.jiraUsername },
-        password: try attempt { Environment.jiraToken }
+        password: try attempt { Environment.jiraToken },
+        knownProjects: jiraProjects
     )
 
     let github = GitHubService(

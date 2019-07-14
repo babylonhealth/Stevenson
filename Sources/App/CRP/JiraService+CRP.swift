@@ -179,21 +179,32 @@ extension JiraService {
         }
     }
 
-    func createAndSetFixedVersions(changelogSections: [ChangelogSection], versionName: String, on container: Container) -> Future<FixedVersionReport> {
-        return changelogSections
+    func createAndSetFixedVersions(changelogSections: [ChangelogSection], versionName: String, on container: Container) throws -> Future<FixedVersionReport> {
+        return try changelogSections
             .compactMap { $0.tickets() }
             .map { (project: (key: String, tickets: [String])) -> Future<FixedVersionReport> in
-                self.createVersion(name: versionName, projectName: project.key, on: container)
-                    .flatMap { self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
+                guard let projectID = self.knownProjects[project.key] else {
+                    return container.future(
+                        FixedVersionReport("Project \(project.key) is not part of our whitelist for creating JIRA versions")
+                    )
+                }
+                let version = JiraService.Version(
+                    projectId: projectID,
+                    description: versionName,
+                    name: versionName,
+                    startDate: Date()
+                )
+                return try self.createVersion(version, on: container)
+                    .flatMap { try self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
                     .mapIfError { FixedVersionReport("Error creating JIRA version in board \(project.key) - \($0)") }
             }
             .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
     }
 
-    func batchSetFixedVersions(_ version: JiraService.Version, tickets: [String], on container: Container) -> Future<FixedVersionReport> {
-        return tickets
+    func batchSetFixedVersions(_ version: JiraService.Version, tickets: [String], on container: Container) throws -> Future<FixedVersionReport> {
+        return try tickets
             .map { (ticket: String) -> Future<FixedVersionReport> in
-                self.setFixedVersion(version, for: ticket, on: container)
+                try self.setFixedVersion(version, for: ticket, on: container)
                     .map { _ in FixedVersionReport() }
                     .mapIfError { FixedVersionReport("Error setting FixedVersion for \(ticket) - \($0)") }
             }
