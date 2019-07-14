@@ -166,6 +166,7 @@ extension JiraService {
 // MARK: support for "Fixed Version"
 
 extension JiraService {
+    /// Used to report non-fatal errors without failing the Future chain
     struct FixedVersionReport: CustomStringConvertible {
         let messages: [String]
         init(_ message: String = "") {
