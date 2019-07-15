@@ -31,11 +31,10 @@ final class AppTests: XCTestCase {
         
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
+
+        #if Xcode
         let changelogJsonData = try encoder.encode(changelogDoc)
         let changelogJson = String(data: changelogJsonData, encoding: .utf8)
-
-        XCTAssertNotNil(changelogJson)
-        #if Xcode
         add(attachment(name: "Changelog JSON", string: changelogJson))
         #endif
 
@@ -51,31 +50,22 @@ final class AppTests: XCTestCase {
         )
 
         let issueData = try encoder.encode(issue)
-        let issueJson = String(data: issueData, encoding: .utf8)
 
         #if Xcode
+        let issueJson = String(data: issueData, encoding: .utf8)
         add(attachment(name: "Ticket", string: issueJson))
         #endif
 
-        let expectedTicketJson: String = try {
-            // We need to decode then reencode the expected JSON as, depending on the platform we run this test on,
-            // the hashing and thus the order of the keys might differ between the machine where the fixture was
-            // generated and the one where the test is executed.
-            let decoder = JSONDecoder()
+        let expectedTicketDict: NSDictionary? = try {
+            // Depending on the platform/machine we run this test on, the hashing and thus order of the keys
+            // in the serialised JSON can differ between the machine where the fixture was generated and the one
+            // where the test is executed. So we need to compare dictionaries, not textual representations
             let encodedData = AppTests.expectedTicketJson.data(using: .utf8) ?? Data()
-            let expectedIssue = try decoder.decode(JiraService.CRPIssue.self, from: encodedData)
-            let decodedData = try encoder.encode(expectedIssue)
-            return String(data: decodedData, encoding: .utf8) ?? "<invalid data>"
+            return try JSONSerialization.jsonObject(with: encodedData, options: []) as? NSDictionary
         }()
+        let issueDict = try JSONSerialization.jsonObject(with: issueData, options: []) as? NSDictionary
 
-        if (issueJson != expectedTicketJson) {
-            let lhsLines = (issueJson?.split(separator: "\n") ?? []).enumerated()
-            let rhsLines = AppTests.expectedTicketJson.split(separator: "\n").enumerated()
-            let diff = zip(lhsLines, rhsLines)
-                .filter { (lhs, rhs) in lhs.element != rhs.element }
-                .map { (lhs, rhs) in "\(lhs.offset): |\(lhs.element)| <> |\(rhs.element)|"}
-            XCTFail("Ticket JSON Mismatch – see diff:\n\(diff.joined(separator: "\n"))")
-        }
+        XCTAssertTrue(issueDict == expectedTicketDict)
     }
 
     #if Xcode
