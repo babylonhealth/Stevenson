@@ -111,15 +111,15 @@ extension JiraService {
     /// Transform a list of ChangelogSection into a 'Document' field for the JIRA API
     ///
     /// - Parameter changelog: The list of sections to format
-    /// - Returns: The Jira Document structure ready to be inserted in a JIRA TextAre field
+    /// - Returns: The Jira Document structure ready to be inserted in a JIRA TextArea field
     static func document(from changelog: [ChangelogSection], jiraBaseURL: URL) -> FieldType.TextArea.Document {
         // Transform CHANGELOG entries into JIRA Document field
         typealias DocContent = FieldType.TextArea.DocContent
 
-        let content: [DocContent] = changelog
+        let content = changelog
             .flatMap { (section: ChangelogSection) -> [DocContent] in
                 let header = section.board.map { "\($0) tickets" } ?? "Other"
-                let listItems: [FieldType.TextArea.ListItem] = section.commits.map {
+                let listItems = section.commits.map {
                     formatMessageLine($0.message, jiraBaseURL: jiraBaseURL)
                 }
 
@@ -146,6 +146,7 @@ extension JiraService {
                 let matchRange = Range(match.range(at: 0), in: string),
                 let ticketRange = Range(match.range(at: 1), in: string)
                 else { continue }
+
             let beforeText = String(string[lastIndex..<matchRange.lowerBound])
             if !beforeText.isEmpty {
                 result.append(.text(beforeText))
