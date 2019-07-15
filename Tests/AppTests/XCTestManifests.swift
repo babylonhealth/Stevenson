@@ -6,9 +6,7 @@ extension AppTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__AppTests = [
-        ("testAddVersion", testAddVersion),
         ("testJiraDocumentFromCommits", testJiraDocumentFromCommits),
-        ("testVersion", testVersion),
     ]
 }
 
