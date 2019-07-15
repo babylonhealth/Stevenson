@@ -111,6 +111,8 @@ extension JiraService {
 extension JiraService {
     public enum FieldType {
         public enum TextArea {
+            // See spec at: https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
+            
             public struct Document: Content {
                 let type = "doc"
                 let content: [DocContent]
