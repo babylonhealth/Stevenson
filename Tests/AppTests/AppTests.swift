@@ -57,7 +57,18 @@ final class AppTests: XCTestCase {
         add(attachment(name: "Ticket", string: issueJson))
         #endif
 
-        if (issueJson != AppTests.expectedTicketJson) {
+        let expectedTicketJson: String = try {
+            // We need to decode then reencode the expected JSON as, depending on the platform we run this test on,
+            // the hashing and thus the order of the keys might differ between the machine where the fixture was
+            // generated and the one where the test is executed.
+            let decoder = JSONDecoder()
+            let encodedData = AppTests.expectedTicketJson.data(using: .utf8) ?? Data()
+            let expectedIssue = try decoder.decode(JiraService.CRPIssue.self, from: encodedData)
+            let decodedData = try encoder.encode(expectedIssue)
+            return String(data: decodedData, encoding: .utf8) ?? "<invalid data>"
+        }()
+
+        if (issueJson != expectedTicketJson) {
             let lhsLines = (issueJson?.split(separator: "\n") ?? []).enumerated()
             let rhsLines = AppTests.expectedTicketJson.split(separator: "\n").enumerated()
             let diff = zip(lhsLines, rhsLines)
