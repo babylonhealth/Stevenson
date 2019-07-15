@@ -231,13 +231,16 @@ extension JiraService {
     }
 
     public struct VersionAddUpdate: Content {
-        struct FieldUpdate<T: Codable>: Content {
-            let add: T
-        }
+        let update: FixVersionUpdate
+
         struct FixVersionUpdate: Content {
             let fixVersions: [FieldUpdate<Version>]
         }
-        let update: FixVersionUpdate
+
+        struct FieldUpdate<T: Codable>: Content {
+            let add: T
+        }
+
         public init(version: Version) {
             self.update = FixVersionUpdate(fixVersions: [FieldUpdate(add: version)])
         }

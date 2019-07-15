@@ -17,9 +17,9 @@ extension XCTestCase {
 func XCTAssertEqualJSON(_ lhs: Data, _ rhs: Data, _ message: String? =  nil, file: StaticString = #file, line: UInt = #line) {
     do {
         // We can't compare plain Data/Strings because the serialisation depends on the machines  we run
-        // the tests on (e.g. macOS/Linux) and order of the keys in serialized textual JSON might differ.
+        // the tests on (e.g. macOS/Linux) and order of the keys in serialised textual JSON might differ.
         // So instead we compare the NSDictionary version of those. Note that since [String: Any] is not Comparable,
-        // We need to rely on JSONSerialiwation and NSDictionary instead to be able to use `==` / `XCAssertEqual`.
+        // We need to rely on JSONSerialization and NSDictionary to be able to use `==` / `XCAssertEqual`.
         let objectDict = try JSONSerialization.jsonObject(with: lhs, options: []) as? NSDictionary
         let expectedDict = try JSONSerialization.jsonObject(with: rhs, options: []) as? NSDictionary
         XCTAssertEqual(objectDict, expectedDict, message ?? "", file: file, line: line)
