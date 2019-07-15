@@ -3,14 +3,14 @@ import XCTest
 
 extension XCTestCase {
     #if Xcode
-    func addAttachment<T: Encodable>(name: String, object: T) { /* Not available on Linux */ }
-    #else
     func addAttachment<T: Encodable>(name: String, object: T) {
         let string = try? String(data: toJSONData(object), encoding: .utf8)
         let attachment = XCTAttachment(string: string ?? "<nil>")
         attachment.name = name
         self.add(attachment)
     }
+    #else
+    func addAttachment<T: Encodable>(name: String, object: T) { /* Not available on Linux nor outside Xcode */ }
     #endif
 }
 
