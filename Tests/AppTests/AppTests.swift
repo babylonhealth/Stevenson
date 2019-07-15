@@ -251,8 +251,4 @@ final class AppTests: XCTestCase {
         return attachment
     }
     #endif
-
-    static let allTests = [
-        ("testJiraDocumentFromCommits", testJiraDocumentFromCommits)
-    ]
 }
