@@ -1,10 +1,3 @@
-//
-//  TestUtils.swift
-//  App
-//
-//  Created by Olivier Halligon on 12/07/2019.
-//
-
 import Foundation
 import XCTest
 
