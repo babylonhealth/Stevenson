@@ -2,20 +2,20 @@ import Vapor
 import Stevenson
 
 extension JiraService {
-    func makeCRPIssue(
-        repoMapping: RepoMapping,
+    static func makeCRPIssue(
+        jiraBaseURL: URL,
+        crpConfig: RepoMapping.CRP,
         release: GitHubService.Release,
-        changelog: String
+        changelog: FieldType.TextArea.Document
     ) -> CRPIssue {
         // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
         let accountablePerson = isTelus ? "ryan.covill" : "andreea.papillon"
-        // Remove brackets around JIRA ticket names so that it's recognized by JIRA as a ticket reference
-        // eg replace "[CNSMR-123] Do this" with "CNSMR-123 Do this"
-        let changelog = changelog.replacingOccurrences(of: "\\[([A-Z]+-[0-9]+)\\]", with: "$1", options: [.regularExpression], range: nil)
+        let changelog = changelog
         let fields = CRPIssueFields(
-            summary: repoMapping.crp.jiraSummary(release),
-            environments: [repoMapping.crp.environment],
+            jiraBaseURL: jiraBaseURL,
+            summary: crpConfig.jiraSummary(release),
+            environments: [crpConfig.environment],
             release: release,
             changelog: changelog,
             accountablePersonName: accountablePerson
@@ -52,17 +52,17 @@ extension JiraService {
 
         // MARK: Fields
 
-        let project = FieldType.ObjectID(id: "13402") // CRP Project
-        let issueType = FieldType.ObjectID(id: "11439") // "CRP: Code Change Request"
-        let summary: String
+        var project = FieldType.ObjectID(id: "13402") // CRP Project
+        var issueType = FieldType.ObjectID(id: "11439") // "CRP: Code Change Request"
+        var summary: String
         var changelog: FieldType.TextArea.Document
-        let environments: [Environment]
+        var environments: [Environment]
         var businessImpact: FieldType.TextArea.Document
-//        let jiraReleaseURL: String
-//        let githubReleaseURL: String
+        let jiraReleaseURL: String
+        let githubReleaseURL: String
         var testing: FieldType.TextArea.Document
         var accountablePerson: FieldType.User
-        let infoSecChecked: InfoSecStatus
+        var infoSecChecked: InfoSecStatus
 
         // MARK: Content keys
 
@@ -73,10 +73,8 @@ extension JiraService {
             case changelog = "customfield_12537"
             case environments = "customfield_12592"
             case businessImpact = "customfield_12538"
-            // [CNSMR-1318] TODO: Find a way to send those "URL" fields as well.
-            // (JIRA API seems to expect an 'object' when sending fields of type "URL")
-//            case jiraReleaseURL = "customfield_12540"
-//            case githubReleaseURL = "customfield_12541"
+            case jiraReleaseURL = "customfield_12540"
+            case githubReleaseURL = "customfield_12541"
             case testing = "customfield_11512"
             case accountablePerson = "customfield_11505"
             case infoSecChecked = "customfield_12527"
@@ -85,18 +83,19 @@ extension JiraService {
         // MARK: Inits
 
         init(
+            jiraBaseURL: URL,
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,
-            changelog: String,
+            changelog: FieldType.TextArea.Document,
             accountablePersonName: String
         ) {
             self.summary = summary
-            self.changelog = FieldType.TextArea.Document(text: changelog)
+            self.changelog = changelog
             self.environments = environments
             self.businessImpact = FieldType.TextArea.Document(text: "TBD")
-//            self.jiraReleaseURL = "https://\(jira.host)/secure/Dashboard.jspa?selectPageId=15452"
-//            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.version)"
+            self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
+            self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)
             self.infoSecChecked = .no
@@ -104,50 +103,62 @@ extension JiraService {
     }
 }
 
-
-
 extension JiraService {
-    /// Represents a reference to a JIRA ticket, in the form [XXX-123]
-    struct TicketID: CustomStringConvertible {
-        /// The board code, e.g. `NRX`, `AV`, `CNSMR`...
-        let board: String
-        /// The ticket number (just the part after the dash), e.g. `123`
-        let number: String
+    func document(from changelog: [ChangelogSection]) -> FieldType.TextArea.Document {
+        return JiraService.document(from: changelog, jiraBaseURL: self.baseURL)
+    }
 
-        /// The full ticket name (the field 'key' in JIRA API), e.g. `CNSMR-123`
-        var key: String {
-            return "\(board)-\(number)"
+    /// Transform a list of ChangelogSection into a 'Document' field for the JIRA API
+    ///
+    /// - Parameter changelog: The list of sections to format
+    /// - Returns: The Jira Document structure ready to be inserted in a JIRA TextArea field
+    static func document(from changelog: [ChangelogSection], jiraBaseURL: URL) -> FieldType.TextArea.Document {
+        // Transform CHANGELOG entries into JIRA Document field
+        typealias DocContent = FieldType.TextArea.DocContent
+
+        let content = changelog
+            .flatMap { (section: ChangelogSection) -> [DocContent] in
+                let header = section.board.map { "\($0) tickets" } ?? "Other"
+                let listItems = section.commits.map {
+                    formatMessageLine($0.message, jiraBaseURL: jiraBaseURL)
+                }
+
+                return [
+                    DocContent.heading(level: 3, title: header),
+                    DocContent.bulletList(items: listItems)
+                ]
         }
+        return FieldType.TextArea.Document(content: content)
+    }
 
-        var description: String {
-            return key
-        }
+    /// Extract tickets from a commit message to create a mix of `.text` and `.inlineCard` content
+    ///
+    /// - Parameter string: The commit message / string to extract tickets from
+    /// - Returns: An array of `.text` and `.inlineCard` elements corresponding to the parsed string
+    static func formatMessageLine(_ string: String, jiraBaseURL: URL) -> FieldType.TextArea.ListItem {
+        let fullRange = NSRange(string.startIndex..<string.endIndex, in: string)
+        let matches = TicketID.regex.matches(in: string, options: [], range: fullRange)
 
-        init(board: String, number: String) {
-            self.board = board.uppercased()
-            self.number = number
-        }
-
-        /// Extract a Ticket reference from a commit message
-        ///
-        /// - Parameter message: The commit message to extract the ticket reference from
-        init?(from message: String) {
-            let fullRange = NSRange(message.startIndex..<message.endIndex, in: message)
-            let match = TicketID.regex.firstMatch(in: message, options: [], range: fullRange)
+        var result: [FieldType.TextArea.DocContent] = []
+        var lastIndex = string.startIndex
+        for match in matches {
             guard
-                let board = TicketID.text(for: match, at: 1, in: message),
-                let number = TicketID.text(for: match, at: 2, in: message)
-                else { return nil }
-            self.init(board: board, number: number)
-        }
+                let matchRange = Range(match.range(at: 0), in: string),
+                let ticketRange = Range(match.range(at: 1), in: string)
+                else { continue }
 
-        private static let regex = try! NSRegularExpression(pattern: #"\b([A-Za-z]*)-([0-9]*)\b"#, options: [])
-
-        private static func text(for match: NSTextCheckingResult?, at index: Int, in text: String) -> String? {
-            return match
-                .map { $0.range(at: index) }
-                .flatMap { Range($0, in: text) }
-                .map { String(text[$0]) }
+            let beforeText = String(string[lastIndex..<matchRange.lowerBound])
+            if !beforeText.isEmpty {
+                result.append(.text(beforeText))
+            }
+            let ticketText = String(string[ticketRange])
+            result.append(.inlineCard(baseURL: jiraBaseURL, ticketKey: ticketText))
+            lastIndex = matchRange.upperBound
         }
+        let endText = String(string[lastIndex..<string.endIndex])
+        if !endText.isEmpty {
+            result.append(.text(endText))
+        }
+        return .init(content: result)
     }
 }

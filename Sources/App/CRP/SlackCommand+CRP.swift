@@ -41,10 +41,12 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .map { formatChangelog(using: $0, for: release) }
+                    .map { ChangelogSection.makeSections(from: $0, for: release) }
+                    .map { jira.document(from: $0) }
                     .map { changelog in
-                        jira.makeCRPIssue(
-                            repoMapping: repoMapping,
+                        JiraService.makeCRPIssue(
+                            jiraBaseURL: jira.baseURL,
+                            crpConfig: repoMapping.crp,
                             release: release,
                             changelog: changelog
                         )
@@ -70,30 +72,28 @@ extension SlackCommand {
 }
 
 
-/// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
-///
-/// - Parameters:
-///   - commits: The list of commits gathered between last release and current one
-///   - release: The release for which to build the CHANGELOG text for
-/// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
-private func formatChangelog(using commits: [String], for release: GitHubService.Release) -> String {
-    // Only keep SDK commits if release is for SDK
-    let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+struct ChangelogSection {
+    let board: String?
+    let commits: [(message: String, ticket: JiraService.TicketID?)]
 
-    // Group then sort the changes by JIRA boards (unclassified last)
-    let grouped = Dictionary(grouping: filteredMessages) { JiraService.TicketID(from: $0)?.board }
-        .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
+    /// Filters the CHANGELOG entries then orders and formats the CHANGELOG text
+    ///
+    /// - Parameters:
+    ///   - commits: The list of commits gathered between last release and current one
+    ///   - release: The release for which to build the CHANGELOG text for
+    /// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
+    static func makeSections(from commits: [String], for release: GitHubService.Release) -> [ChangelogSection] {
+        // Only keep SDK commits if release is for SDK
+        let filteredMessages = release.isSDK ? commits.filter(hasSDKChanges) : commits
+        let parsedMessages = filteredMessages.map { (message: $0, ticket: JiraService.TicketID(from: $0)) }
 
-    // Build a CHANGELOG text
-    return grouped
-        .reduce(into: [], { (accum: inout [String], entry: (board: String?, commitMessages: [String])) in
-            let title = entry.board.map { "\($0) tickets" } ?? "Other"
-            accum.append("## \(title)")
-            accum.append("")
-            accum.append(contentsOf: entry.commitMessages)
-            accum.append("")
-        })
-        .joined(separator: "\n")
+        // Group then sort the changes by JIRA boards (unclassified last)
+        return Dictionary(grouping: parsedMessages) { $0.ticket?.board }
+            .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
+            .map(ChangelogSection.init)
+    }
+
+    private static func hasSDKChanges(message: String) -> Bool {
+        return message.contains("#SDK") || message.range(of: #"\bSDK-[0-9]+\b"#, options: .regularExpression) != nil
+    }
 }
-
-
