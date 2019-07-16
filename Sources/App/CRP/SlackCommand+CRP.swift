@@ -84,12 +84,16 @@ struct ChangelogSection {
     /// - Returns: The text containing the filtered and formatted CHANGELOG, grouped and ordered by jira board
     static func makeSections(from commits: [String], for release: GitHubService.Release) -> [ChangelogSection] {
         // Only keep SDK commits if release is for SDK
-        let filteredMessages = release.isSDK ? commits.filter { $0.contains("#SDK") || $0.contains("[SDK-") } : commits
+        let filteredMessages = release.isSDK ? commits.filter(hasSDKChanges) : commits
         let parsedMessages = filteredMessages.map { (message: $0, ticket: JiraService.TicketID(from: $0)) }
 
         // Group then sort the changes by JIRA boards (unclassified last)
         return Dictionary(grouping: parsedMessages) { $0.ticket?.board }
             .sorted { e1, e2 in e1.key ?? "ZZZ" < e2.key ?? "ZZZ" }
             .map(ChangelogSection.init)
+    }
+
+    private static func hasSDKChanges(message: String) -> Bool {
+        return message.contains("#SDK") || message.range(of: #"\bSDK-[0-9]+\b"#, options: .regularExpression) != nil
     }
 }
