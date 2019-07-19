@@ -75,6 +75,17 @@ extension GitHubService: FailableService {
     }
 }
 
+extension JiraService: FailableService {
+    struct ServiceError: Swift.Error, Decodable, Debuggable {
+        let message: String
+        let identifier: String = "JiraService"
+
+        var reason: String {
+            return message
+        }
+    }
+}
+
 public struct NilValueError: Error, Debuggable {
     public let identifier = "nilValue"
     public let reason = "Unexpected nil value"

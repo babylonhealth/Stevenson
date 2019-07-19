@@ -11,6 +11,21 @@ final class AppTests: XCTestCase {
         "[CRP-4142] Commit 4"
     ]
 
+    static let fakeVersion: JiraService.Version = {
+        let dateComps = DateComponents(
+            calendar: Calendar(identifier: .gregorian),
+            timeZone: TimeZone(secondsFromGMT: 0),
+            year: 2019, month: 07, day: 10
+        )
+        let v = JiraService.Version(
+            projectId: 123,
+            description: "Fake Version 1.2.3 for tests",
+            name: "Fake 1.2.3",
+            startDate: dateComps.date!
+        )
+        return v
+    }()
+
     func testJiraDocumentFromCommits() throws {
         let release = try GitHubService.Release(
             repo: GitHubService.Repository(fullName: "company/project", baseBranch: "develop"),
@@ -28,18 +43,10 @@ final class AppTests: XCTestCase {
 
         let jiraBaseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
         let changelogDoc = JiraService.document(from: entries, jiraBaseURL: jiraBaseURL)
-        
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-
-        #if Xcode
-        let changelogJsonData = try encoder.encode(changelogDoc)
-        let changelogJson = String(data: changelogJsonData, encoding: .utf8)
-        add(attachment(name: "Changelog JSON", string: changelogJson))
-        #endif
 
         let crpConfig = RepoMapping.CRP(
             environment: .appStore,
+            jiraVersionName: { _ in "Dummy Version 1.2.3" },
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
         let issue = JiraService.makeCRPIssue(
@@ -49,32 +56,54 @@ final class AppTests: XCTestCase {
             changelog: changelogDoc
         )
 
-        let issueData = try encoder.encode(issue)
+        addAttachment(name: "Ticket", object: issue)
 
-        #if Xcode
-        let issueJson = String(data: issueData, encoding: .utf8)
-        add(attachment(name: "Ticket", string: issueJson))
-        #endif
-
-        let expectedTicketDict: NSDictionary? = try {
-            // Depending on the platform/machine we run this test on, the hashing and thus order of the keys
-            // in the serialised JSON can differ between the machine where the fixture was generated and the one
-            // where the test is executed. So we need to compare dictionaries, not textual representations
-            let encodedData = AppTests.expectedTicketJson.data(using: .utf8) ?? Data()
-            return try JSONSerialization.jsonObject(with: encodedData, options: []) as? NSDictionary
-        }()
-        let issueDict = try JSONSerialization.jsonObject(with: issueData, options: []) as? NSDictionary
-
-        XCTAssertTrue(issueDict == expectedTicketDict)
+        XCTAssertEqualJSON(issue, AppTests.expectedTicketJson, "Ticket JSON Mismatch")
     }
 
-    #if Xcode
-    private func attachment(name: String, string: String?) -> XCTAttachment {
-        let attachment = XCTAttachment(string: string ?? "<nil>")
-        attachment.name = name
-        return attachment
+    func testVersion() throws {
+        addAttachment(name: "Version JSON", object: AppTests.fakeVersion)
+
+        let expected = #"""
+            {
+              "projectId" : 123,
+              "startDate" : "2019-07-10",
+              "description" : "Fake Version 1.2.3 for tests",
+              "name" : "Fake 1.2.3",
+              "released" : false
+            }
+            """#
+        XCTAssertEqualJSON(AppTests.fakeVersion, expected, "Version JSON Mismatch")
     }
-    #endif
+
+    func testAddVersion() throws {
+        var version = AppTests.fakeVersion
+        version.id = "42"
+        let update = JiraService.VersionAddUpdate(version: version)
+        addAttachment(name: "AddVersion", object: update)
+
+        let expected = #"""
+            {
+              "update" : {
+                "fixVersions" : [
+                  {
+                    "add" : {
+                      "id" : "42",
+                      "projectId" : 123,
+                      "startDate" : "2019-07-10",
+                      "description" : "Fake Version 1.2.3 for tests",
+                      "name" : "Fake 1.2.3",
+                      "released" : false
+                    }
+                  }
+                ]
+              }
+            }
+            """#
+
+        XCTAssertEqualJSON(update, expected, "Update Request JSON Mismatch")
+    }
+
 }
 
 

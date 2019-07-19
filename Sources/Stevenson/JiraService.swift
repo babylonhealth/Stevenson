@@ -4,8 +4,10 @@ import Vapor
 public struct JiraService {
     public let baseURL: URL
     private let headers: HTTPHeaders
+    // Whitelist of Project Keys, and their corresponding ID, on which we're allowed to interact and create JIRA versions
+    public let knownProjects: [String: Int]
 
-    public init(baseURL: URL, username: String, password: String) {
+    public init(baseURL: URL, username: String, password: String, knownProjects: [String: Int]) {
         self.baseURL = baseURL
 
         let base64Auth = Data("\(username):\(password)".utf8).base64EncodedString(options: [])
@@ -14,6 +16,7 @@ public struct JiraService {
             "Content-Type": "application/json",
             "Accept": "application/json"
         ]
+        self.knownProjects = knownProjects
     }
 }
 
@@ -74,7 +77,7 @@ public protocol JiraIssueFields: Content {
 
 extension JiraService {
     public struct Issue<Fields: JiraIssueFields>: Content {
-        let fields: Fields
+        public let fields: Fields
         public init(fields: Fields) {
             self.fields = fields
         }
@@ -188,5 +191,77 @@ extension JiraService {
                 self.name = name
             }
         }
+    }
+}
+
+extension JiraService {
+    public struct Version: Content {
+        public var id: String?
+        let projectId: Int
+        let description: String
+        let name: String
+        let released: Bool
+        let startDate: String
+
+        public init(projectId: Int, description: String, name: String, released: Bool = false, startDate: Date) {
+            self.id = nil
+            self.projectId = projectId
+            self.description = description
+            self.name = name
+            self.released = released
+            // ISO8601DateFormatter doesn't seem to work on Linux
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            self.startDate = formatter.string(from: startDate)
+        }
+    }
+
+    public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
+        let fullURL = URL(string: "/rest/api/3/version", relativeTo: baseURL)!
+        return try container.client()
+            .post(fullURL, headers: self.headers) {
+                try $0.content.encode(version)
+            }
+            .catchError(.capture())
+            .flatMap {
+                try $0.content.decode(Version.self)
+            }
+            .catchError(.capture())
+    }
+
+    public struct VersionAddUpdate: Content {
+        let update: FixVersionUpdate
+
+        struct FixVersionUpdate: Content {
+            let fixVersions: [FieldUpdate<Version>]
+        }
+
+        struct FieldUpdate<T: Codable>: Content {
+            let add: T
+        }
+
+        public init(version: Version) {
+            self.update = FixVersionUpdate(fixVersions: [FieldUpdate(add: version)])
+        }
+    }
+
+    public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Response> {
+        let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
+
+        return try container.client()
+            .put(fullURL, headers: self.headers) {
+                try $0.content.encode(VersionAddUpdate(version: version))
+            }
+            .catchError(.capture())
+            .flatMap { response -> Future<Response> in
+                guard response.http.status == .noContent else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
+                return response.future(response)
+            }
+            .catchError(.capture())
     }
 }
