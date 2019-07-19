@@ -146,18 +146,18 @@ extension SlackCommand {
 You can skip step 1 and 2 if you have already set it up locally.
 
 1. Install the Heroku CLI.
-   ```
+   ```bash
    brew install heroku/brew/heroku
    heroku login
    ```
    
 2. Navigate to the local repo, and configure the Heroku remote using the CLI.
-   ```
+   ```bash
    heroku git:remote -a <heroku-app-name>
    ```
    
 3. Push the `master` branch to deploy.
-   ```
+   ```bash
    git checkout master
    git push heroku master
    ```
