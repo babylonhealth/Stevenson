@@ -176,11 +176,17 @@ extension JiraService {
             self.messages = reports.flatMap { $0.messages }
         }
         var description: String {
-            return messages.map({ " - \($0)" }).joined(separator: "\n")
+            return messages
+                .map { " - \($0)" }
+                .joined(separator: "\n")
         }
     }
 
-    func createAndSetFixedVersions(changelogSections: [ChangelogSection], versionName: String, on container: Container) throws -> Future<FixedVersionReport> {
+    func createAndSetFixedVersions(
+        changelogSections: [ChangelogSection],
+        versionName: String,
+        on container: Container
+    ) throws -> Future<FixedVersionReport> {
         return try changelogSections
             .compactMap { $0.tickets() }
             .map { (project: (key: String, tickets: [String])) -> Future<FixedVersionReport> in
