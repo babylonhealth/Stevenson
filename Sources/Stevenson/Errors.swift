@@ -83,8 +83,15 @@ extension JiraService: FailableService {
         public let identifier: String = "JiraService"
 
         public var reason: String {
-            let allErrors = errorMessages + errors.map { "\($0): \($1)" }
-            return allErrors.joined(separator: " ; ")
+            let allErrors = errorMessages + errors.sorted(by: <).map { "\($0): \($1)" }
+            if allErrors.count > 1 {
+                return allErrors
+                    .enumerated()
+                    .map { "[\($0.offset+1)] \($0.element)" }
+                    .joined(separator: " ")
+            } else {
+                return allErrors.first ?? "Unknown error"
+            }
         }
     }
 }

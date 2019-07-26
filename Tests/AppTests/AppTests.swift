@@ -114,7 +114,7 @@ final class AppTests: XCTestCase {
         let error1 = try decoder.decode(JiraService.ServiceError.self, from: errorResponse1)
         XCTAssertEqual(error1.errorMessages, ["Issue does not exist or you do not have permission to see it.", "Some other message"])
         XCTAssertEqual(error1.errors, [:])
-        XCTAssertEqual(error1.reason, "Issue does not exist or you do not have permission to see it. ; Some other message")
+        XCTAssertEqual(error1.reason, "[1] Issue does not exist or you do not have permission to see it. [2] Some other message")
 
         let errorResponse2 = #"""
             {"errorMessages":[],"errors":{"fixVersions":"Field 'fixVersions' cannot be set. It is not on the appropriate screen, or unknown."}}
@@ -126,11 +126,18 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(error2.reason, "fixVersions: Field 'fixVersions' cannot be set. It is not on the appropriate screen, or unknown.")
 
         let errorResponse3 = #"""
-            {"errorMessages":["msg1","msg2"],"errors":{"key1":"error1","key2":"error2"}}
+            {"errorMessages":["msg1.","msg2."],"errors":{"key1":"error1.","key2":"error2."}}
         """#.data(using: .utf8)!
 
         let error3 = try decoder.decode(JiraService.ServiceError.self, from: errorResponse3)
-        XCTAssertEqual(error3.reason, "msg1 ; msg2 ; key1: error1 ; key2: error2")
+        XCTAssertEqual(error3.reason, "[1] msg1. [2] msg2. [3] key1: error1. [4] key2: error2.")
+
+        let errorResponse4 = #"""
+            {"errorMessages":[],"errors":{}}
+        """#.data(using: .utf8)!
+
+        let error4 = try decoder.decode(JiraService.ServiceError.self, from: errorResponse4)
+        XCTAssertEqual(error4.reason, "Unknown error")
     }
 }
 
