@@ -76,12 +76,15 @@ extension GitHubService: FailableService {
 }
 
 extension JiraService: FailableService {
-    struct ServiceError: Swift.Error, Decodable, Debuggable {
-        let message: String
-        let identifier: String = "JiraService"
+    public struct ServiceError: Swift.Error, Decodable, Debuggable {
+        // https://developer.atlassian.com/cloud/jira/platform/rest/v3/?utm_source=%2Fcloud%2Fjira%2Fplatform%2Frest%2F&utm_medium=302#status-codes
+        public let errorMessages: [String]
+        public let errors: [String: String]
+        public let identifier: String = "JiraService"
 
-        var reason: String {
-            return message
+        public var reason: String {
+            let allErrors = errorMessages + errors.map { "\($0): \($1)" }
+            return allErrors.joined(separator: " ; ")
         }
     }
 }
