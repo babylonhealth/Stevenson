@@ -77,7 +77,7 @@ extension GitHubService: FailableService {
 
 extension JiraService: FailableService {
     public struct ServiceError: Swift.Error, Decodable, Debuggable {
-        // https://developer.atlassian.com/cloud/jira/platform/rest/v3/?utm_source=%2Fcloud%2Fjira%2Fplatform%2Frest%2F&utm_medium=302#status-codes
+        // See https://developer.atlassian.com/cloud/jira/platform/rest/v3/#status-codes for schema
         public let errorMessages: [String]
         public let errors: [String: String]
         public let identifier: String = "JiraService"
