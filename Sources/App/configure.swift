@@ -13,7 +13,7 @@ private let jiraProjects = [
     "GW"    : 16949, // Triage UI
     // TODO: [CNSMR-2402] Re-enable IDM and MN once those boards have migrated to use the standard setup for their JIRA fields
     // "IDM"   : 16903, // Identity Platform / Identity Management
-    // "MN"    : 17031, // Monitor –
+    // "MN"    : 17031, // Monitor
     "MON"   : 10103, // HealthCheck
     "NRX"   : 16911, // Enrolment and Integrity
     "PAR"   : 17098, // Partnerships
@@ -21,7 +21,7 @@ private let jiraProjects = [
     "PRSCR" : 16840, // Prescriptions
     "SDK"   : 16975, // SDK
     "TEL"   : 16857, // Telus
-    "TES"   : 17074, // Tests & Kits
+    "TES"   : 17074, // Test Kits
     "WH"    : 17112, // Women's Health
 ]
 
