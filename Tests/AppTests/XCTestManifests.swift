@@ -8,6 +8,7 @@ extension AppTests {
     static let __allTests__AppTests = [
         ("testAddVersion", testAddVersion),
         ("testJiraDocumentFromCommits", testJiraDocumentFromCommits),
+        ("testJiraErrors", testJiraErrors),
         ("testVersion", testVersion),
     ]
 }
