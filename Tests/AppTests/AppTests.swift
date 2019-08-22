@@ -6,9 +6,12 @@ import XCTest
 final class AppTests: XCTestCase {
     static let fakeCommits = [
         "[CNSMR-2044] Commit 1",
-        "[CRP-4141] Commit 3",
-        "[CNSMR-2045] Commit 2",
-        "[CRP-4142] Commit 4"
+        // trap: we don't want it to match "sdk-core" as a ticket reference from the SDK board
+        "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)",
+        "[SDK-4142] Commit 2",
+        "[CNSMR-2045] Commit 3",
+        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE nboard
+        "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
     ]
 
     static let fakeVersion: JiraService.Version = {
@@ -33,13 +36,16 @@ final class AppTests: XCTestCase {
         )
 
         let entries = ChangelogSection.makeSections(from: AppTests.fakeCommits, for: release)
-        XCTAssertEqual(entries.count, 2)
+        XCTAssertEqual(entries.count, 3)
         XCTAssertEqual(entries[0].board, "CNSMR")
-        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[CNSMR-2044] Commit 1", "[CNSMR-2045] Commit 2"])
-        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["CNSMR-2044", "CNSMR-2045"])
-        XCTAssertEqual(entries[1].board, "CRP")
-        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[CRP-4141] Commit 3", "[CRP-4142] Commit 4"])
-        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["CRP-4141", "CRP-4142"])
+        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[CNSMR-2044] Commit 1", "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)", "[CNSMR-2045] Commit 3"])
+        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["CNSMR-2044", "CNSMR-1763", "CNSMR-2045"])
+        XCTAssertEqual(entries[1].board, "SDK")
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["SDK-4142"])
+        XCTAssertEqual(entries[2].board, nil)
+        XCTAssertEqual(entries[2].commits.map { $0.message }, ["Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop"])
+        XCTAssertEqual(entries[2].commits.map { $0.ticket?.key }, [nil])
 
         let jiraBaseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
         let changelogDoc = JiraService.document(from: entries, jiraBaseURL: jiraBaseURL)
@@ -223,7 +229,64 @@ extension AppTests {
                             {
                               "type" : "inlineCard",
                               "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-1763#icft=CNSMR-1763"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Migrate sdk-nhsgp into sdk-core (#8163)"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
                                 "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-2045#icft=CNSMR-2045"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Commit 3"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type" : "heading",
+                  "attrs" : {
+                    "level" : 3
+                  },
+                  "content" : [
+                    {
+                      "type" : "text",
+                      "text" : "SDK tickets"
+                    }
+                  ]
+                },
+                {
+                  "type" : "bulletList",
+                  "content" : [
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/SDK-4142#icft=SDK-4142"
                               }
                             },
                             {
@@ -244,7 +307,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "CRP tickets"
+                      "text" : "Other"
                     }
                   ]
                 },
@@ -258,34 +321,8 @@ extension AppTests {
                           "type" : "paragraph",
                           "content" : [
                             {
-                              "type" : "inlineCard",
-                              "attrs" : {
-                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CRP-4141#icft=CRP-4141"
-                              }
-                            },
-                            {
                               "type" : "text",
-                              "text" : " Commit 3"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type" : "listItem",
-                      "content" : [
-                        {
-                          "type" : "paragraph",
-                          "content" : [
-                            {
-                              "type" : "inlineCard",
-                              "attrs" : {
-                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CRP-4142#icft=CRP-4142"
-                              }
-                            },
-                            {
-                              "type" : "text",
-                              "text" : " Commit 4"
+                              "text" : "Merge remote-tracking branch 'origin\/release\/babylon\/4.4.0' into develop"
                             }
                           ]
                         }
