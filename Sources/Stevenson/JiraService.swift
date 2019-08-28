@@ -57,7 +57,7 @@ extension JiraService {
             self.init(board: board, number: number)
         }
 
-        public static let regex = try! NSRegularExpression(pattern: #"\[?\b(([A-Za-z]*)-([0-9]*))\b\]?"#, options: [])
+        public static let regex = try! NSRegularExpression(pattern: #"\[?\b(([A-Za-z]+)-([0-9]+))\b\]?"#, options: [])
 
         private static func text(for match: NSTextCheckingResult?, at index: Int, in text: String) -> String? {
             return match

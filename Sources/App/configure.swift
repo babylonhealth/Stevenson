@@ -21,7 +21,8 @@ private let jiraProjects = [
     "PRSCR" : 16840, // Prescriptions
     "SDK"   : 16975, // SDK
     "TEL"   : 16857, // Telus
-    "TES"   : 17074, // Test Kits
+    // TODO: [CNSMR-2402] Re-enable TES once this boards have migrated to use the standard setup for their JIRA fields
+    // "TES"   : 17074, // Test Kits
     "WH"    : 17112, // Women's Health
 ]
 
