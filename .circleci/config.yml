@@ -19,6 +19,7 @@ jobs:
       - run: swift build -c release
 
 workflows:
+  version: 2
   tests:
     jobs:
       - linux
