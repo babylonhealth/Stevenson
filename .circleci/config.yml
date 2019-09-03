@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
   linux:
@@ -19,7 +19,6 @@ jobs:
       - run: swift build -c release
 
 workflows:
-  version: 2
   tests:
     jobs:
       - linux
