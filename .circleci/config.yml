@@ -9,7 +9,7 @@ parameters:
     default: false
 
 jobs:
-  linux:
+  linux-build:
     docker:
       - image: vapor/swift:5.0.0
     steps:
@@ -39,8 +39,10 @@ workflows:
   test:
     when: << pipeline.parameters.run_tests >>
     jobs:
+      - linux-build
       - linux-test
 
   build_release:
     jobs:
+      - linux-build
       - linux-release 
