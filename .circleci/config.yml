@@ -7,6 +7,9 @@ parameters:
   release:
     type: boolean
     default: false
+  build:
+    type: boolean
+    default: false
 
 jobs:
   linux-build:
@@ -43,6 +46,7 @@ workflows:
       - linux-test
 
   build_release:
+    when: << pipeline.parameters.build >>
     jobs:
       - linux-build
       - linux-release 
