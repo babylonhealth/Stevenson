@@ -4,10 +4,7 @@ parameters:
   run_tests:
     type: boolean
     default: false
-  release:
-    type: boolean
-    default: false
-  build:
+  build_release:
     type: boolean
     default: false
 
@@ -40,13 +37,17 @@ jobs:
 workflows:
   version: 2
 
+  build:
+    jobs:
+      - linux-build
+
   test:
     when: << pipeline.parameters.run_tests >>
     jobs:
       - linux-test
 
   build_release:
-    when: << pipeline.parameters.build >>
+    when: << pipeline.parameters.build_release >>
     jobs:
       - linux-build
       - linux-release 
