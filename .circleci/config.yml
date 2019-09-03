@@ -9,6 +9,13 @@ parameters:
     default: false
 
 jobs:
+  
+  dummy:
+    docker:
+      - image: vapor/swift:5.0.0
+    steps:
+      - run: echo "I do nothing" 
+   
   linux-build:
     docker:
       - image: vapor/swift:5.0.0
@@ -37,9 +44,9 @@ jobs:
 workflows:
   version: 2
 
-  build:
-    jobs:
-      - linux-build
+  dummy:
+    jobs: 
+      - dummy
 
   test:
     when: << pipeline.parameters.run_tests >>
@@ -49,5 +56,4 @@ workflows:
   build_release:
     when: << pipeline.parameters.build_release >>
     jobs:
-      - linux-build
       - linux-release 
