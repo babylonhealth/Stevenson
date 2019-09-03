@@ -13,22 +13,21 @@ parameters:
 
 jobs:
   
-  linux-build:
+  linux:
+    parameters:
+      run_tests:
+        type: boolean
+        default: false
     docker:
       - image: vapor/swift:5.0.0
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
       - run: swift build
-
-  linux-test:
-    docker:
-      - image: vapor/swift:5.0.0
-    steps:
-      - checkout
-      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift build
-      - run: swift test 
+      - when:
+          condition: << parameters.run_tests >>
+          steps:
+            - run: swift test 
 
   linux-release:
     docker:
@@ -42,14 +41,9 @@ workflows:
   version: 2
 
   build:
-    when: << pipeline.parameters.push >>
     jobs: 
-      - linux-build
-
-  test:
-    when: << pipeline.parameters.run_tests >>
-    jobs:
-      - linux-test
+      - linux:
+          run_tests: << pipeline.parameters.run_tests >>
 
   build_release:
     when: << pipeline.parameters.build_release >>
