@@ -15,6 +15,16 @@ parameters:
     enum: ["build", "test"]
     default: "build"
 
+commands:
+  swift:
+    description: "Runs swift command"
+    parameters:
+      command:
+        default: --version
+        type: string
+    steps:
+      - run: swift << parameters.command >>
+
 jobs:
   swift:
     docker:
@@ -22,7 +32,8 @@ jobs:
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift << pipeline.parameters.swift >> 
+      - swift:
+          command: << pipeline.parameters.swift >>  
 
   linux:
     docker:
@@ -30,11 +41,13 @@ jobs:
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift build
+      - swift:
+          command: build  
       - when:
           condition: << pipeline.parameters.run_tests >>
           steps:
-            - run: swift test 
+            - swift:
+                command: test  
 
   linux-release:
     docker:
@@ -42,13 +55,14 @@ jobs:
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift build -c release
+      - swift:
+          command: build -c release
 
 workflows:
   version: 2
 
   swift:
-    when: << pipeline.parameters.swift >>
+    unless: << pipeline.parameters.push >>
     jobs:
       - swift
 
