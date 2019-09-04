@@ -9,10 +9,21 @@ parameters:
     default: false
   push:
     type: boolean
-    default: true 
+    default: true
+  swift:
+    type: enum
+    enum: ["build", "test"]
+    default: "build"
 
 jobs:
-  
+  swift:
+    docker:
+      - image: vapor/swift:5.0.0
+    steps:
+      - checkout
+      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
+      - run: swift << pipeline.parameters.swift >> 
+
   linux:
     docker:
       - image: vapor/swift:5.0.0
@@ -35,6 +46,11 @@ jobs:
 
 workflows:
   version: 2
+
+  swift:
+    when: << pipeline.parameters.swift >>
+    jobs:
+      - swift
 
   build:
     when: << pipeline.parameters.push >>
