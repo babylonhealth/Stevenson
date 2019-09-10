@@ -107,6 +107,7 @@ extension SlackCommand {
             )
             .map {
                 SlackResponse("""
+                    You asked me: `\(metadata.text)`.
                     🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
