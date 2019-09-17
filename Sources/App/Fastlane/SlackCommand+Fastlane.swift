@@ -58,18 +58,18 @@ extension SlackCommand {
         })
     }
 
-    static let hockeyapp = { (ci: CircleCIService) in
+    static let appcenter = { (ci: CircleCIService) in
         SlackCommand(
-            name: "hockeyapp",
+            name: "appcenter",
             help: """
-            Makes a new beta build for HockeyApp. Shorthand for `/fastlane hockeyapp`.
+            Makes a new beta build for AppCenter. Shorthand for `/fastlane appcenter`.
 
             Parameters:
             - name of the target (as in the project)
             - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
 
             Example:
-            `/hockeyapp Babylon \(Option.branch.value):develop`
+            `/appcenter Babylon \(Option.branch.value):develop`
             """,
             allowedChannels: ["ios-build"],
             run: { metadata, container in
@@ -77,7 +77,7 @@ extension SlackCommand {
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
                         channelName: metadata.channelName,
-                        text: "hockeyapp target:\(metadata.text)",
+                        text: "appcenter target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
                     ci: ci,
