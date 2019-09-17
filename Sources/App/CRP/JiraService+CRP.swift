@@ -10,7 +10,8 @@ extension JiraService {
     ) -> CRPIssue {
         // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
-        let accountablePerson = isTelus ? "ryan.covill" : "andreea.papillon"
+        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
+        let accountablePerson = isTelus ? "ryan.covill" : "mark.bates"
         let changelog = changelog
         let fields = CRPIssueFields(
             jiraBaseURL: jiraBaseURL,
