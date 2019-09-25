@@ -96,8 +96,12 @@ extension SlackCommand {
         let options = metadata.textComponents.dropFirst().joined(separator: " ")
         let branch = branch ?? metadata.value(forOption: .branch)
 
-        let parameters = ["FASTLANE": lane, "OPTIONS": options]
-        
+        let parameters: [String: CircleCIService.BuildRequest.Parameter] = [
+            "push": .bool(false),
+            "lane": .string(lane),
+            "options": .string(options)
+        ]
+
         return try ci
             .run(
                 parameters: parameters,
