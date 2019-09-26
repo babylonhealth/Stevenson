@@ -353,7 +353,7 @@ extension AppTests {
             },
             "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
             "customfield_11505" : {
-              "name" : "andreea.papillon"
+              "name" : "mark.bates"
             }
           }
         }
