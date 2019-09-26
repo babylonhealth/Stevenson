@@ -1,6 +1,7 @@
 import Vapor
 import Stevenson
 
+// Use https://babylonpartners.atlassian.net/rest/api/3/project/<ProjectKey> to get the corresponding ID
 private let jiraProjects = [
     "APPTS" : 16875, // Booking/Appointments
     "AV"    : 16942, // Core Experience / Avalon
@@ -11,9 +12,9 @@ private let jiraProjects = [
     "COREUS": 17127, // Babylon US Core Product
     "CW"    : 16832, // Consumer Web
     "GW"    : 16949, // Triage UI
-    // TODO: [CNSMR-2402] Re-enable IDM and MN once those boards have migrated to use the standard setup for their JIRA fields
+    // TODO: [CNSMR-2402] Re-enable IDM once this board have migrated to use the standard setup for their JIRA fields
     // "IDM"   : 16903, // Identity Platform / Identity Management
-    // "MN"    : 17031, // Monitor
+    "MS"    : 17233, // Monitor Squad
     "MON"   : 10103, // HealthCheck
     "NRX"   : 16911, // Enrolment and Integrity
     "PAR"   : 17098, // Partnerships
@@ -21,7 +22,7 @@ private let jiraProjects = [
     "PRSCR" : 16840, // Prescriptions
     "SDK"   : 16975, // SDK
     "TEL"   : 16857, // Telus
-    // TODO: [CNSMR-2402] Re-enable TES once this boards have migrated to use the standard setup for their JIRA fields
+    // TODO: [CNSMR-2402] Re-enable TES once this board have migrated to use the standard setup for their JIRA fields
     // "TES"   : 17074, // Test Kits
     "WH"    : 17112, // Women's Health
 ]
