@@ -13,7 +13,54 @@ public struct CircleCIService {
         self.token = token
     }
 
-    public struct BuildRequest: Encodable {
+}
+
+extension CircleCIService {
+
+    struct BuildRequest: Content {
+        let buildParameters: [String: String]
+
+        enum CodingKeys: String, CodingKey {
+            case buildParameters = "build_parameters"
+        }
+    }
+
+    public struct BuildResponse: Content {
+        public let branch: String
+        public let buildURL: String
+
+        enum CodingKeys: String, CodingKey {
+            case branch
+            case buildURL = "build_url"
+        }
+    }
+
+    private func buildURL(project: String, branch: String) -> URL {
+        return URL(
+            string: "/api/v1.1/project/github/\(project)/tree/\(branch)?circle-token=\(token)",
+            relativeTo: baseURL
+        )!
+    }
+
+    public func job(
+        parameters: [String: String],
+        project: String,
+        branch: String,
+        on container: Container
+    ) throws -> Future<BuildResponse> {
+        let url = buildURL(project: project, branch: branch)
+        return try request(.capture()) {
+            try container.client().post(url, headers: headers) {
+                try $0.content.encode(BuildRequest(buildParameters: parameters))
+            }
+        }
+    }
+
+}
+
+extension CircleCIService {
+
+    public struct PipelineRequest: Encodable {
         let branch: String
         let parameters: [String: Parameter]
 
@@ -33,7 +80,7 @@ public struct CircleCIService {
         }
     }
 
-    public struct BuildResponse: Content {
+    public struct PipelineResponse: Content {
         public let branch: String
         public let buildURL: URL
     }
@@ -55,13 +102,6 @@ public struct CircleCIService {
         }
     }
 
-    private func buildURL(project: String, branch: String) -> URL {
-        return URL(
-            string: "/api/v2/project/github/\(project)/pipeline?circle-token=\(token)",
-            relativeTo: baseURL
-        )!
-    }
-
     private func pipelineURL(pipelineID: String) -> URL {
         return URL(
             string: "/api/v2/pipeline/\(pipelineID)?circle-token=\(token)",
@@ -76,24 +116,24 @@ public struct CircleCIService {
         )!
     }
 
-    public func run(
-        parameters: [String: BuildRequest.Parameter],
+    public func pipeline(
+        parameters: [String: PipelineRequest.Parameter],
         project: String,
         branch: String,
         on container: Container
-    ) throws -> Future<BuildResponse> {
+    ) throws -> Future<PipelineResponse> {
         let url = buildURL(project: project, branch: branch)
 
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
-                try $0.content.encode(json: BuildRequest(branch: branch, parameters: parameters))
+                try $0.content.encode(json: PipelineRequest(branch: branch, parameters: parameters))
             }
         }.flatMap { (pipelineID: PipelineID) in
             try self.request(.capture()) {
                 try container.client().get(self.pipelineURL(pipelineID: pipelineID.id), headers: self.headers)
             }
         }.map { (pipeline: Pipeline) in
-            BuildResponse(
+            PipelineResponse(
                 branch: pipeline.vcs.branch,
                 buildURL: pipeline.workflows.first.map {
                     self.workflowURL(workflowID: $0.id)

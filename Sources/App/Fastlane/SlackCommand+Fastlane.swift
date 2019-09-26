@@ -48,6 +48,7 @@ extension SlackCommand {
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
                         channelName: metadata.channelName,
+                        command: "/",
                         text: "testflight target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
@@ -77,6 +78,7 @@ extension SlackCommand {
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
                         channelName: metadata.channelName,
+                        command: "/",
                         text: "hockeyapp target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
@@ -96,14 +98,14 @@ extension SlackCommand {
         let options = metadata.textComponents.dropFirst().joined(separator: " ")
         let branch = branch ?? metadata.value(forOption: .branch)
 
-        let parameters: [String: CircleCIService.BuildRequest.Parameter] = [
+        let parameters: [String: CircleCIService.PipelineRequest.Parameter] = [
             "push": .bool(false),
             "lane": .string(lane),
             "options": .string(options)
         ]
 
         return try ci
-            .run(
+            .pipeline(
                 parameters: parameters,
                 project: RepoMapping.ios.repository.fullName,
                 branch: branch ?? RepoMapping.ios.repository.baseBranch,
@@ -111,7 +113,7 @@ extension SlackCommand {
             )
             .map {
                 SlackResponse("""
-                    You asked me: `\(metadata.text)`.
+                    You asked me: `\(metadata.command) \(metadata.text)`.
                     🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
