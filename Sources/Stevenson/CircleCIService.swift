@@ -128,9 +128,11 @@ extension CircleCIService {
             try container.client().post(url, headers: headers) {
                 try $0.content.encode(json: PipelineRequest(branch: branch, parameters: parameters))
             }
-        }.flatMap { (pipelineID: PipelineID) in
+        }.map { (pipelineID: PipelineID) in
+            self.pipelineURL(pipelineID: pipelineID.id)
+        }.flatMap { pipelineURL in
             try self.request(.capture()) {
-                try container.client().get(self.pipelineURL(pipelineID: pipelineID.id), headers: self.headers)
+                try container.client().get(pipelineURL, headers: self.headers)
             }
         }.map { (pipeline: Pipeline) in
             PipelineResponse(
