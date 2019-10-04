@@ -48,7 +48,7 @@ extension SlackCommand {
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
                         channelName: metadata.channelName,
-                        command: "/",
+                        command: "/fastlane",
                         text: "testflight target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
@@ -78,7 +78,7 @@ extension SlackCommand {
                     metadata: SlackCommandMetadata(
                         token: metadata.token,
                         channelName: metadata.channelName,
-                        command: "/",
+                        command: "/fastlane",
                         text: "hockeyapp target:\(metadata.text)",
                         responseURL: metadata.responseURL
                     ),
