@@ -102,6 +102,13 @@ extension CircleCIService {
         }
     }
 
+    private func pipelineURL(project: String) -> URL {
+        return URL(
+            string: "/api/v2/project/github/\(project)/pipeline?circle-token=\(token)",
+            relativeTo: baseURL
+        )!
+    }
+
     private func pipelineURL(pipelineID: String) -> URL {
         return URL(
             string: "/api/v2/pipeline/\(pipelineID)?circle-token=\(token)",
@@ -122,7 +129,7 @@ extension CircleCIService {
         branch: String,
         on container: Container
     ) throws -> Future<PipelineResponse> {
-        let url = buildURL(project: project, branch: branch)
+        let url = pipelineURL(project: project)
 
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
