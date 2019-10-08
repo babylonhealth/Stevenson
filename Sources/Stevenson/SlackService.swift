@@ -29,6 +29,7 @@ public struct SlackCommand {
 public struct SlackCommandMetadata: Content {
     public let token: String
     public let channelName: String
+    public let command: String
     public let text: String
     public let textComponents: [String.SubSequence]
     public let responseURL: String?
@@ -36,11 +37,13 @@ public struct SlackCommandMetadata: Content {
     public init(
         token: String,
         channelName: String,
+        command: String,
         text: String,
         responseURL: String?
     ) {
         self.token = token
         self.channelName = channelName
+        self.command = command
         self.text = text
         self.textComponents = text.split(separator: " ")
         self.responseURL = responseURL
@@ -49,6 +52,7 @@ public struct SlackCommandMetadata: Content {
     enum CodingKeys: String, CodingKey {
         case token
         case channelName = "channel_name"
+        case command
         case text
         case responseURL = "response_url"
     }
@@ -58,6 +62,7 @@ public struct SlackCommandMetadata: Content {
         self = try SlackCommandMetadata(
             token:          container.decode(String.self, forKey: .token),
             channelName:    container.decode(String.self, forKey: .channelName),
+            command:        container.decode(String.self, forKey: .command),
             text:           container.decode(String.self, forKey: .text),
             responseURL:    container.decode(String.self, forKey: .responseURL)
         )
