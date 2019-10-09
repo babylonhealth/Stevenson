@@ -11,7 +11,7 @@ public struct SlackCommand {
     /// If empty the command will be allowed in all channels
     public let allowedChannels: Set<String>
 
-    let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
+    public let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
 
     public init(
         name: String,

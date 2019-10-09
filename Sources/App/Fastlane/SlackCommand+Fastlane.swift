@@ -3,6 +3,45 @@ import Vapor
 import Stevenson
 
 extension SlackCommand {
+    static let stevenson = { (ci: CircleCIService) in
+        SlackCommand(
+            name: "stevenson",
+            help: """
+            Does magic...
+            """,
+            allowedChannels: [],
+            run: { metadata, container in
+                let command: SlackCommand
+                switch metadata.textComponents[0] {
+                case "fastlane":
+                    command = SlackCommand.fastlane(ci)
+                case "testflight":
+                    command = SlackCommand.testflight(ci)
+                case "hockeyapp":
+                    command = SlackCommand.hockeyapp(ci)
+                default:
+                    return try runLane(
+                        metadata: metadata,
+                        ci: ci,
+                        on: container
+                    )
+                }
+
+                if metadata.textComponents[1] == "help" {
+                    return container.future(SlackResponse(command.help))
+                } else {
+                    let metadata = SlackCommandMetadata(
+                        token: metadata.token,
+                        channelName: metadata.channelName,
+                        command: metadata.command,
+                        text: metadata.textComponents.dropFirst().joined(separator: " "),
+                        responseURL: metadata.responseURL
+                    )
+                    return try command.run(metadata, container)
+                }
+        })
+    }
+
     static let fastlane = { (ci: CircleCIService) in
         SlackCommand(
             name: "fastlane",
