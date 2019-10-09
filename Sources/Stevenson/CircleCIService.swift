@@ -138,7 +138,10 @@ extension CircleCIService {
         }.map { (pipelineID: PipelineID) in
             self.pipelineURL(pipelineID: pipelineID.id)
         }.flatMap { pipelineURL in
-            try self.request(.capture()) {
+            // workflows are not created immediately so we wait a bit
+            // hoping that when we request pipeline the workflow id will be there
+            sleep(2)
+            return try self.request(.capture()) {
                 try container.client().get(pipelineURL, headers: self.headers)
             }
         }.map { (pipeline: Pipeline) in
