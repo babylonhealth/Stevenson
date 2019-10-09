@@ -148,7 +148,7 @@ extension CircleCIService {
             PipelineResponse(
                 branch: pipeline.vcs.branch,
                 buildURL: pipeline.workflows.first.map {
-                    self.workflowURL(workflowID: $0.id)
+                    self.workflowURL(workflowID: $0.id).absoluteURL
                 } ?? self.baseURL
             )
         }
