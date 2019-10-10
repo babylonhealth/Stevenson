@@ -11,18 +11,41 @@ public struct SlackCommand {
     /// If empty the command will be allowed in all channels
     public let allowedChannels: Set<String>
 
+    /// Closure that performs the actual action of the command.
+    /// If subCommands are provided then it first will try to select approapraite sub command
+    /// by the first word in the command text, and if it finds one then this command will be executed,
+    /// otherwise this closure is called
     public let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
 
     public init(
         name: String,
         help: String,
         allowedChannels: Set<String>,
+        subCommands: [String: SlackCommand] = [:],
         run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
     ) {
         self.name = name
         self.allowedChannels = allowedChannels
         self.help = help
-        self.run = run
+        self.run = { (metadata, container) throws -> Future<SlackResponse> in
+            let subCommandName = String(metadata.textComponents[0])
+            guard let subCommand = subCommands[subCommandName] else {
+                return try run(metadata, container)
+            }
+
+            if metadata.textComponents[1] == "help" {
+                return container.future(SlackResponse(subCommand.help))
+            } else {
+                let metadata = SlackCommandMetadata(
+                    token: metadata.token,
+                    channelName: metadata.channelName,
+                    command: metadata.command,
+                    text: metadata.textComponents.dropFirst().joined(separator: " "),
+                    responseURL: metadata.responseURL
+                )
+                return try subCommand.run(metadata, container)
+            }
+        }
     }
 }
 

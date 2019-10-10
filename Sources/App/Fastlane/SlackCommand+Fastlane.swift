@@ -10,35 +10,17 @@ extension SlackCommand {
             Does magic...
             """,
             allowedChannels: [],
+            subCommands: [
+                "fastlane": SlackCommand.fastlane(ci),
+                "testflight": SlackCommand.testflight(ci),
+                "hockeyapp": SlackCommand.hockeyapp(ci)
+            ],
             run: { metadata, container in
-                let command: SlackCommand
-                switch metadata.textComponents[0] {
-                case "fastlane":
-                    command = SlackCommand.fastlane(ci)
-                case "testflight":
-                    command = SlackCommand.testflight(ci)
-                case "hockeyapp":
-                    command = SlackCommand.hockeyapp(ci)
-                default:
-                    return try runLane(
-                        metadata: metadata,
-                        ci: ci,
-                        on: container
-                    )
-                }
-
-                if metadata.textComponents[1] == "help" {
-                    return container.future(SlackResponse(command.help))
-                } else {
-                    let metadata = SlackCommandMetadata(
-                        token: metadata.token,
-                        channelName: metadata.channelName,
-                        command: metadata.command,
-                        text: metadata.textComponents.dropFirst().joined(separator: " "),
-                        responseURL: metadata.responseURL
-                    )
-                    return try command.run(metadata, container)
-                }
+                try runPipeline(
+                    metadata: metadata,
+                    ci: ci,
+                    on: container
+                )
         })
     }
 
@@ -127,6 +109,33 @@ extension SlackCommand {
         })
     }
 
+    static func runPipeline(
+        metadata: SlackCommandMetadata,
+        branch: String? = nil,
+        ci: CircleCIService,
+        on container: Container
+    ) throws -> Future<SlackResponse> {
+        let pipeline = String(metadata.textComponents[0])
+        let optionsKeysValues = metadata.textComponents.dropFirst()
+            .compactMap { (component: String.SubSequence) -> (String, CircleCIService.PipelineRequest.Parameter)? in
+                let components = component.split(separator: ":")
+                guard let key = components.first, let value = components.last else { return nil }
+                return (String(key), .string(String(value)))
+        }
+        var parameters = Dictionary(uniqueKeysWithValues: optionsKeysValues)
+        parameters["push"] = .bool(false)
+        parameters[pipeline] = .bool(true)
+
+        return try run(
+            pipeline,
+            parameters: parameters,
+            metadata: metadata,
+            branch: branch,
+            ci: ci,
+            on: container
+        )
+    }
+
     static func runLane(
         metadata: SlackCommandMetadata,
         branch: String? = nil,
@@ -135,13 +144,31 @@ extension SlackCommand {
     ) throws -> Future<SlackResponse> {
         let lane = String(metadata.textComponents[0])
         let options = metadata.textComponents.dropFirst().joined(separator: " ")
-        let branch = branch ?? metadata.value(forOption: .branch)
 
         let parameters: [String: CircleCIService.PipelineRequest.Parameter] = [
             "push": .bool(false),
             "lane": .string(lane),
             "options": .string(options)
         ]
+        return try run(
+            lane,
+            parameters: parameters,
+            metadata: metadata,
+            branch: branch,
+            ci: ci,
+            on: container
+        )
+    }
+
+    private static func run(
+        _ pipelineOrLane: String,
+        parameters: [String: CircleCIService.PipelineRequest.Parameter],
+        metadata: SlackCommandMetadata,
+        branch: String?,
+        ci: CircleCIService,
+        on container: Container
+    ) throws -> Future<SlackResponse> {
+        let branch = branch ?? metadata.value(forOption: .branch)
 
         return try ci
             .pipeline(
@@ -153,7 +180,7 @@ extension SlackCommand {
             .map {
                 SlackResponse("""
                     You asked me: `\(metadata.command) \(metadata.text)`.
-                    🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
+                    🚀 Triggered `\(pipelineOrLane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
                     visibility: .channel
@@ -163,7 +190,7 @@ extension SlackCommand {
                 withImmediateResponse: SlackResponse("👍", visibility: .channel),
                 responseURL: metadata.responseURL,
                 on: container
-            )
+        )
     }
 
 }
