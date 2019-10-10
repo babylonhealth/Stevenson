@@ -21,15 +21,22 @@ public struct SlackCommand {
         name: String,
         help: String,
         allowedChannels: Set<String>,
-        subCommands: [String: SlackCommand] = [:],
+        subCommands: [SlackCommand] = [],
         run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
     ) {
         self.name = name
         self.allowedChannels = allowedChannels
-        self.help = help
+        if subCommands.isEmpty {
+            self.help = help
+        } else {
+            self.help = help +
+            """
+            Sub-commands:
+            \(subCommands.map({ "- \($0.name)" }).joined(separator: "\n"))
+            """
+        }
         self.run = { (metadata, container) throws -> Future<SlackResponse> in
-            let subCommandName = String(metadata.textComponents[0])
-            guard let subCommand = subCommands[subCommandName] else {
+            guard let subCommand = subCommands.first(where: { metadata.text.hasPrefix($0.name) }) else {
                 return try run(metadata, container)
             }
 

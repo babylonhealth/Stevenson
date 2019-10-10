@@ -7,13 +7,21 @@ extension SlackCommand {
         SlackCommand(
             name: "stevenson",
             help: """
-            Does magic...
+            Invokes lane, beta or AppStore build or runs arbitrary workflow.
+
+            Parameters:
+            - name of the workflow to run
+            - list of workflow parameters in the fastlane format (e.g. `param:value`)
+            - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
+
+            Example:
+            `/stevenson ui_tests param:value \(Option.branch.value):develop`
             """,
             allowedChannels: [],
             subCommands: [
-                "fastlane": SlackCommand.fastlane(ci),
-                "testflight": SlackCommand.testflight(ci),
-                "hockeyapp": SlackCommand.hockeyapp(ci)
+                SlackCommand.fastlane(ci),
+                SlackCommand.testflight(ci),
+                SlackCommand.hockeyapp(ci)
             ],
             run: { metadata, container in
                 try runPipeline(
@@ -119,8 +127,13 @@ extension SlackCommand {
         let optionsKeysValues = metadata.textComponents.dropFirst()
             .compactMap { (component: String.SubSequence) -> (String, CircleCIService.PipelineRequest.Parameter)? in
                 let components = component.split(separator: ":")
-                guard let key = components.first, let value = components.last else { return nil }
-                return (String(key), .string(String(value)))
+                if components.count == 1 {
+                    return (String(components[0]), .bool(true))
+                } else if components.count == 2 {
+                    return (String(components[0]), .string(String(components[1])))
+                } else {
+                    return nil
+                }
         }
         var parameters = Dictionary(uniqueKeysWithValues: optionsKeysValues)
         parameters["push"] = .bool(false)
