@@ -3,35 +3,6 @@ import Vapor
 import Stevenson
 
 extension SlackCommand {
-    static let stevenson = { (ci: CircleCIService) in
-        SlackCommand(
-            name: "stevenson",
-            help: """
-            Invokes lane, beta or AppStore build or runs arbitrary workflow.
-
-            Parameters:
-            - name of the workflow to run
-            - list of workflow parameters in the fastlane format (e.g. `param:value`)
-            - `branch`: name of the branch to run the lane on. Default is `\(RepoMapping.ios.repository.baseBranch)`
-
-            Example:
-            `/stevenson ui_tests param:value \(Option.branch.value):develop`
-            """,
-            allowedChannels: [],
-            subCommands: [
-                SlackCommand.fastlane(ci),
-                SlackCommand.testflight(ci),
-                SlackCommand.hockeyapp(ci)
-            ],
-            run: { metadata, container in
-                try runPipeline(
-                    metadata: metadata,
-                    ci: ci,
-                    on: container
-                )
-        })
-    }
-
     static let fastlane = { (ci: CircleCIService) in
         SlackCommand(
             name: "fastlane",
