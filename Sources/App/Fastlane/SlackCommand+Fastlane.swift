@@ -106,7 +106,7 @@ extension SlackCommand {
                     return nil
                 }
         }
-        var parameters = Dictionary(uniqueKeysWithValues: optionsKeysValues)
+        var parameters = Dictionary(optionsKeysValues, uniquingKeysWith: { $1 })
         parameters["push"] = .bool(false)
         parameters[pipeline] = .bool(true)
 
