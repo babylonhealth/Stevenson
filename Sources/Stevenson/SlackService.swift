@@ -12,7 +12,7 @@ public struct SlackCommand {
     public let allowedChannels: Set<String>
 
     /// Closure that performs the actual action of the command.
-    /// If subCommands are provided then it first will try to select approapraite sub command
+    /// If subCommands are provided, it will first try to select the appropriate sub-command
     /// by the first word in the command text, and if it finds one then this command will be executed,
     /// otherwise this closure is called
     public let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
