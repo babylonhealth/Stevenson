@@ -21,7 +21,7 @@ extension SlackCommand {
             subCommands: [
                 .fastlane(ci),
                 .testflight(ci),
-                .hockeyapp(ci),
+                .appcenter(ci),
                 .crp(jira, github)
             ],
             run: { metadata, container in

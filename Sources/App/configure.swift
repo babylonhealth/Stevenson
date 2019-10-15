@@ -3,6 +3,7 @@ import Stevenson
 
 // Use https://babylonpartners.atlassian.net/rest/api/3/project/<ProjectKey> to get the corresponding ID
 private let jiraProjects = [
+    "ANDRP" : 17264, // Android Platform
     "APPTS" : 16875, // Booking/Appointments
     "AV"    : 16942, // Core Experience / Avalon
     "CE"    : 16937, // Consultation Experience
@@ -14,6 +15,7 @@ private let jiraProjects = [
     "GW"    : 16949, // Triage UI
     // TODO: [CNSMR-2402] Re-enable IDM once this board have migrated to use the standard setup for their JIRA fields
     // "IDM"   : 16903, // Identity Platform / Identity Management
+    "IOSP"  : 17263, // iOS Platform Squad
     "MS"    : 17233, // Monitor Squad
     "MON"   : 10103, // HealthCheck
     "NRX"   : 16911, // Enrolment and Integrity
