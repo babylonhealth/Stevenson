@@ -34,7 +34,7 @@ public struct SlackCommand {
             Sub-commands:
             \(subCommands.map({ "- \($0.name)" }).joined(separator: "\n"))
             
-            Run `/(name) <sub-command> help` for help on a sub-command.
+            Run `/\(name) <sub-command> help` for help on a sub-command.
             """
         }
         self.run = { (metadata, container) throws -> Future<SlackResponse> in
