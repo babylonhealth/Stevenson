@@ -109,6 +109,8 @@ extension SlackCommand {
         var parameters = Dictionary(optionsKeysValues, uniquingKeysWith: { $1 })
         parameters["push"] = .bool(false)
         parameters[pipeline] = .bool(true)
+        // branch parameter is not needed in parameters and actually results in unexpected parameter error
+        parameters["branch"] = nil
 
         return try run(
             pipeline,
