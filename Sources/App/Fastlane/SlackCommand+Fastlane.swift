@@ -88,6 +88,38 @@ extension SlackCommand {
         })
     }
 
+    static func runPipeline(
+        metadata: SlackCommandMetadata,
+        branch: String? = nil,
+        ci: CircleCIService,
+        on container: Container
+    ) throws -> Future<SlackResponse> {
+        let pipeline = String(metadata.textComponents[0])
+        let optionsKeysValues = metadata.textComponents.dropFirst()
+            .compactMap { (component: String.SubSequence) -> (String, CircleCIService.PipelineRequest.Parameter)? in
+                let components = component.split(separator: ":")
+                if components.count == 1 {
+                    return (String(components[0]), .bool(true))
+                } else if components.count == 2 {
+                    return (String(components[0]), .string(String(components[1])))
+                } else {
+                    return nil
+                }
+        }
+        var parameters = Dictionary(optionsKeysValues, uniquingKeysWith: { $1 })
+        parameters["push"] = .bool(false)
+        parameters[pipeline] = .bool(true)
+
+        return try run(
+            pipeline,
+            parameters: parameters,
+            metadata: metadata,
+            branch: branch,
+            ci: ci,
+            on: container
+        )
+    }
+
     static func runLane(
         metadata: SlackCommandMetadata,
         branch: String? = nil,
@@ -96,13 +128,31 @@ extension SlackCommand {
     ) throws -> Future<SlackResponse> {
         let lane = String(metadata.textComponents[0])
         let options = metadata.textComponents.dropFirst().joined(separator: " ")
-        let branch = branch ?? metadata.value(forOption: .branch)
 
         let parameters: [String: CircleCIService.PipelineRequest.Parameter] = [
             "push": .bool(false),
             "lane": .string(lane),
             "options": .string(options)
         ]
+        return try run(
+            lane,
+            parameters: parameters,
+            metadata: metadata,
+            branch: branch,
+            ci: ci,
+            on: container
+        )
+    }
+
+    private static func run(
+        _ pipelineOrLane: String,
+        parameters: [String: CircleCIService.PipelineRequest.Parameter],
+        metadata: SlackCommandMetadata,
+        branch: String?,
+        ci: CircleCIService,
+        on container: Container
+    ) throws -> Future<SlackResponse> {
+        let branch = branch ?? metadata.value(forOption: .branch)
 
         return try ci
             .pipeline(
@@ -114,7 +164,7 @@ extension SlackCommand {
             .map {
                 SlackResponse("""
                     You asked me: `\(metadata.command) \(metadata.text)`.
-                    🚀 Triggered `\(lane)` on the `\($0.branch)` branch.
+                    🚀 Triggered `\(pipelineOrLane)` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
                     visibility: .channel
@@ -124,7 +174,7 @@ extension SlackCommand {
                 withImmediateResponse: SlackResponse("👍", visibility: .channel),
                 responseURL: metadata.responseURL,
                 on: container
-            )
+        )
     }
 
 }

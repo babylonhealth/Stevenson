@@ -11,18 +11,50 @@ public struct SlackCommand {
     /// If empty the command will be allowed in all channels
     public let allowedChannels: Set<String>
 
-    let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
+    /// Closure that performs the actual action of the command.
+    /// If subCommands are provided, it will first try to select the appropriate sub-command
+    /// by the first word in the command text, and if it finds one then this command will be executed,
+    /// otherwise this closure is called
+    public let run: (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
 
     public init(
         name: String,
         help: String,
         allowedChannels: Set<String>,
+        subCommands: [SlackCommand] = [],
         run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackResponse>
     ) {
         self.name = name
         self.allowedChannels = allowedChannels
-        self.help = help
-        self.run = run
+        if subCommands.isEmpty {
+            self.help = help
+        } else {
+            self.help = help +
+            """
+            Sub-commands:
+            \(subCommands.map({ "- \($0.name)" }).joined(separator: "\n"))
+            
+            Run `/(name) <sub-command> help` for help on a sub-command.
+            """
+        }
+        self.run = { (metadata, container) throws -> Future<SlackResponse> in
+            guard let subCommand = subCommands.first(where: { metadata.text.hasPrefix($0.name) }) else {
+                return try run(metadata, container)
+            }
+
+            if metadata.textComponents[1] == "help" {
+                return container.future(SlackResponse(subCommand.help))
+            } else {
+                let metadata = SlackCommandMetadata(
+                    token: metadata.token,
+                    channelName: metadata.channelName,
+                    command: metadata.command,
+                    text: metadata.textComponents.dropFirst().joined(separator: " "),
+                    responseURL: metadata.responseURL
+                )
+                return try subCommand.run(metadata, container)
+            }
+        }
     }
 }
 

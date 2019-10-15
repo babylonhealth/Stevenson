@@ -53,10 +53,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     let router = EngineRouter.default()
     try routes(router: router, slack: slack, commands: [
-        .fastlane(ci),
-        .appcenter(ci),
-        .testflight(ci),
-        .crp(jira, github)
+        .stevenson(ci, jira, github)
     ])
     services.register(router, as: Router.self)
 
