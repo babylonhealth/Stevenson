@@ -16,7 +16,7 @@ extension RepoMapping {
     // [CNSMR-1319] TODO: Use a config file to parametrise repo list
     static let ios = RepoMapping(
         repository: GitHubService.Repository(
-            fullName: "Babylonpartners/babylon-ios",
+            fullName: "babylonhealth/babylon-ios",
             baseBranch: "develop"
         ),
         crp: CRP(
@@ -37,7 +37,7 @@ extension RepoMapping {
 
     static let android = RepoMapping(
         repository: GitHubService.Repository(
-            fullName: "Babylonpartners/babylon-android",
+            fullName: "babylonhealth/babylon-android",
             baseBranch: "master"
         ),
         crp: CRP(

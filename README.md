@@ -1,7 +1,7 @@
 # iOS Build Distribution System
 
 `Stevenson` is a Vapor framework designed to build integrations between Slack apps, Github, JIRA and CI services (CircleCI).
-This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works checkout our [playbook](https://github.com/Babylonpartners/ios-playbook))
+This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works checkout our [playbook](https://github.com/babylonhealth/ios-playbook))
 
 ## 🚀 Usage
 
@@ -9,7 +9,7 @@ To use `Stevenson` in your app add it as a dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Babylonpartners/Stevenson.git", .branch("master")),
+    .package(url: "https://github.com/babylonhealth/Stevenson.git", .branch("master")),
 ]
 ```
 
@@ -184,7 +184,7 @@ Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for ins
 
 ## ✨ Take a look at our other OSS projects!
 
-* [Bento](https://github.com/Babylonpartners/Bento): Swift library for building component-based interfaces on top of UITableView and UICollectionView 🍱
-* [DrawerKit](https://github.com/Babylonpartners/DrawerKit): DrawerKit lets an UIViewController modally present another UIViewController in a manner similar to the way Apple's Maps app works.
-* [ReactiveFeedback](https://github.com/Babylonpartners/ReactiveFeedback): Unidirectional reactive architecture
-* 🚧 [Wall-E](https://github.com/Babylonpartners/Wall-E): A bot that monitors and manages your pull requests by ensuring they are merged when they're ready and don't stack up in your repository 🤓
+* [Bento](https://github.com/babylonhealth/Bento): Swift library for building component-based interfaces on top of UITableView and UICollectionView 🍱
+* [DrawerKit](https://github.com/babylonhealth/DrawerKit): DrawerKit lets an UIViewController modally present another UIViewController in a manner similar to the way Apple's Maps app works.
+* [ReactiveFeedback](https://github.com/babylonhealth/ReactiveFeedback): Unidirectional reactive architecture
+* 🚧 [Wall-E](https://github.com/babylonhealth/Wall-E): A bot that monitors and manages your pull requests by ensuring they are merged when they're ready and don't stack up in your repository 🤓
