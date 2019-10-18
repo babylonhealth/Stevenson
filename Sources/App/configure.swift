@@ -55,6 +55,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     try routes(
         router: router,
         github: github,
+        ci: ci,
         slack: slack,
         commands: [
             .stevenson(ci, jira, github),

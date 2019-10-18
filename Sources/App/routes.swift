@@ -5,6 +5,7 @@ import Stevenson
 public func routes(
     router: Router,
     github: GitHubService,
+    ci: CircleCIService,
     slack: SlackService,
     commands: [SlackCommand]
 ) throws {
@@ -12,8 +13,8 @@ public func routes(
         return "It works!"
     }
 
-    router.post("github") { (request) -> Future<Response> in
-        return try HTTPResponse(status: .ok).encode(for: request)
+    router.post("github/comment") { (request) -> Future<Response> in
+        try github.issueComment(on: request, ci: ci)
     }
 
     commands.forEach { command in

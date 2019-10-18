@@ -110,4 +110,24 @@ extension GitHubService {
             response.map { $0.tag_name }
         }
     }
+
+    public struct PullRequest: Content {
+        public struct Ref: Content {
+            public let ref: String
+        }
+
+        public let head: Ref
+        public let base: Ref
+    }
+
+    public func pullRequest(
+        number: Int,
+        in repo: Repository,
+        on container: Container
+    ) throws -> Future<PullRequest> {
+        let url = URL(string: "/repos/\(repo.fullName)/pulls/\(number)", relativeTo: baseURL)!
+        return try request(.capture()) {
+            try container.client().get(url, headers: headers)
+        }
+    }
 }
