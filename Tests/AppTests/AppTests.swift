@@ -32,9 +32,11 @@ final class AppTests: XCTestCase {
     func testReleaseType() {
         typealias ReleaseType = JiraService.CRPIssueFields.ReleaseType
         let expectations: [String: ReleaseType] = [
-            "4.0"    : .major,
-            "3.0.0"  : .major,
-            "3.2.0"  : .minor,
+            "5"      : .major,
+            "5.0"    : .major,
+            "5.0.0"  : .major,
+            "4.1"    : .minor,
+            "4.1.0"  : .minor,
             "3.2.1"  : .patch,
             "3.0.1"  : .patch,
             "3.0.0.1": .patch,
