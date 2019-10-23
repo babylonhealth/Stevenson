@@ -6,7 +6,8 @@ extension JiraService {
         jiraBaseURL: URL,
         crpConfig: RepoMapping.CRP,
         release: GitHubService.Release,
-        changelog: FieldType.TextArea.Document
+        changelog: FieldType.TextArea.Document,
+        targetDate: Date? = nil // will use `guessTargetDate()` if nil
     ) -> CRPIssue {
         // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
@@ -18,10 +19,19 @@ extension JiraService {
             summary: crpConfig.jiraSummary(release),
             environments: [crpConfig.environment],
             release: release,
+            releaseType: .init(version: release.version),
+            targetDate: targetDate ?? guessTargetDate(),
             changelog: changelog,
             accountablePersonName: accountablePerson
         )
         return CRPIssue(fields: fields)
+    }
+
+    private static func guessTargetDate() -> Date {
+        let now = Date()
+        // Estimate time between when the CRP ticket is created and the app is released to the AppStore
+        let estimateOffset = DateComponents(day: 5)
+        return Calendar(identifier: .gregorian).date(byAdding: estimateOffset, to: now) ?? now
     }
 }
 
@@ -39,10 +49,16 @@ extension JiraService {
 
         struct Environment: Content {
             let id: String
-
             static let playStore = Environment(id: "12394")
             static let appStore = Environment(id: "12395")
             static let notApplicable = Environment(id: "12396")
+        }
+
+        struct ReleaseType: Content {
+            let id: String
+            static let major = ReleaseType(id: "12651")
+            static let minor = ReleaseType(id: "12652")
+            static let patch = ReleaseType(id: "12653")
         }
 
         struct InfoSecStatus: Content {
@@ -58,6 +74,8 @@ extension JiraService {
         var summary: String
         var changelog: FieldType.TextArea.Document
         var environments: [Environment]
+        var releaseType: ReleaseType
+        @YMDDate var targetDate: Date
         var businessImpact: FieldType.TextArea.Document
         let jiraReleaseURL: String
         let githubReleaseURL: String
@@ -69,16 +87,18 @@ extension JiraService {
 
         enum CodingKeys: String, CodingKey {
             case project = "project"
-            case issueType = "issuetype"
-            case summary = "summary"
-            case changelog = "customfield_12537"
-            case environments = "customfield_12592"
-            case businessImpact = "customfield_12538"
-            case jiraReleaseURL = "customfield_12540"
-            case githubReleaseURL = "customfield_12541"
-            case testing = "customfield_11512"
-            case accountablePerson = "customfield_11505"
-            case infoSecChecked = "customfield_12527"
+            case issueType = "issuetype"                 // required
+            case summary = "summary"                     // required
+            case changelog = "customfield_12537"         // required
+            case environments = "customfield_12592"      // required
+            case releaseType = "customfield_12794"       // required
+            case targetDate = "customfield_11514"        // required
+            case businessImpact = "customfield_12538"    // required
+            case jiraReleaseURL = "customfield_12540"    // optional
+            case githubReleaseURL = "customfield_12541"  // optional
+            case testing = "customfield_11512"           // required
+            case accountablePerson = "customfield_11505" // required
+            case infoSecChecked = "customfield_12527"    // required
         }
 
         // MARK: Inits
@@ -88,18 +108,45 @@ extension JiraService {
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,
+            releaseType: ReleaseType,
+            targetDate: Date,
             changelog: FieldType.TextArea.Document,
             accountablePersonName: String
         ) {
             self.summary = summary
             self.changelog = changelog
             self.environments = environments
+            self.releaseType = releaseType
+            self.targetDate = targetDate
             self.businessImpact = FieldType.TextArea.Document(text: "TBD")
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = FieldType.User(name: accountablePersonName)
             self.infoSecChecked = .no
+        }
+    }
+}
+
+extension JiraService.CRPIssueFields.ReleaseType {
+    init(version: String) {
+        // Ensure we're only considering x.y.z version formats (ignoring potential suffix "-rc" or similar)
+        let scanner = Scanner(string: version)
+        var (minor, patch) = (0, 0)
+        scanner.scanInt(nil)    // major version number
+        scanner.scanString(".", into: nil)
+        scanner.scanInt(&minor) // minor version number
+        scanner.scanString(".", into: nil)
+        scanner.scanInt(&patch) // patch version number
+        if scanner.scanString(".", into: nil) {
+            // if we have a 4th digit coming our way, assume it's always a patch release
+            self = .patch
+        } else if minor == 0 && patch == 0 {
+            self = .major
+        } else if patch == 0 {
+            self = .minor
+        } else {
+            self = .patch
         }
     }
 }

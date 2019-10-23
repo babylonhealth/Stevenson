@@ -201,7 +201,7 @@ extension JiraService {
         let description: String
         let name: String
         let released: Bool
-        let startDate: String
+        @YMDDate var startDate: Date
 
         public init(projectId: Int, description: String, name: String, released: Bool = false, startDate: Date) {
             self.id = nil
@@ -209,11 +209,7 @@ extension JiraService {
             self.description = description
             self.name = name
             self.released = released
-            // ISO8601DateFormatter doesn't seem to work on Linux
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            self.startDate = formatter.string(from: startDate)
+            self.startDate = startDate
         }
     }
 

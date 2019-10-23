@@ -29,6 +29,22 @@ final class AppTests: XCTestCase {
         return v
     }()
 
+    func testReleaseType() {
+        typealias ReleaseType = JiraService.CRPIssueFields.ReleaseType
+        let expectations: [String: ReleaseType] = [
+            "4.0"    : .major,
+            "3.0.0"  : .major,
+            "3.2.0"  : .minor,
+            "3.2.1"  : .patch,
+            "3.0.1"  : .patch,
+            "3.0.0.1": .patch,
+        ]
+        for (version, expectedType) in expectations {
+            XCTAssertEqual(ReleaseType(version: version).id, expectedType.id, "\(version): mismatch")
+            XCTAssertEqual(ReleaseType(version: "\(version)-rc1").id, expectedType.id, "\(version)-rc1: mismatch")
+        }
+    }
+
     func testJiraDocumentFromCommits() throws {
         let release = try GitHubService.Release(
             repo: GitHubService.Repository(fullName: "company/project", baseBranch: "develop"),
@@ -55,11 +71,13 @@ final class AppTests: XCTestCase {
             jiraVersionName: { _ in "Dummy Version 1.2.3" },
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
+        let targetDate = DateComponents(calendar: .init(identifier: .gregorian), timeZone: TimeZone(abbreviation: "GMT"), year: 2019, month: 10, day: 31).date!
         let issue = JiraService.makeCRPIssue(
             jiraBaseURL: jiraBaseURL,
             crpConfig: crpConfig,
             release: release,
-            changelog: changelogDoc
+            changelog: changelogDoc,
+            targetDate: targetDate
         )
 
         addAttachment(name: "Ticket", object: issue)
@@ -154,34 +172,6 @@ extension AppTests {
     static let expectedTicketJson = #"""
         {
           "fields" : {
-            "customfield_12538" : {
-              "type" : "doc",
-              "content" : [
-                {
-                  "type" : "paragraph",
-                  "content" : [
-                    {
-                      "type" : "text",
-                      "text" : "TBD"
-                    }
-                  ]
-                }
-              ],
-              "version" : 1
-            },
-            "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
-            "issuetype" : {
-              "id" : "11439"
-            },
-            "customfield_12592" : [
-              {
-                "id" : "12395"
-              }
-            ],
-            "summary" : "Fake-Publish Dummy App v1.2.3",
-            "customfield_12527" : {
-              "id" : "11941"
-            },
             "customfield_12537" : {
               "type" : "doc",
               "content" : [
@@ -333,6 +323,14 @@ extension AppTests {
               ],
               "version" : 1
             },
+            "customfield_11514" : "2019-10-31",
+            "issuetype" : {
+              "id" : "11439"
+            },
+            "project" : {
+              "id" : "13402"
+            },
+            "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
             "customfield_11512" : {
               "type" : "doc",
               "content" : [
@@ -348,12 +346,36 @@ extension AppTests {
               ],
               "version" : 1
             },
-            "project" : {
-              "id" : "13402"
-            },
-            "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
+            "summary" : "Fake-Publish Dummy App v1.2.3",
+            "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
             "customfield_11505" : {
               "name" : "mark.bates"
+            },
+            "customfield_12592" : [
+              {
+                "id" : "12395"
+              }
+            ],
+            "customfield_12527" : {
+              "id" : "11941"
+            },
+            "customfield_12794" : {
+              "id" : "12653"
+            },
+            "customfield_12538" : {
+              "type" : "doc",
+              "content" : [
+                {
+                  "type" : "paragraph",
+                  "content" : [
+                    {
+                      "type" : "text",
+                      "text" : "TBD"
+                    }
+                  ]
+                }
+              ],
+              "version" : 1
             }
           }
         }
