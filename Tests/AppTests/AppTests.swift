@@ -10,7 +10,7 @@ final class AppTests: XCTestCase {
         "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)",
         "[SDK-4142] Commit 2",
         "[CNSMR-2045] Commit 3",
-        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE nboard
+        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE board
         "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
     ]
 
