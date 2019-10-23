@@ -131,19 +131,16 @@ extension JiraService {
 extension JiraService.CRPIssueFields.ReleaseType {
     init(version: String) {
         // Ensure we're only considering x.y.z version formats (ignoring potential suffix "-rc" or similar)
-        let scanner = Scanner(string: version)
-        var (minor, patch) = (0, 0)
-        scanner.scanInt(nil)    // major version number
-        scanner.scanString(".", into: nil)
-        scanner.scanInt(&minor) // minor version number
-        scanner.scanString(".", into: nil)
-        scanner.scanInt(&patch) // patch version number
-        if scanner.scanString(".", into: nil) {
-            // if we have a 4th digit coming our way, assume it's always a patch release
+        let endIndex = version.firstIndex { !"0123456789.".contains($0) } ?? version.endIndex
+        let comps = version[..<endIndex].split(separator: ".")
+        let minor = comps.count > 1 ? comps[1] : "0"
+        let patch = comps.count > 2 ? comps[2] : "0"
+        if comps.count > 3 {
+            // if we have more than 3 digits, assume it's always a patch release
             self = .patch
-        } else if minor == 0 && patch == 0 {
+        } else if minor == "0" && patch == "0" {
             self = .major
-        } else if patch == 0 {
+        } else if patch == "0" {
             self = .minor
         } else {
             self = .patch
