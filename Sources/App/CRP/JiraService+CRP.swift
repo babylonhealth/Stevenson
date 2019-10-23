@@ -30,7 +30,7 @@ extension JiraService {
     private static func guessTargetDate() -> Date {
         let now = Date()
         // Estimate time between when the CRP ticket is created and the app is released to the AppStore
-        let estimateOffset = DateComponents(day: 5)
+        let estimateOffset = DateComponents(day: 7)
         return Calendar(identifier: .gregorian).date(byAdding: estimateOffset, to: now) ?? now
     }
 }
