@@ -201,7 +201,8 @@ extension JiraService {
         let description: String
         let name: String
         let released: Bool
-        @YMDDate var startDate: Date
+        @CodableDate<YMDDateFormat>
+        var startDate: Date
 
         public init(projectId: Int, description: String, name: String, released: Bool = false, startDate: Date) {
             self.id = nil

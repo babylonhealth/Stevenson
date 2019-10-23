@@ -1,14 +1,22 @@
 import Foundation
 
+public protocol CodableDateFormat {
+    static var dateFormat: String { get }
+}
+
+public enum YMDDateFormat: CodableDateFormat {
+    public static let dateFormat = "yyyy-MM-dd"
+}
+
 @propertyWrapper
-public struct YMDDate {
+public struct CodableDate<Format: CodableDateFormat> {
     public var wrappedValue: Date
     public init(wrappedValue: Date) {
         self.wrappedValue = wrappedValue
     }
 }
 
-extension YMDDate: Codable {
+extension CodableDate: Codable {
     public struct InvalidDate: Error {
         let string: String
     }
@@ -33,7 +41,7 @@ extension YMDDate: Codable {
         // Note: ISO8601DateFormatter seem to crash on Linux anyway
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.dateFormat = Format.dateFormat
         return formatter
     }
 }

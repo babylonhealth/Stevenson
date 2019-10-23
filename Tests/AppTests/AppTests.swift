@@ -15,16 +15,11 @@ final class AppTests: XCTestCase {
     ]
 
     static let fakeVersion: JiraService.Version = {
-        let dateComps = DateComponents(
-            calendar: Calendar(identifier: .gregorian),
-            timeZone: TimeZone(secondsFromGMT: 0),
-            year: 2019, month: 07, day: 10
-        )
         let v = JiraService.Version(
             projectId: 123,
             description: "Fake Version 1.2.3 for tests",
             name: "Fake 1.2.3",
-            startDate: dateComps.date!
+            startDate: fixedGMTDate(year: 2019, month: 07, day: 10)
         )
         return v
     }()
@@ -73,13 +68,12 @@ final class AppTests: XCTestCase {
             jiraVersionName: { _ in "Dummy Version 1.2.3" },
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
-        let targetDate = DateComponents(calendar: .init(identifier: .gregorian), timeZone: TimeZone(abbreviation: "GMT"), year: 2019, month: 10, day: 31).date!
         let issue = JiraService.makeCRPIssue(
             jiraBaseURL: jiraBaseURL,
             crpConfig: crpConfig,
             release: release,
             changelog: changelogDoc,
-            targetDate: targetDate
+            targetDate: fixedGMTDate(year: 2019, month: 10, day: 31)
         )
 
         addAttachment(name: "Ticket", object: issue)
