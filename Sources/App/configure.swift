@@ -5,27 +5,26 @@ import Stevenson
 private let jiraProjects = [
     "ANDRP" : 17264, // Android Platform
     "APPTS" : 16875, // Booking/Appointments
-    "AV"    : 16942, // Core Experience / Avalon
+    "AV"    : 16942, // Onboarding and Navigation (ex Core Experience / Avalon)
     "CE"    : 16937, // Consultation Experience
-    // TODO: [CNSMR-2402] Re-enable CM board once they've migrated all their tickets from private instance to main one
-    // "CM"    : 16920, // Condition Management
     "CNSMR" : 16968, // Consumer Apps (Native/Core)
     "COREUS": 17127, // Babylon US Core Product
     "CW"    : 16832, // Consumer Web
     "GW"    : 16949, // Triage UI
-    // TODO: [CNSMR-2402] Re-enable IDM once this board have migrated to use the standard setup for their JIRA fields
+    // TODO: [IOSP-101/IOSP-147] Re-enable IDM once this board have migrated away from NextGen board
     // "IDM"   : 16903, // Identity Platform / Identity Management
-    "IOSP"  : 17263, // iOS Platform Squad
-    "MS"    : 17233, // Monitor Squad
+    "IOSP"  : 17263, // iOS Native Apps Platform
+    "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
-    "NRX"   : 16911, // Enrolment and Integrity
+    "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
     "PRO"   : 16980, // Professional Services
     "PRSCR" : 16840, // Prescriptions
     "SDK"   : 16975, // SDK
     "TEL"   : 16857, // Telus
-    // TODO: [CNSMR-2402] Re-enable TES once this board have migrated to use the standard setup for their JIRA fields
-    // "TES"   : 17074, // Test Kits
+    // TODO: [IOSP-101/268] Re-enable TEN once this board have migrated away from NextGen board
+    // "TEN"   : 16955,
+    "TK"    : 17299, // Test Kits
     "WH"    : 17112, // Women's Health
 ]
 
