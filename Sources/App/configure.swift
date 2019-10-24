@@ -7,13 +7,13 @@ private let jiraProjects = [
     "APPTS" : 16875, // Booking/Appointments
     "AV"    : 16942, // Core Experience / Avalon
     "CE"    : 16937, // Consultation Experience
-    // TODO: [CNSMR-2402] Re-enable CM board once they've migrated all their tickets from private instance to main one
+    // TODO: [IOSP-101/IOSP-145] Re-enable CM board once they've migrated all their tickets from private instance to main one
     // "CM"    : 16920, // Condition Management
     "CNSMR" : 16968, // Consumer Apps (Native/Core)
     "COREUS": 17127, // Babylon US Core Product
     "CW"    : 16832, // Consumer Web
     "GW"    : 16949, // Triage UI
-    // TODO: [CNSMR-2402] Re-enable IDM once this board have migrated to use the standard setup for their JIRA fields
+    // TODO: [IOSP-101/IOSP-147] Re-enable IDM once this board have migrated to use the standard setup for their JIRA fields
     // "IDM"   : 16903, // Identity Platform / Identity Management
     "IOSP"  : 17263, // iOS Platform Squad
     "MS"    : 17233, // Monitor Squad
@@ -24,8 +24,7 @@ private let jiraProjects = [
     "PRSCR" : 16840, // Prescriptions
     "SDK"   : 16975, // SDK
     "TEL"   : 16857, // Telus
-    // TODO: [CNSMR-2402] Re-enable TES once this board have migrated to use the standard setup for their JIRA fields
-    // "TES"   : 17074, // Test Kits
+    "TK"    : 17299, // Test Kits
     "WH"    : 17112, // Women's Health
 ]
 
