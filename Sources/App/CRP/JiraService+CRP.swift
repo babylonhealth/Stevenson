@@ -75,7 +75,7 @@ extension JiraService {
         var changelog: FieldType.TextArea.Document
         var environments: [Environment]
         var releaseType: ReleaseType
-        @CodableDate<YMDDateFormat>
+        @CustomCodable<YMDDate>
         var targetDate: Date
         var businessImpact: FieldType.TextArea.Document
         let jiraReleaseURL: String
