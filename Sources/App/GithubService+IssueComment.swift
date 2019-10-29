@@ -19,10 +19,6 @@ struct CommentAction: Content {
         let number: Int
     }
 
-    struct PullRequest: Content {
-        let url: URL
-    }
-
     struct Repository: Content {
         let full_name: String
     }
