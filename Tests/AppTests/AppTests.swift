@@ -10,24 +10,37 @@ final class AppTests: XCTestCase {
         "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)",
         "[SDK-4142] Commit 2",
         "[CNSMR-2045] Commit 3",
-        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE nboard
+        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE board
         "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
     ]
 
     static let fakeVersion: JiraService.Version = {
-        let dateComps = DateComponents(
-            calendar: Calendar(identifier: .gregorian),
-            timeZone: TimeZone(secondsFromGMT: 0),
-            year: 2019, month: 07, day: 10
-        )
         let v = JiraService.Version(
             projectId: 123,
             description: "Fake Version 1.2.3 for tests",
             name: "Fake 1.2.3",
-            startDate: dateComps.date!
+            startDate: fixedGMTDate(year: 2019, month: 07, day: 10)
         )
         return v
     }()
+
+    func testReleaseType() {
+        typealias ReleaseType = JiraService.CRPIssueFields.ReleaseType
+        let expectations: [String: ReleaseType] = [
+            "5"      : .major,
+            "5.0"    : .major,
+            "5.0.0"  : .major,
+            "4.1"    : .minor,
+            "4.1.0"  : .minor,
+            "3.2.1"  : .patch,
+            "3.0.1"  : .patch,
+            "3.0.0.1": .patch,
+        ]
+        for (version, expectedType) in expectations {
+            XCTAssertEqual(ReleaseType(version: version).id, expectedType.id, "\(version): mismatch")
+            XCTAssertEqual(ReleaseType(version: "\(version)-rc1").id, expectedType.id, "\(version)-rc1: mismatch")
+        }
+    }
 
     func testJiraDocumentFromCommits() throws {
         let release = try GitHubService.Release(
@@ -59,7 +72,8 @@ final class AppTests: XCTestCase {
             jiraBaseURL: jiraBaseURL,
             crpConfig: crpConfig,
             release: release,
-            changelog: changelogDoc
+            changelog: changelogDoc,
+            targetDate: fixedGMTDate(year: 2019, month: 10, day: 31)
         )
 
         addAttachment(name: "Ticket", object: issue)
@@ -154,34 +168,6 @@ extension AppTests {
     static let expectedTicketJson = #"""
         {
           "fields" : {
-            "customfield_12538" : {
-              "type" : "doc",
-              "content" : [
-                {
-                  "type" : "paragraph",
-                  "content" : [
-                    {
-                      "type" : "text",
-                      "text" : "TBD"
-                    }
-                  ]
-                }
-              ],
-              "version" : 1
-            },
-            "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
-            "issuetype" : {
-              "id" : "11439"
-            },
-            "customfield_12592" : [
-              {
-                "id" : "12395"
-              }
-            ],
-            "summary" : "Fake-Publish Dummy App v1.2.3",
-            "customfield_12527" : {
-              "id" : "11941"
-            },
             "customfield_12537" : {
               "type" : "doc",
               "content" : [
@@ -333,6 +319,14 @@ extension AppTests {
               ],
               "version" : 1
             },
+            "customfield_11514" : "2019-10-31",
+            "issuetype" : {
+              "id" : "11439"
+            },
+            "project" : {
+              "id" : "13402"
+            },
+            "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
             "customfield_11512" : {
               "type" : "doc",
               "content" : [
@@ -348,12 +342,36 @@ extension AppTests {
               ],
               "version" : 1
             },
-            "project" : {
-              "id" : "13402"
-            },
-            "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
+            "summary" : "Fake-Publish Dummy App v1.2.3",
+            "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
             "customfield_11505" : {
               "name" : "mark.bates"
+            },
+            "customfield_12592" : [
+              {
+                "id" : "12395"
+              }
+            ],
+            "customfield_12527" : {
+              "id" : "11941"
+            },
+            "customfield_12794" : {
+              "id" : "12653"
+            },
+            "customfield_12538" : {
+              "type" : "doc",
+              "content" : [
+                {
+                  "type" : "paragraph",
+                  "content" : [
+                    {
+                      "type" : "text",
+                      "text" : "TBD"
+                    }
+                  ]
+                }
+              ],
+              "version" : 1
             }
           }
         }

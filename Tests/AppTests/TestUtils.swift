@@ -43,3 +43,11 @@ func toJSONData<T: Encodable>(_ object: T) throws -> Data {
     encoder.outputFormatting = .prettyPrinted
     return try encoder.encode(object)
 }
+
+func fixedGMTDate(year: Int, month: Int, day: Int) -> Date {
+    return DateComponents(
+        calendar: Calendar(identifier: .gregorian),
+        timeZone: TimeZone(secondsFromGMT: 0),
+        year: year, month: month, day: day
+    ).date!
+}
