@@ -1,6 +1,6 @@
 import Foundation
 
-public enum YMDDate: CodableTransformer {
+public enum YMDDate: TransformerType {
     public static func encode(decodedObject date: Date) throws -> String {
         Self.formatter.string(from: date)
     }
