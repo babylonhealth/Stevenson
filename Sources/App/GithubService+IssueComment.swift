@@ -9,6 +9,7 @@ struct CommentAction: Content {
     let action: String
     let comment: Comment
     let issue: Issue
+    let repository: Repository
 
     struct Comment: Content {
         let body: String
@@ -21,6 +22,10 @@ struct CommentAction: Content {
     struct PullRequest: Content {
         let url: URL
     }
+
+    struct Repository: Content {
+        let full_name: String
+    }
 }
 
 extension GitHubService {
@@ -28,8 +33,7 @@ extension GitHubService {
         let headers = request.http.headers
 
         guard
-            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true,
-            headers.firstValue(name: .init("X-GitHub-Event")) == "issue_comment"
+            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
         else {
             throw Abort(.badRequest)
         }
@@ -39,17 +43,26 @@ extension GitHubService {
 }
 
 extension GitHubService {
-    // Handle incoming webhook for issue comment
+    // Handle incoming webhook for issue or PR comment
+    // https://developer.github.com/v3/activity/events/types/#issuecommentevent
     func issueComment(
         on request: Request,
         ci: CircleCIService
     ) throws -> Future<Response> {
         return try webhook(from: request).flatMap { (action: CommentAction) in
-            guard action.comment.body.hasPrefix("@ios-bot-babylon") else {
+            let headers = request.http.headers
+            let textComponents = action.comment.body.split(separator: " ")
+
+            guard
+                headers.firstValue(name: .init("X-GitHub-Event")) == "issue_comment",
+                action.comment.body.hasPrefix("@ios-bot-babylon"),
+                textComponents.count >= 2,
+                let repo = RepoMapping.all.first(where: { _, mapping in
+                    action.repository.full_name == mapping.repository.fullName
+                })?.value.repository
+            else {
                 throw Abort(.badRequest)
             }
-
-            let repo = RepoMapping.ios.repository
 
             return try self.pullRequest(
                 number: action.issue.number,
@@ -57,11 +70,6 @@ extension GitHubService {
                 on: request
             ).flatMap { pullRequest in
                 let branch = pullRequest.head.ref
-
-                let textComponents = action.comment.body.split(separator: " ")
-                guard textComponents.count >= 2 else {
-                    throw Abort(.badRequest)
-                }
 
                 if textComponents[1] == "fastlane" {
                     return try ci.runLane(
