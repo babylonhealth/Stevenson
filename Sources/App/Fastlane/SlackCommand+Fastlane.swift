@@ -94,30 +94,20 @@ extension SlackCommand {
         ci: CircleCIService,
         on container: Container
     ) throws -> Future<SlackResponse> {
-        let pipeline = String(metadata.textComponents[0])
-        let optionsKeysValues = metadata.textComponents.dropFirst()
-            .compactMap { (component: String.SubSequence) -> (String, CircleCIService.PipelineRequest.Parameter)? in
-                let components = component.split(separator: ":")
-                if components.count == 1 {
-                    return (String(components[0]), .bool(true))
-                } else if components.count == 2 {
-                    return (String(components[0]), .string(String(components[1])))
-                } else {
-                    return nil
-                }
-        }
-        var parameters = Dictionary(optionsKeysValues, uniquingKeysWith: { $1 })
-        parameters["push"] = .bool(false)
-        parameters[pipeline] = .bool(true)
-        // branch parameter is not needed in parameters and actually results in unexpected parameter error
-        parameters["branch"] = nil
+        let branch = branch
+            ?? metadata.value(forOption: .branch)
+            ?? RepoMapping.ios.repository.baseBranch
 
-        return try run(
-            pipeline,
-            parameters: parameters,
-            metadata: metadata,
+        let pipeline = try ci.runPipeline(
+            textComponents: metadata.textComponents,
             branch: branch,
-            ci: ci,
+            project: RepoMapping.ios.repository.fullName,
+            on: container
+        )
+
+        return respond(
+            to: pipeline,
+            metadata: metadata,
             on: container
         )
     }
@@ -128,45 +118,33 @@ extension SlackCommand {
         ci: CircleCIService,
         on container: Container
     ) throws -> Future<SlackResponse> {
-        let lane = String(metadata.textComponents[0])
-        let options = metadata.textComponents.dropFirst().joined(separator: " ")
+        let branch = branch
+            ?? metadata.value(forOption: .branch)
+            ?? RepoMapping.ios.repository.baseBranch
 
-        let parameters: [String: CircleCIService.PipelineRequest.Parameter] = [
-            "push": .bool(false),
-            "lane": .string(lane),
-            "options": .string(options)
-        ]
-        return try run(
-            lane,
-            parameters: parameters,
-            metadata: metadata,
+        let pipeline = try ci.runLane(
+            textComponents: metadata.textComponents,
             branch: branch,
-            ci: ci,
+            project: RepoMapping.ios.repository.fullName,
+            on: container
+        )
+        return respond(
+            to: pipeline,
+            metadata: metadata,
             on: container
         )
     }
 
-    private static func run(
-        _ pipelineOrLane: String,
-        parameters: [String: CircleCIService.PipelineRequest.Parameter],
+    private static func respond(
+        to pipeline: Future<CircleCIService.PipelineResponse>,
         metadata: SlackCommandMetadata,
-        branch: String?,
-        ci: CircleCIService,
         on container: Container
-    ) throws -> Future<SlackResponse> {
-        let branch = branch ?? metadata.value(forOption: .branch)
-
-        return try ci
-            .pipeline(
-                parameters: parameters,
-                project: RepoMapping.ios.repository.fullName,
-                branch: branch ?? RepoMapping.ios.repository.baseBranch,
-                on: container
-            )
+    ) -> Future<SlackResponse> {
+        return pipeline
             .map {
                 SlackResponse("""
                     You asked me: `\(metadata.command) \(metadata.text)`.
-                    🚀 Triggered `\(pipelineOrLane)` on the `\($0.branch)` branch.
+                    🚀 Triggered `\(metadata.textComponents[0])` on the `\($0.branch)` branch.
                     \($0.buildURL)
                     """,
                     visibility: .channel
