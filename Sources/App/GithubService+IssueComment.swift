@@ -57,7 +57,8 @@ extension GitHubService {
                     action.repository.full_name == mapping.repository.fullName
                 })?.value.repository
             else {
-                throw Abort(.badRequest)
+                // fail command but still return ok code so that we don't have hooks reported as failed on github
+                throw Abort(.ok)
             }
 
             return try self.pullRequest(
