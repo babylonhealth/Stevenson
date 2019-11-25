@@ -17,6 +17,10 @@ public func routes(
         try github.issueComment(on: request, ci: ci)
     }
 
+    router.post("github/label") { (request) -> Future<Response> in
+        try github.labelEvent(on: request, ci: ci)
+    }
+
     commands.forEach { command in
         router.post(command.name) { req -> Future<Response> in
             do {
