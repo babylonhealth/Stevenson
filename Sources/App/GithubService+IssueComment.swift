@@ -58,7 +58,7 @@ extension GitHubService {
                 })?.value.repository
             else {
                 // return ok code so that we don't have hooks reported as failed on github
-                request.future(request.response(http: .init(status: .ok)))
+                return request.future(request.response(http: .init(status: .ok)))
             }
 
             return try self.pullRequest(
