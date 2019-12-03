@@ -27,20 +27,17 @@ extension GitHubService {
         return try webhook(from: request).flatMap { (action: PullRequestEvent) in
             let headers = request.http.headers
 
+            let shouldRunChecks: Bool = (action.label.name == "Merge" && action.mergableState != "blocked") || action.label.name == "Run checks 🤖"
+
             guard
                 headers.firstValue(name: .init("X-GitHub-Event")) == "pull_request",
                 action.action == "labeled",
                 let repo = RepoMapping.all.first(where: { _, mapping in
                     action.repository.full_name == mapping.repository.fullName
                 })?.value.repository,
-            action.label.name == "Merge" || action.label.name == "Run checks 🤖"
+                shouldRunChecks
             else {
                 // fail command but still return ok code so that we don't have hooks reported as failed on GitHub
-                return request.future(request.response(http: .init(status: .ok)))
-            }
-
-            // return if merging but not blocked
-            if action.label.name == "Merge" && action.mergableState != "blocked" {
                 return request.future(request.response(http: .init(status: .ok)))
             }
 
