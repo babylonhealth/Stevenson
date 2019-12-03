@@ -33,18 +33,21 @@ extension GitHubService {
                 let repo = RepoMapping.all.first(where: { _, mapping in
                     action.repository.full_name == mapping.repository.fullName
                 })?.value.repository,
-                action.label == "Merge" || action.label == "Run checks 🤖"
+            action.label.name == "Merge" || action.label.name == "Run checks 🤖"
             else {
                 // fail command but still return ok code so that we don't have hooks reported as failed on GitHub
                 return request.future(request.response(http: .init(status: .ok)))
             }
 
             // return if merging but not blocked
-            if action.label == "Merge" && action.mergableState != "blocked" {
+            if action.label.name == "Merge" && action.mergableState != "blocked" {
                 return request.future(request.response(http: .init(status: .ok)))
             }
 
             // TODO if test, remove label
+
+            if action.label.name == "Run checks 🤖" {
+            }
 
             return try self.pullRequest(
                 number: action.number,
@@ -52,9 +55,11 @@ extension GitHubService {
                 on: request
             ).flatMap { pullRequest in
                 let branch = pullRequest.head.ref
+                let workflow = "test_pr"
+                let textComponents = workflow.split(separator: " ")
 
                 return try ci.runPipeline(
-                    textComponents: "test_pr",
+                    textComponents: Array(textComponents),
                     branch: branch,
                     project: repo.fullName,
                     on: request
