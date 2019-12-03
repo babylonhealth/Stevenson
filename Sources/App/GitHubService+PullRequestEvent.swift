@@ -24,7 +24,7 @@ struct PullRequestEvent: Content {
 extension GitHubService {
     // Handle incoming webhook for PR events
     // https://developer.github.com/v3/activity/events/types/#pullrequestevent
-    func pullRequestEvent(
+    func labelEvent(
         on request: Request,
         ci: CircleCIService
     ) throws -> Future<Response> {
