@@ -39,7 +39,7 @@ extension GitHubService {
                 action.label == "Merge" || action.label == "Run checks 🤖"
             else {
                 // fail command but still return ok code so that we don't have hooks reported as failed on GitHub
-                throw Abort(.ok)
+                return request.future(request.response(http: .init(status: .ok)))
             }
 
             return try self.pullRequest(
