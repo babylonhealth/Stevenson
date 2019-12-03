@@ -10,6 +10,7 @@ struct PullRequestEvent: Content {
     let number: Int
     let repository: Repository
     let label: Label
+    let mergableState: String
 
     struct Label: Content {
         let name: String
@@ -39,6 +40,11 @@ extension GitHubService {
                 action.label == "Merge" || action.label == "Run checks 🤖"
             else {
                 // fail command but still return ok code so that we don't have hooks reported as failed on GitHub
+                return request.future(request.response(http: .init(status: .ok)))
+            }
+
+            // return if merging but not blocked
+            if action.label == "Merge" && action.mergableState != "blocked" {
                 return request.future(request.response(http: .init(status: .ok)))
             }
 
