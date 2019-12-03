@@ -1,10 +1,6 @@
 import Vapor
 import Stevenson
 
-struct PingAction: Content {
-    let zen: String
-}
-
 struct PullRequestEvent: Content {
     let action: String
     let number: Int
