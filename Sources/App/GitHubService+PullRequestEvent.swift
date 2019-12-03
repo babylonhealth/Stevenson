@@ -4,16 +4,12 @@ import Stevenson
 struct PullRequestEvent: Content {
     let action: String
     let number: Int
-    let repository: Repository
+    let repository: GitHubService.Repository
     let label: Label
     let mergableState: String
 
     struct Label: Content {
         let name: String
-    }
-
-    struct Repository: Content {
-        let full_name: String
     }
 }
 
@@ -33,7 +29,7 @@ extension GitHubService {
                 headers.firstValue(name: .init("X-GitHub-Event")) == "pull_request",
                 action.action == "labeled",
                 let repo = RepoMapping.all.first(where: { _, mapping in
-                    action.repository.full_name == mapping.repository.fullName
+                    action.repository.fullName == mapping.repository.fullName
                 })?.value.repository,
                 shouldRunChecks
             else {
@@ -41,9 +37,13 @@ extension GitHubService {
                 return request.future(request.response(http: .init(status: .ok)))
             }
 
-            // TODO if test, remove label
-
             if action.label.name == "Run checks 🤖" {
+                _ = try self.removeLabel(
+                    in: action.repository,
+                    prNumber: action.number,
+                    name: action.label.name,
+                    on: request
+                )
             }
 
             return try self.pullRequest(

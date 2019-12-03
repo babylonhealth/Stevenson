@@ -14,7 +14,7 @@ public struct GitHubService: Service {
 }
 
 extension GitHubService {
-    public struct Repository {
+    public struct Repository: Codable {
         public let fullName: String
         public let baseBranch: String
 
@@ -84,6 +84,18 @@ extension GitHubService {
             try container.client().post(url, headers: headers) {
                 try $0.content.encode(["ref": "refs/heads/\(name)", "sha": ref.sha])
             }
+        }
+    }
+
+    public func removeLabel(
+        in repo: Repository,
+        prNumber: Int,
+        name: String,
+        on container: Container
+    ) throws -> Future<GitHubService.PullRequest> {
+        let url = URL(string: "/repos/\(repo.fullName)/issues/\(prNumber)/labels/\(name)", relativeTo: baseURL)!
+        return try request(.capture()) {
+            try container.client().delete(url, headers: headers)
         }
     }
 
