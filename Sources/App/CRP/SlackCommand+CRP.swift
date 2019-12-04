@@ -39,36 +39,14 @@ extension SlackCommand {
                     branch: branch
                 )
 
-                let jiraVersionName = repoMapping.crp.jiraVersionName(release)
-
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .map { ChangelogSection.makeSections(from: $0, for: release) }
-                    .flatMap { (changelogSections: [ChangelogSection]) -> Future<(JiraService.CreatedIssue, [ChangelogSection])> in
-                        // Create CRP Issue
-                        let crpIssue = JiraService.makeCRPIssue(
-                            jiraBaseURL: jira.baseURL,
-                            crpConfig: repoMapping.crp,
-                            release: release,
-                            changelog: jira.document(from: changelogSections)
-                        )
-
-                        let futureIssue = try jira.create(issue: crpIssue, on: container)
-                        return futureIssue.map { ($0, changelogSections) }
-                    }
-                    .catchError(.capture())
-                    .flatMap { (crpIssue: JiraService.CreatedIssue, changelogSections: [ChangelogSection]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
-                        // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                        let report = try jira.createAndSetFixedVersions(
-                            changelogSections: changelogSections,
-                            versionName: jiraVersionName,
-                            on: container
-                        )
-                        return report.map { (crpIssue, $0) }
+                    .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
+                        try jira.executeCRPTicketProcess(release: release, repoMapping: repoMapping, commitMessages: commitMessages, container: container)
                     }
                     .map { (crpIssue, report) in
                         let fixVersionReport = report.messages.isEmpty
-                            ? "✅ Successfully added '\(jiraVersionName)' in 'Fixed Versions' for all tickets"
+                            ? "✅ Successfully added '\(repoMapping.crp.jiraVersionName(release))' in 'Fixed Versions' for all tickets"
                             : "❌ Some errors occurred when trying to set 'Fixed Versions' on some tickets, you might need to fix them manually\n\(report)"
 
                         return SlackResponse("""
@@ -86,7 +64,6 @@ extension SlackCommand {
         })
     }
 }
-
 
 struct ChangelogSection {
     let board: String?

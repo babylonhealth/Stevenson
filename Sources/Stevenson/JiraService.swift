@@ -197,9 +197,9 @@ extension JiraService {
 extension JiraService {
     public struct Version: Content {
         public var id: String?
-        let projectId: Int
-        let description: String
-        let name: String
+        public let projectId: Int
+        public let description: String
+        public let name: String
         let released: Bool
         @CustomCodable<YMDDate>
         var startDate: Date
@@ -221,8 +221,16 @@ extension JiraService {
                 try $0.content.encode(version)
             }
             .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(Version.self)
+            .flatMap { response in
+                print(response)
+                if response.http.status == .created {
+                    return try response.content
+                        .decode(Version.self)
+                } else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
             }
             .catchError(.capture())
     }
