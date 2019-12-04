@@ -99,15 +99,18 @@ extension JiraService {
 
     public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> Future<CreatedIssue> {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
-        self.logger.info("[JIRA] Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)")
+
+        let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
+        self.logger.info("[JIRA] \(logMessage)")
+
         return try container.client()
             .post(fullURL, headers: self.headers) { request in
                 try request.content.encode(issue)
-                self.logger.debug("[JIRA-API] Request for creating issue <\(issue.fields.summary)>:\n\(request)")
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
             .flatMap { response in
-                self.logger.debug("[JIRA-API] Response for creating issue <\(issue.fields.summary)>:\n\(response)")
+                self.logResponse(logMessage, response)
                 if response.http.status == .created {
                     return try response.content
                         .decode(CreatedIssue.self)
@@ -145,16 +148,19 @@ extension JiraService {
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
         let fullURL = URL(string: "/rest/api/3/version", relativeTo: baseURL)!
+
         let projectKey = self.knownProjects.first(where: { $0.value == version.projectId })?.key ?? "#\(version.projectId)"
-        self.logger.info("[JIRA] Creating a new JIRA version <\(version.name)> on board <\(projectKey)")
+        let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
+        self.logger.info("[JIRA] \(logMessage)")
+
         return try container.client()
             .post(fullURL, headers: self.headers) { request in
                 try request.content.encode(version)
-                self.logger.debug("[JIRA-API] Request for creating JIRA version <\(version.name)> on board <\(projectKey):\n\(request)")
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
             .flatMap { response in
-                self.logger.debug("[JIRA-API] Response for creating JIRA version <\(version.name)> on board <\(projectKey):\n\(response)")
+                self.logResponse(logMessage, response)
                 if response.http.status == .created {
                     return try response.content
                         .decode(Version.self)
@@ -188,15 +194,18 @@ extension JiraService {
 
     public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Response> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
-        self.logger.info("[JIRA] Setting Fix Version field to <\(version.id ?? "nil")-\(version.name)> for ticket <\(ticket)")
+
+        let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
+        self.logger.info("[JIRA] \(logMessage)")
+
         return try container.client()
             .put(fullURL, headers: self.headers) { request in
                 try request.content.encode(VersionAddUpdate(version: version))
-                self.logger.debug("[JIRA-API] Request for setting Fix Version field on ticket \(ticket):\n\(request)")
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
             .flatMap { response -> Future<Response> in
-                self.logger.debug("[JIRA-API] Response for setting Fix Version field on ticket \(ticket):\n\(response)")
+                self.logResponse(logMessage, response)
                 guard response.http.status == .noContent else {
                     return try response.content
                         .decode(ServiceError.self)
@@ -205,5 +214,17 @@ extension JiraService {
                 return response.future(response)
             }
             .catchError(.capture())
+    }
+}
+
+// MARK: Helpers
+
+extension JiraService {
+    fileprivate func logRequest(_ message: String, _ request: Request) {
+        self.logger.debug("[JIRA-API] Request for \(message):\n======>\n\(request)\n<======")
+    }
+
+    fileprivate func logResponse(_ message: String, _ response: Response) {
+        self.logger.debug("[JIRA-API] response for \(message):\n======>\n\(response)\n<======")
     }
 }
