@@ -103,8 +103,8 @@ extension JiraService {
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
         self.logger.info("[JIRA] \(logMessage)")
 
-        return try container.client()
-            .post(fullURL, headers: self.headers) { request in
+        return try container.make(SlowClient.self)
+            .post(fullURL, headers: self.headers, on: container) { request in
                 try request.content.encode(issue)
                 self.logRequest(logMessage, request)
             }
@@ -153,8 +153,8 @@ extension JiraService {
         let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
         self.logger.info("[JIRA] \(logMessage)")
 
-        return try container.client()
-            .post(fullURL, headers: self.headers) { request in
+        return try container.make(SlowClient.self)
+            .post(fullURL, headers: self.headers, on: container) { request in
                 try request.content.encode(version)
                 self.logRequest(logMessage, request)
             }
@@ -198,8 +198,8 @@ extension JiraService {
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
         self.logger.info("[JIRA] \(logMessage)")
 
-        return try container.client()
-            .put(fullURL, headers: self.headers) { request in
+        return try container.make(SlowClient.self)
+            .put(fullURL, headers: self.headers, on: container) { request in
                 try request.content.encode(VersionAddUpdate(version: version))
                 self.logRequest(logMessage, request)
             }

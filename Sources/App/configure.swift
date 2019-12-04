@@ -72,4 +72,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var middlewares = MiddlewareConfig()
     middlewares.use(ErrorMiddleware.self)
     services.register(middlewares)
+
+    // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
+    let slowClient = SlowClient()
+    services.register(slowClient)
 }
