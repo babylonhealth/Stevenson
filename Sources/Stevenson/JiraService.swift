@@ -6,8 +6,9 @@ public struct JiraService {
     private let headers: HTTPHeaders
     // Whitelist of Project Keys, and their corresponding ID, on which we're allowed to interact and create JIRA versions
     public let knownProjects: [String: Int]
+    public let logger: Logger
 
-    public init(baseURL: URL, username: String, password: String, knownProjects: [String: Int]) {
+    public init(baseURL: URL, username: String, password: String, knownProjects: [String: Int], logger: Logger) {
         self.baseURL = baseURL
 
         let base64Auth = Data("\(username):\(password)".utf8).base64EncodedString(options: [])
@@ -17,6 +18,7 @@ public struct JiraService {
             "Accept": "application/json"
         ]
         self.knownProjects = knownProjects
+        self.logger = logger
     }
 }
 
@@ -73,6 +75,7 @@ extension JiraService {
 public protocol JiraIssueFields: Content {
     var project: JiraService.FieldType.ObjectID { get }
     var issueType: JiraService.FieldType.ObjectID { get }
+    var summary: String { get }
 }
 
 extension JiraService {
@@ -96,13 +99,23 @@ extension JiraService {
 
     public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> Future<CreatedIssue> {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
+        self.logger.info("[JIRA] Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)")
         return try container.client()
-            .post(fullURL, headers: self.headers) {
-                try $0.content.encode(issue)
+            .post(fullURL, headers: self.headers) { request in
+                try request.content.encode(issue)
+                self.logger.debug("[JIRA-API] Request for creating issue <\(issue.fields.summary)>:\n\(request)")
             }
             .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(CreatedIssue.self)
+            .flatMap { response in
+                self.logger.debug("[JIRA-API] Response for creating issue <\(issue.fields.summary)>:\n\(response)")
+                if response.http.status == .created {
+                    return try response.content
+                        .decode(CreatedIssue.self)
+                } else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
             }
             .catchError(.capture())
     }
@@ -132,13 +145,16 @@ extension JiraService {
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
         let fullURL = URL(string: "/rest/api/3/version", relativeTo: baseURL)!
+        let projectKey = self.knownProjects.first(where: { $0.value == version.projectId })?.key ?? "#\(version.projectId)"
+        self.logger.info("[JIRA] Creating a new JIRA version <\(version.name)> on board <\(projectKey)")
         return try container.client()
-            .post(fullURL, headers: self.headers) {
-                try $0.content.encode(version)
+            .post(fullURL, headers: self.headers) { request in
+                try request.content.encode(version)
+                self.logger.debug("[JIRA-API] Request for creating JIRA version <\(version.name)> on board <\(projectKey):\n\(request)")
             }
             .catchError(.capture())
             .flatMap { response in
-                print(response)
+                self.logger.debug("[JIRA-API] Response for creating JIRA version <\(version.name)> on board <\(projectKey):\n\(response)")
                 if response.http.status == .created {
                     return try response.content
                         .decode(Version.self)
@@ -172,13 +188,15 @@ extension JiraService {
 
     public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Response> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
-
+        self.logger.info("[JIRA] Setting Fix Version field to <\(version.id ?? "nil")-\(version.name)> for ticket <\(ticket)")
         return try container.client()
-            .put(fullURL, headers: self.headers) {
-                try $0.content.encode(VersionAddUpdate(version: version))
+            .put(fullURL, headers: self.headers) { request in
+                try request.content.encode(VersionAddUpdate(version: version))
+                self.logger.debug("[JIRA-API] Request for setting Fix Version field on ticket \(ticket):\n\(request)")
             }
             .catchError(.capture())
             .flatMap { response -> Future<Response> in
+                self.logger.debug("[JIRA-API] Response for setting Fix Version field on ticket \(ticket):\n\(response)")
                 guard response.http.status == .noContent else {
                     return try response.content
                         .decode(ServiceError.self)
