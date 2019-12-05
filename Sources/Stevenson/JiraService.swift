@@ -109,8 +109,10 @@ extension JiraService {
                 self.logRequest(logMessage, request)
             }
             .catchError(.capture())
-            .flatMap { response in
+            .do { response in
                 self.logResponse(logMessage, response)
+            }
+            .flatMap { response in
                 if response.http.status == .created {
                     return try response.content
                         .decode(CreatedIssue.self)
@@ -159,8 +161,10 @@ extension JiraService {
                 self.logRequest(logMessage, request)
             }
             .catchError(.capture())
-            .flatMap { response in
+            .do { response in
                 self.logResponse(logMessage, response)
+            }
+            .flatMap { response in
                 if response.http.status == .created {
                     return try response.content
                         .decode(Version.self)
@@ -204,8 +208,10 @@ extension JiraService {
                 self.logRequest(logMessage, request)
             }
             .catchError(.capture())
-            .flatMap { response -> Future<Response> in
+            .do { response in
                 self.logResponse(logMessage, response)
+            }
+            .flatMap { response -> Future<Response> in
                 guard response.http.status == .noContent else {
                     return try response.content
                         .decode(ServiceError.self)
