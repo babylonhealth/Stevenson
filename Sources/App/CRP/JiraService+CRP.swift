@@ -1,6 +1,25 @@
 import Vapor
 import Stevenson
 
+// MARK: Constants
+
+// [CNSMR-1319] TODO: Use a config file to parametrise those
+extension JiraService {
+    /// Official CRP Board
+    static let crpProjectID = FieldType.ObjectID(id: "13402")
+
+    static func accountablePerson(release: GitHubService.Release) -> String {
+        let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
+        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
+        return isTelus ? "ryan.covill" : "mark.bates"
+    }
+
+    /// Estimate time between when the CRP ticket is created and the app is released to the AppStore
+    static let releaseEstimateDuration = DateComponents(day: 7)
+}
+
+// MARK: - CRP Ticket Dance
+
 extension JiraService {
     static func makeCRPIssue(
         jiraBaseURL: URL,
@@ -10,10 +29,7 @@ extension JiraService {
         changelog: FieldType.TextArea.Document,
         targetDate: Date? = nil // will use `guessTargetDate()` if nil
     ) -> CRPIssue {
-        // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
-        let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
-        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
-        let accountablePerson = isTelus ? "ryan.covill" : "mark.bates"
+        let accountablePerson = JiraService.accountablePerson(release: release)
         let changelog = changelog
         let fields = CRPIssueFields(
             jiraBaseURL: jiraBaseURL,
@@ -31,13 +47,10 @@ extension JiraService {
 
     private static func guessTargetDate() -> Date {
         let now = Date()
-        // Estimate time between when the CRP ticket is created and the app is released to the AppStore
-        let estimateOffset = DateComponents(day: 7)
+        let estimateOffset = JiraService.releaseEstimateDuration
         return Calendar(identifier: .gregorian).date(byAdding: estimateOffset, to: now) ?? now
     }
 }
-
-// MARK: - CRP Ticket Dance
 
 extension JiraService {
     /// Do the CRP ticket dance, which consists of:
@@ -78,6 +91,7 @@ extension JiraService {
 }
 
 // MARK: - Define the CRP Issue type
+
 extension JiraService {
 
     /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
@@ -193,6 +207,7 @@ extension JiraService.CRPIssueFields.ReleaseType {
 }
 
 // MARK: Create JIRA Documents
+
 extension JiraService {
     func document(from changelog: [ChangelogSection]) -> FieldType.TextArea.Document {
         return JiraService.document(from: changelog, jiraBaseURL: self.baseURL)

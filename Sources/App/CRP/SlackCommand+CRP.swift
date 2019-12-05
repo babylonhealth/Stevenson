@@ -46,7 +46,7 @@ extension SlackCommand {
                             commitMessages: commitMessages,
                             release: release,
                             repoMapping: repoMapping,
-                            crpProjectID: .init(id: "13402"), // CRP Board
+                            crpProjectID: JiraService.crpProjectID,
                             container: container
                         )
                     }
