@@ -45,10 +45,10 @@ extension JiraService {
     ///  - then create all the JIRA versions on each boards,
     ///  - then for each board, set the Fix Version field for each ticket concerned by the CRP for that board's JIRA version
     internal func executeCRPTicketProcess(
-        crpProjectID: JiraService.FieldType.ObjectID = .init(id: "13402"), // CRP Project
+        commitMessages: [String],
         release: GitHubService.Release,
         repoMapping: RepoMapping,
-        commitMessages: [String],
+        crpProjectID: JiraService.FieldType.ObjectID,
         container: Request
     ) throws -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> {
 
@@ -68,12 +68,11 @@ extension JiraService {
             .catchError(.capture())
             .flatMap { (crpIssue: JiraService.CreatedIssue) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
                 // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                let report = try self.createAndSetFixedVersions(
+                return try self.createAndSetFixedVersions(
                     changelogSections: changelogSections,
                     versionName: jiraVersionName,
                     on: container
-                )
-                return report.map { (crpIssue, $0) }
+                ).map { (crpIssue, $0) }
         }
     }
 }

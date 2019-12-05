@@ -42,8 +42,15 @@ extension SlackCommand {
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
                     .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
-                        try jira.executeCRPTicketProcess(release: release, repoMapping: repoMapping, commitMessages: commitMessages, container: container)
+                        try jira.executeCRPTicketProcess(
+                            commitMessages: commitMessages,
+                            release: release,
+                            repoMapping: repoMapping,
+                            crpProjectID: .init(id: "13402"), // CRP Board
+                            container: container
+                        )
                     }
+                    .catchError(.capture())
                     .map { (crpIssue, report) in
                         let fixVersionReport = report.messages.isEmpty
                             ? "✅ Successfully added '\(repoMapping.crp.jiraVersionName(release))' in 'Fixed Versions' for all tickets"

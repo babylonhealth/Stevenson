@@ -93,9 +93,6 @@ private final class SlowMode<T, U> {
 
 // MARK: SlowClient
 
-
-import Vapor
-
 public final class SlowClient: Service {
     private let slowMode: SlowMode<Request, Response>
 
