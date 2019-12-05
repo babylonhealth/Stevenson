@@ -70,6 +70,7 @@ final class AppTests: XCTestCase {
         )
         let issue = JiraService.makeCRPIssue(
             jiraBaseURL: jiraBaseURL,
+            crpProjectID: .init(id: "12345"),
             crpConfig: crpConfig,
             release: release,
             changelog: changelogDoc,
@@ -324,7 +325,7 @@ extension AppTests {
               "id" : "11439"
             },
             "project" : {
-              "id" : "13402"
+              "id" : "12345"
             },
             "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
             "customfield_11512" : {

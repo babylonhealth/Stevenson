@@ -6,8 +6,9 @@ public struct JiraService {
     private let headers: HTTPHeaders
     // Whitelist of Project Keys, and their corresponding ID, on which we're allowed to interact and create JIRA versions
     public let knownProjects: [String: Int]
+    public let logger: Logger
 
-    public init(baseURL: URL, username: String, password: String, knownProjects: [String: Int]) {
+    public init(baseURL: URL, username: String, password: String, knownProjects: [String: Int], logger: Logger) {
         self.baseURL = baseURL
 
         let base64Auth = Data("\(username):\(password)".utf8).base64EncodedString(options: [])
@@ -17,6 +18,7 @@ public struct JiraService {
             "Accept": "application/json"
         ]
         self.knownProjects = knownProjects
+        self.logger = logger
     }
 }
 
@@ -68,11 +70,12 @@ extension JiraService {
     }
 }
 
-// MARK: Issue creation
+// MARK: Issue creation API
 
 public protocol JiraIssueFields: Content {
     var project: JiraService.FieldType.ObjectID { get }
     var issueType: JiraService.FieldType.ObjectID { get }
+    var summary: String { get }
 }
 
 extension JiraService {
@@ -96,110 +99,41 @@ extension JiraService {
 
     public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> Future<CreatedIssue> {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
-        return try container.client()
-            .post(fullURL, headers: self.headers) {
-                try $0.content.encode(issue)
+
+        let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
+        self.logger.info("[JIRA] \(logMessage)")
+
+        return try container.make(SlowClient.self)
+            .post(fullURL, headers: self.headers, on: container) { request in
+                try request.content.encode(issue)
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(CreatedIssue.self)
+            .do { response in
+                self.logResponse(logMessage, response)
+            }
+            .flatMap { response in
+                if response.http.status == .created {
+                    return try response.content
+                        .decode(CreatedIssue.self)
+                } else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
             }
             .catchError(.capture())
     }
 }
 
-
-// MARK: Jira Common Field Types
-
-extension JiraService {
-    public enum FieldType {
-        public enum TextArea {
-            // See spec at: https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-            
-            public struct Document: Content {
-                let type = "doc"
-                let content: [DocContent]
-                let version = 1
-                public init(content: [DocContent]) {
-                    self.content = content
-                }
-                public init(text: String) {
-                    self.content = [DocContent.paragraph([.text(text)])]
-                }
-            }
-
-            public struct DocContent: Content {
-                let type: String
-                let attrs: [String: AnyCodable]?
-                let content: [DocContent]?
-                let text: String?
-
-                fileprivate init(type: String, attrs: [String: Any]? = nil, content: [DocContent]? = nil, text: String? = nil) {
-                    self.type = type
-                    self.attrs = attrs.map { $0.mapValues { AnyCodable($0) } }
-                    self.content = content
-                    self.text = text
-                }
-
-                public static func heading(level: Int, title: String) -> DocContent {
-                    return DocContent(type: "heading", attrs: ["level": level], content: [.text(title)])
-                }
-
-                public static func bulletList(items: [ListItem]) -> DocContent {
-                    return DocContent(type: "bulletList", content: items.map { $0.content })
-                }
-
-                public static func paragraph(_ content: [DocContent]) -> DocContent {
-                    return DocContent(type: "paragraph", content: content)
-                }
-
-                public static func inlineCard(baseURL: URL, ticketKey: String) -> DocContent {
-                    let url = "\(baseURL)/browse/\(ticketKey)#icft=\(ticketKey)"
-                    return DocContent(type: "inlineCard", attrs: ["url": url], content: nil)
-                }
-
-                public static func text(_ text: String) -> DocContent {
-                    return DocContent(type: "text", text: text)
-                }
-
-                public static func hardbreak() -> DocContent {
-                    return DocContent(type: "hardBreak")
-                }
-            }
-
-            public struct ListItem {
-                let content: DocContent
-                public init(content: [DocContent]) {
-                    self.content = DocContent(
-                        type: "listItem",
-                        content: [DocContent.paragraph(content)]
-                    )
-                }
-            }
-        }
-
-        public struct ObjectID: Content {
-            let id: String
-            public init(id: String) {
-                self.id = id
-            }
-        }
-
-        public struct User: Content {
-            let name: String
-            public init(name: String) {
-                self.name = name
-            }
-        }
-    }
-}
+// MARK: JIRA Versions creation API
 
 extension JiraService {
     public struct Version: Content {
         public var id: String?
-        let projectId: Int
-        let description: String
-        let name: String
+        public let projectId: Int
+        public let description: String
+        public let name: String
         let released: Bool
         @CustomCodable<YMDDate>
         var startDate: Date
@@ -216,17 +150,36 @@ extension JiraService {
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
         let fullURL = URL(string: "/rest/api/3/version", relativeTo: baseURL)!
-        return try container.client()
-            .post(fullURL, headers: self.headers) {
-                try $0.content.encode(version)
+
+        let projectKey = self.knownProjects.first(where: { $0.value == version.projectId })?.key ?? "#\(version.projectId)"
+        let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
+        self.logger.info("[JIRA] \(logMessage)")
+
+        return try container.make(SlowClient.self)
+            .post(fullURL, headers: self.headers, on: container) { request in
+                try request.content.encode(version)
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
-            .flatMap {
-                try $0.content.decode(Version.self)
+            .do { response in
+                self.logResponse(logMessage, response)
+            }
+            .flatMap { response in
+                if response.http.status == .created {
+                    return try response.content
+                        .decode(Version.self)
+                } else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
             }
             .catchError(.capture())
     }
+}
 
+// MARK: FixVersion field update API
+extension JiraService {
     public struct VersionAddUpdate: Content {
         let update: FixVersionUpdate
 
@@ -246,11 +199,18 @@ extension JiraService {
     public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Response> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
 
-        return try container.client()
-            .put(fullURL, headers: self.headers) {
-                try $0.content.encode(VersionAddUpdate(version: version))
+        let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
+        self.logger.info("[JIRA] \(logMessage)")
+
+        return try container.make(SlowClient.self)
+            .put(fullURL, headers: self.headers, on: container) { request in
+                try request.content.encode(VersionAddUpdate(version: version))
+                self.logRequest(logMessage, request)
             }
             .catchError(.capture())
+            .do { response in
+                self.logResponse(logMessage, response)
+            }
             .flatMap { response -> Future<Response> in
                 guard response.http.status == .noContent else {
                     return try response.content
@@ -260,5 +220,17 @@ extension JiraService {
                 return response.future(response)
             }
             .catchError(.capture())
+    }
+}
+
+// MARK: Helpers
+
+extension JiraService {
+    fileprivate func logRequest(_ message: String, _ request: Request) {
+        self.logger.debug("[JIRA-API] Request for \(message):\n======>\n\(request)\n<======")
+    }
+
+    fileprivate func logResponse(_ message: String, _ response: Response) {
+        self.logger.debug("[JIRA-API] response for \(message):\n======>\n\(response)\n<======")
     }
 }

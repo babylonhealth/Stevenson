@@ -30,6 +30,8 @@ private let jiraProjects = [
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
+    let logger = PrintLogger()
+
     let slack = SlackService(
         token: try attempt { Environment.slackToken }
     )
@@ -42,7 +44,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         baseURL: try attempt { Environment.jiraBaseURL.flatMap(URL.init(string:)) },
         username: try attempt { Environment.jiraUsername },
         password: try attempt { Environment.jiraToken },
-        knownProjects: jiraProjects
+        knownProjects: jiraProjects,
+        logger: logger
     )
 
     let github = GitHubService(
@@ -69,4 +72,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var middlewares = MiddlewareConfig()
     middlewares.use(ErrorMiddleware.self)
     services.register(middlewares)
+
+    // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
+    let slowClient = SlowClient()
+    services.register(slowClient)
 }

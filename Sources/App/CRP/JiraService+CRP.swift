@@ -1,21 +1,39 @@
 import Vapor
 import Stevenson
 
+// MARK: Constants
+
+// [CNSMR-1319] TODO: Use a config file to parametrise those
+extension JiraService {
+    /// Official CRP Board
+    static let crpProjectID = FieldType.ObjectID(id: "13402")
+
+    static func accountablePerson(release: GitHubService.Release) -> String {
+        let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
+        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
+        return isTelus ? "ryan.covill" : "mark.bates"
+    }
+
+    /// Estimate time between when the CRP ticket is created and the app is released to the AppStore
+    static let releaseEstimateDuration = DateComponents(day: 7)
+}
+
+// MARK: - CRP Ticket Dance
+
 extension JiraService {
     static func makeCRPIssue(
         jiraBaseURL: URL,
+        crpProjectID: JiraService.FieldType.ObjectID,
         crpConfig: RepoMapping.CRP,
         release: GitHubService.Release,
         changelog: FieldType.TextArea.Document,
         targetDate: Date? = nil // will use `guessTargetDate()` if nil
     ) -> CRPIssue {
-        // [CNSMR-1319] TODO: Use a config file to parametrise accountable person
-        let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
-        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
-        let accountablePerson = isTelus ? "ryan.covill" : "mark.bates"
+        let accountablePerson = JiraService.accountablePerson(release: release)
         let changelog = changelog
         let fields = CRPIssueFields(
             jiraBaseURL: jiraBaseURL,
+            crpProjectID: crpProjectID,
             summary: crpConfig.jiraSummary(release),
             environments: [crpConfig.environment],
             release: release,
@@ -29,14 +47,51 @@ extension JiraService {
 
     private static func guessTargetDate() -> Date {
         let now = Date()
-        // Estimate time between when the CRP ticket is created and the app is released to the AppStore
-        let estimateOffset = DateComponents(day: 7)
+        let estimateOffset = JiraService.releaseEstimateDuration
         return Calendar(identifier: .gregorian).date(byAdding: estimateOffset, to: now) ?? now
     }
 }
 
+extension JiraService {
+    /// Do the CRP ticket dance, which consists of:
+    ///  - creating the CRP ticket from list of commits,
+    ///  - then create all the JIRA versions on each boards,
+    ///  - then for each board, set the Fix Version field for each ticket concerned by the CRP for that board's JIRA version
+    internal func executeCRPTicketProcess(
+        commitMessages: [String],
+        release: GitHubService.Release,
+        repoMapping: RepoMapping,
+        crpProjectID: JiraService.FieldType.ObjectID,
+        container: Request
+    ) throws -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> {
 
-// MARK: - Define a CRP Issue
+        let jiraVersionName = repoMapping.crp.jiraVersionName(release)
+        let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
+
+        // Create CRP Issue
+        let crpIssue = JiraService.makeCRPIssue(
+            jiraBaseURL: self.baseURL,
+            crpProjectID: crpProjectID,
+            crpConfig: repoMapping.crp,
+            release: release,
+            changelog: self.document(from: changelogSections)
+        )
+
+        return try self.create(issue: crpIssue, on: container)
+            .catchError(.capture())
+            .flatMap { (crpIssue: JiraService.CreatedIssue) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
+                // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
+                return try self.createAndSetFixedVersions(
+                    changelogSections: changelogSections,
+                    versionName: jiraVersionName,
+                    on: container
+                ).map { (crpIssue, $0) }
+        }
+    }
+}
+
+// MARK: - Define the CRP Issue type
+
 extension JiraService {
 
     /// A CRPIssue is a Jira issue specific to our CRP Board (aka Releases Plan Board)
@@ -69,7 +124,7 @@ extension JiraService {
 
         // MARK: Fields
 
-        var project = FieldType.ObjectID(id: "13402") // CRP Project
+        var project: FieldType.ObjectID
         var issueType = FieldType.ObjectID(id: "11439") // "CRP: Code Change Request"
         var summary: String
         var changelog: FieldType.TextArea.Document
@@ -87,7 +142,7 @@ extension JiraService {
         // MARK: Content keys
 
         enum CodingKeys: String, CodingKey {
-            case project = "project"
+            case project = "project"                     // required
             case issueType = "issuetype"                 // required
             case summary = "summary"                     // required
             case changelog = "customfield_12537"         // required
@@ -106,6 +161,7 @@ extension JiraService {
 
         init(
             jiraBaseURL: URL,
+            crpProjectID: FieldType.ObjectID,
             summary: String,
             environments: [Environment],
             release: GitHubService.Release,
@@ -114,6 +170,7 @@ extension JiraService {
             changelog: FieldType.TextArea.Document,
             accountablePersonName: String
         ) {
+            self.project = crpProjectID
             self.summary = summary
             self.changelog = changelog
             self.environments = environments
@@ -148,6 +205,8 @@ extension JiraService.CRPIssueFields.ReleaseType {
         }
     }
 }
+
+// MARK: Create JIRA Documents
 
 extension JiraService {
     func document(from changelog: [ChangelogSection]) -> FieldType.TextArea.Document {
@@ -209,7 +268,7 @@ extension JiraService {
     }
 }
 
-// MARK: support for "Fixed Version"
+// MARK: Support for "Fixed Version"
 
 extension JiraService {
     /// Used to report non-fatal errors without failing the Future chain
@@ -249,7 +308,9 @@ extension JiraService {
                 )
                 return try self.createVersion(version, on: container)
                     .flatMap { try self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
-                    .mapIfError { FixedVersionReport("Error creating JIRA version in board \(project.key) - \($0)") }
+                    .mapIfError { error in
+                        return FixedVersionReport("Error creating JIRA version in board \(project.key) - \(error)")
+                    }
             }
             .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
     }
@@ -259,7 +320,9 @@ extension JiraService {
             .map { (ticket: String) -> Future<FixedVersionReport> in
                 try self.setFixedVersion(version, for: ticket, on: container)
                     .map { _ in FixedVersionReport() }
-                    .mapIfError { FixedVersionReport("Error setting FixedVersion for \(ticket) - \($0)") }
+                    .mapIfError { error in
+                        return FixedVersionReport("Error setting FixedVersion for \(ticket) - \(error)")
+                }
             }
             .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
     }
