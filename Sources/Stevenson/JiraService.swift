@@ -137,8 +137,8 @@ extension JiraService {
         let released: Bool
         let startDate: CustomCodable<YMDDate>?
 
-        public init(projectId: Int, name: String, description: String?, released: Bool = false, startDate: Date?) {
-            self.id = nil
+        public init(id: String? = nil, projectId: Int, name: String, description: String?, released: Bool = false, startDate: Date?) {
+            self.id = id
             self.projectId = projectId
             self.name = name
             self.description = description
