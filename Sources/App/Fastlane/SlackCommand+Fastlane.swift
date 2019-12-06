@@ -151,7 +151,7 @@ extension SlackCommand {
                 )
             }
             .replyLater(
-                withImmediateResponse: SlackResponse("👍", visibility: .channel),
+                withImmediateResponse: SlackResponse("👍 (If you don't receive response with the link to the triggered CI job in a few seconds please check CI logs before repeating a command)", visibility: .channel),
                 responseURL: metadata.responseURL,
                 on: container
         )
