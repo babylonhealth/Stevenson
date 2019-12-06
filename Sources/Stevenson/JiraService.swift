@@ -130,22 +130,49 @@ extension JiraService {
 
 extension JiraService {
     public struct Version: Content {
-        public var id: String?
+        public let id: String?
         public let projectId: Int
-        public let description: String
+        public let description: String?
         public let name: String
         let released: Bool
-        @CustomCodable<YMDDate>
-        var startDate: Date
+        let startDate: CustomCodable<YMDDate>?
 
-        public init(projectId: Int, description: String, name: String, released: Bool = false, startDate: Date) {
+        public init(projectId: Int, name: String, description: String?, released: Bool = false, startDate: Date?) {
             self.id = nil
             self.projectId = projectId
-            self.description = description
             self.name = name
+            self.description = description
             self.released = released
-            self.startDate = startDate
+            self.startDate = startDate.map(CustomCodable<YMDDate>.init(wrappedValue:))
         }
+    }
+
+    public func getVersions(project projectID: Int, on container: Container) throws -> Future<[Version]> {
+        let fullURL = URL(string: "/rest/api/3/project/\(projectID)/versions", relativeTo: baseURL)!
+
+        let projectKey = self.knownProjects.first(where: { $0.value == projectID })?.key ?? "#\(projectID)"
+        let logMessage = "Fetching JIRA versions for board <\(projectKey)>"
+        self.logger.info("[JIRA] \(logMessage)")
+
+        return try container.make(SlowClient.self)
+                .get(fullURL, headers: self.headers, on: container) { request in
+                    self.logRequest(logMessage, request)
+                }
+                .catchError(.capture())
+                .do { response in
+                    self.logResponse(logMessage, response)
+                }
+                .flatMap { response in
+                    if response.http.status == .ok {
+                        return try response.content
+                            .decode([Version].self)
+                    } else {
+                        return try response.content
+                            .decode(ServiceError.self)
+                            .thenThrowing { throw $0 }
+                    }
+                }
+                .catchError(.capture())
     }
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {

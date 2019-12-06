@@ -300,13 +300,21 @@ extension JiraService {
                         FixedVersionReport("Project \(project.key) is not part of our whitelist for creating JIRA versions")
                     )
                 }
-                let version = JiraService.Version(
-                    projectId: projectID,
-                    description: versionName,
-                    name: versionName,
-                    startDate: Date()
-                )
-                return try self.createVersion(version, on: container)
+
+                return try self.getVersions(project: projectID, on: container)
+                    .flatMap { allVersions in
+                        if let existingVersion = allVersions.first(where: { $0.name == versionName }) {
+                            return container.future(existingVersion)
+                        } else {
+                            let version = JiraService.Version(
+                                projectId: projectID,
+                                name: versionName,
+                                description: versionName,
+                                startDate: Date()
+                            )
+                            return try self.createVersion(version, on: container)
+                        }
+                    }
                     .flatMap { try self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
                     .mapIfError { error in
                         return FixedVersionReport("Error creating JIRA version in board \(project.key) - \(error)")
