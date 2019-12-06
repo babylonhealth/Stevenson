@@ -101,7 +101,7 @@ extension JiraService {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
 
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
-        self.logger.info("[JIRA] \(logMessage)")
+        self.logInfo(logMessage)
 
         return try container.make(SlowClient.self)
             .post(fullURL, headers: self.headers, on: container) { request in
@@ -152,27 +152,27 @@ extension JiraService {
 
         let projectKey = self.knownProjects.first(where: { $0.value == projectID })?.key ?? "#\(projectID)"
         let logMessage = "Fetching JIRA versions for board <\(projectKey)>"
-        self.logger.info("[JIRA] \(logMessage)")
+        self.logInfo(logMessage)
 
         return try container.make(SlowClient.self)
-                .get(fullURL, headers: self.headers, on: container) { request in
-                    self.logRequest(logMessage, request)
+            .get(fullURL, headers: self.headers, on: container) { request in
+                self.logRequest(logMessage, request)
+            }
+            .catchError(.capture())
+            .do { response in
+                self.logResponse(logMessage, response)
+            }
+            .flatMap { response in
+                if response.http.status == .ok {
+                    return try response.content
+                        .decode([Version].self)
+                } else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
                 }
-                .catchError(.capture())
-                .do { response in
-                    self.logResponse(logMessage, response)
-                }
-                .flatMap { response in
-                    if response.http.status == .ok {
-                        return try response.content
-                            .decode([Version].self)
-                    } else {
-                        return try response.content
-                            .decode(ServiceError.self)
-                            .thenThrowing { throw $0 }
-                    }
-                }
-                .catchError(.capture())
+            }
+            .catchError(.capture())
     }
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
@@ -180,7 +180,7 @@ extension JiraService {
 
         let projectKey = self.knownProjects.first(where: { $0.value == version.projectId })?.key ?? "#\(version.projectId)"
         let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
-        self.logger.info("[JIRA] \(logMessage)")
+        self.logInfo(logMessage)
 
         return try container.make(SlowClient.self)
             .post(fullURL, headers: self.headers, on: container) { request in
@@ -227,7 +227,7 @@ extension JiraService {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
 
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
-        self.logger.info("[JIRA] \(logMessage)")
+        self.logInfo(logMessage)
 
         return try container.make(SlowClient.self)
             .put(fullURL, headers: self.headers, on: container) { request in
@@ -253,6 +253,10 @@ extension JiraService {
 // MARK: Helpers
 
 extension JiraService {
+    fileprivate func logInfo(_ message: String) {
+        self.logger.info("[JIRA] \(message)")
+    }
+
     fileprivate func logRequest(_ message: String, _ request: Request) {
         self.logger.debug("[JIRA-API] Request for \(message):\n======>\n\(request)\n<======")
     }
