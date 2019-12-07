@@ -102,27 +102,16 @@ extension JiraService {
 
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
         self.logInfo(logMessage)
-
-        return try container.make(SlowClient.self)
-            .post(fullURL, headers: self.headers, on: container) { request in
-                try request.content.encode(issue)
-                self.logRequest(logMessage, request)
-            }
-            .catchError(.capture())
-            .do { response in
-                self.logResponse(logMessage, response)
-            }
-            .flatMap { response in
-                if response.http.status == .created {
-                    return try response.content
-                        .decode(CreatedIssue.self)
-                } else {
-                    return try response.content
-                        .decode(ServiceError.self)
-                        .thenThrowing { throw $0 }
+        return try request(.capture()) {
+            return try container.make(SlowClient.self)
+                .post(fullURL, headers: self.headers, on: container) { request in
+                    try request.content.encode(issue)
+                    self.logRequest(logMessage, request)
                 }
-            }
-            .catchError(.capture())
+                .do { response in
+                    self.logResponse(logMessage, response)
+                }
+        }
     }
 }
 
@@ -154,25 +143,15 @@ extension JiraService {
         let logMessage = "Fetching JIRA versions for board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return try container.make(SlowClient.self)
-            .get(fullURL, headers: self.headers, on: container) { request in
-                self.logRequest(logMessage, request)
-            }
-            .catchError(.capture())
-            .do { response in
-                self.logResponse(logMessage, response)
-            }
-            .flatMap { response in
-                if response.http.status == .ok {
-                    return try response.content
-                        .decode([Version].self)
-                } else {
-                    return try response.content
-                        .decode(ServiceError.self)
-                        .thenThrowing { throw $0 }
+        return try request(.capture()) {
+            return try container.make(SlowClient.self)
+                .get(fullURL, headers: self.headers, on: container) { request in
+                    self.logRequest(logMessage, request)
                 }
-            }
-            .catchError(.capture())
+                .do { response in
+                    self.logResponse(logMessage, response)
+                }
+        }
     }
 
     public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
@@ -182,26 +161,16 @@ extension JiraService {
         let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return try container.make(SlowClient.self)
-            .post(fullURL, headers: self.headers, on: container) { request in
-                try request.content.encode(version)
-                self.logRequest(logMessage, request)
-            }
-            .catchError(.capture())
-            .do { response in
-                self.logResponse(logMessage, response)
-            }
-            .flatMap { response in
-                if response.http.status == .created {
-                    return try response.content
-                        .decode(Version.self)
-                } else {
-                    return try response.content
-                        .decode(ServiceError.self)
-                        .thenThrowing { throw $0 }
+        return try request(.capture()) {
+            return try container.make(SlowClient.self)
+                .post(fullURL, headers: self.headers, on: container) { request in
+                    try request.content.encode(version)
+                    self.logRequest(logMessage, request)
                 }
-            }
-            .catchError(.capture())
+                .do { response in
+                    self.logResponse(logMessage, response)
+                }
+        }
     }
 }
 
@@ -223,30 +192,22 @@ extension JiraService {
         }
     }
 
-    public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Response> {
+    public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Void> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
 
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
         self.logInfo(logMessage)
 
-        return try container.make(SlowClient.self)
-            .put(fullURL, headers: self.headers, on: container) { request in
-                try request.content.encode(VersionAddUpdate(version: version))
-                self.logRequest(logMessage, request)
-            }
-            .catchError(.capture())
-            .do { response in
-                self.logResponse(logMessage, response)
-            }
-            .flatMap { response -> Future<Response> in
-                guard response.http.status == .noContent else {
-                    return try response.content
-                        .decode(ServiceError.self)
-                        .thenThrowing { throw $0 }
+        return try request(.capture()) {
+            return try container.make(SlowClient.self)
+                .put(fullURL, headers: self.headers, on: container) { request in
+                    try request.content.encode(VersionAddUpdate(version: version))
+                    self.logRequest(logMessage, request)
                 }
-                return response.future(response)
-            }
-            .catchError(.capture())
+                .do { response in
+                    self.logResponse(logMessage, response)
+                }
+        }
     }
 }
 
