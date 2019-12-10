@@ -51,6 +51,22 @@ extension FailableService {
             }
             .catchError(sourceLocation)
     }
+
+    public func request(
+        _ sourceLocation: SourceLocation,
+        _ makeRequest: () throws -> Future<Response>
+    ) throws -> Future<Void> {
+        return try makeRequest()
+            .flatMap { response in
+                guard response.http.status == .noContent else {
+                    return try response.content
+                        .decode(ServiceError.self)
+                        .thenThrowing { throw $0 }
+                }
+                return response.future(())
+            }
+            .catchError(sourceLocation)
+    }
 }
 
 extension CircleCIService: FailableService {

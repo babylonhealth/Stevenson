@@ -14,15 +14,13 @@ final class AppTests: XCTestCase {
         "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
     ]
 
-    static let fakeVersion: JiraService.Version = {
-        let v = JiraService.Version(
-            projectId: 123,
-            description: "Fake Version 1.2.3 for tests",
-            name: "Fake 1.2.3",
-            startDate: fixedGMTDate(year: 2019, month: 07, day: 10)
-        )
-        return v
-    }()
+    static let fakeVersion = JiraService.Version(
+        id: "42",
+        projectId: 123,
+        name: "Fake 1.2.3",
+        description: "Fake Version 1.2.3 for tests",
+        startDate: fixedGMTDate(year: 2019, month: 07, day: 10)
+    )
 
     func testReleaseType() {
         typealias ReleaseType = JiraService.CRPIssueFields.ReleaseType
@@ -87,6 +85,7 @@ final class AppTests: XCTestCase {
 
         let expected = #"""
             {
+              "id" : "42",
               "projectId" : 123,
               "startDate" : "2019-07-10",
               "description" : "Fake Version 1.2.3 for tests",
@@ -98,9 +97,7 @@ final class AppTests: XCTestCase {
     }
 
     func testAddVersion() throws {
-        var version = AppTests.fakeVersion
-        version.id = "42"
-        let update = JiraService.VersionAddUpdate(version: version)
+        let update = JiraService.VersionAddUpdate(version: AppTests.fakeVersion)
         addAttachment(name: "AddVersion", object: update)
 
         let expected = #"""
