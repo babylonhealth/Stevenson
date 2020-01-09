@@ -1,7 +1,7 @@
 # 🤖 Stevenson Bot
 
 `Stevenson` is a Vapor framework designed to build integrations between Slack apps, Github, JIRA and CI services (CircleCI).  
-This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works, checko our [playbook](https://github.com/babylonhealth/ios-playbook))
+This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works, check our [playbook](https://github.com/babylonhealth/ios-playbook))
 
 ## 🚀 Usage
 
