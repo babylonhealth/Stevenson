@@ -89,6 +89,8 @@ One particularity of `createAndSetFixedVersions` and `batchSetFixedVersions` is 
 
 This report is then printed at the very end of the CRP process (as a reply in Slack) to inform the Release Engineer which ticket failed to have their "Fix Version" field updated, to let them update the tickets manually.
 
+Note: The `FixedVersionReport` struct is used to gather messages. It's implemented such as passing multiple `FixedVersionReport` to its `init` will `flatMap` the messages of them all in a single report, allowing us to use constructs like `map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)` on the parallel sequence of API calls setting the version on each ticket in `batchSetFixedVersions` and use a similar construct in `createAndSetFixedVersions` to gather all the reports on each board/`ChangelogSection` into a single report.
+
 ### SlowClient
 
 One of the particularity of this process is that it sends a LOT of API calls to JIRA – one for the CRP ticket itself, then one for each board to create a JIRA version, then one for each ticket in the CRP to update their fields. This made us reach the JIRA max API quota and resulted in some API requests to JIRA sometimes failing with timeout.
