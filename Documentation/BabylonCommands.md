@@ -21,90 +21,28 @@ ENV Var | Description
 
 # 🕹 Commands implemented in the Babylon Bot
 
-The Stevenson instance used at Babylon, whose code can be found in the `App/` directory, declares the features described below, which mainly consist of 3 main core features:
+The Stevenson instance used at Babylon, whose code can be found in the `App/` directory, mainly consist of 3 main core features
 
-* Invoking a `fastlane` command on CI
-* Responding to a GitHub comment to trigger a CI pipeline
-* [Generating the CRP ticket](CRP.md)
+## Invoking a `fastlane` command on CI via Slack
 
-## `/stevenson`
+Allows us to use a slash command in our Slack to trigger CI workflows.
 
-This is the main Slack command, used to namespace other commands. It's implemented in `MainCommand.swift`
+* Usage documentation can be found [here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/SlackCIIntegration.md)
+* The `SlackCommand` is implemented in `SlackCommand+Fastlane.swift` and then handled in `SlackService.swift` by `func handle(command:on:)`.
 
-This command expects one of the following sub-commands, which are described in more details below:
+Implementation is quite straightforward, parsing the slack command parameters then invoking `CircleCIService.runlane` with them.
 
-* `/stevenson fastlane …`
-* `/stevenson appcenter …`
-* `/stevenson testflight …`
-* `/stevenson crp …`
+Our Slack is configured with a Slack app to send webhooks for those slash commands to the URL of our bot for it to process those requests. See [main README.md](../README.md) for details about configuring your Slack app.
 
-## `/stevenson fastlane`
+## Responding to a GitHub comment to trigger a CI pipeline
 
-This and the 2 following commands are implemented in `SlackCommand+Fastlane.swift`
-> Also still accessible via `/fastlane` directly, though deprecated in favor of being invoked as a `/stevenson` subcommand instead.
+* Usage documentation can be found [here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/SlackCIIntegration.md)
+* Implementation simply consists of a _route_ implemented in `routes.swift` and invoking `GitHubService.issueComment(on:ci:)` in `GitHubService+IssueComment.swift`.  
+  The method parses the request headers and comment body, then calls `CircleCIService.runLane` or `CircleCIService.runPipeline` appropriately to trigger CI.
 
-This command allows you to trigger a CircleCI job which will run the provided lane.
+Our GitHub is then configured with a webhook on comments that sends the request to the URL of our bot so it can process it.
 
-```
-/stevenson fastlane <lane> [branch:<branch>] [target:<target>] [<other_options>]
-```
+## Generating the CRP ticket
 
-* If `branch:` is not provided, defaults to running the lane on `develop`
-* `target:` is only used by some lanes in Fastlane, like `appcenter` or `testflight`. In most cases it's not needed
-* Any potential `<other_options>` depend on each lane. Check our Fastlane to see which are available for each. Examples include `version:` for `appcenter` and `testflight` lanes
-
-
-## `/stevenson appcenter`
-
-> Also still accessible via `/appcenter` directly, though deprecated in favor of being invoked as a `/stevenson` subcommand instead.
-
-
-```
-/stevenson appcenter <target> [version:<version>] [branch:<branch>]
-```
-
-* This command is just a convenience doing the same as `/stevenson fastlane appcenter target:<target> version:<version> branch:<branch>`
-* If `branch:` is not provided, defaults to `release/<target>/<version>`
-
-## `/stevenson testflight`
-
-> Also still accessible via `/testflight` directly, though deprecated in favor of being invoked as a `/stevenson` subcommand instead.
-
-```
-/stevenson testflight <target> [version:<version>] [branch:<branch>]
-```
-
-* This command is just a convenience doing the same as `/stevenson fastlane testflight target:<target> version:<version> branch:<branch>`
-* If `branch:` is not provided, defaults to `release/<target>/<version>`
-
-
-## `/stevenson crp`
-
-> Still accessible via `/crp` directly, though deprecated in favor of new name.
-
-This command creates a "CRP Ticket" in our JIRA, which is a JIRA ticket gathering all the tickets that will be part of a release to the Stores in order to validate approval for that release. The creation and approval of this ticket to make a new release is part of our SSDLC. 
-
-For more information about the CRP, visit [the dedicated page in your Playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md).
-
-```
-/crp <repo> branch:<branch>
-```
-
-* `<repo>` should be one of the repositories declared in `RepoMapping.swift` – namely either `ios` or `android`.
-* `<branch>` will typically be the name of a release branch, e.g. `release/babylon/<version>`
-
-Execution of CRP process is composed of multiple subtasks (auto-gathering the list of tickets from the commits, creating the CRP ticket, creating JIRA versions on each relevant boards, setting the "Fix Version" field of all relevant tickets to the appropriate JIRA version…) and involves a good chunk of code. For implementation details of this part of the code, see [CRP implementation details](CRP.md)
-
-## Responding to a GitHub comment `"@ios-bot-babylon …"`
-
-Our bot also responds to a route to the `/github/comment` URL, which is sent by GitHub webhooks when a new comment is made on a GitHub issue or Pull Request.
-
-We have configured our GitHub repo to send the webhook to the URL of our bot, which means our bot will handle every new comment made to any issue or PR and be able to act on it.
-
-This route processes comments starting with `@ios-babylon-bot` (discarding any other kind of comments); it then invokes the workflow (whose name is provided in the comment) on the PR's branch in CircleCI.
-
-```
-@ios-bot-babylon <workflow_name>
-```
-
-This will simply run the workflow `<workflow_name>` on CircleCI, on the head branch of the PR this comment was made on.
+* The CRP process (usage documentation) is described [here in our playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
+* The code for this process is a bit more convoluted and spread out; [implementation details for the CRP code can be found here](CRP.md)
