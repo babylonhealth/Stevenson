@@ -101,10 +101,10 @@ Our bot also responds to a route to the `/github/comment` URL, which is sent by 
 
 We have configured our GitHub repo to send the webhook to the URL of our bot, which means our bot will handle every new comment made to any issue or PR and be able to act on it.
 
-This route processes comments starting with `@ios-babylon-bot` (discarding any other kind of comments); it then runs `fastlane` to invoke the mentioned lane on the PR's branch in CI.
+This route processes comments starting with `@ios-babylon-bot` (discarding any other kind of comments); it then invokes the workflow (whose name is provided in the comment) on the PR's branch in CircleCI.
 
 ```
-@ios-bot-babylon <lane_name>
+@ios-bot-babylon <workflow_name>
 ```
 
-This will simply run lane `<lane_name>` in CI on the head branch of the PR this comment was made on.
+This will simply run the workflow `<workflow_name>` on CircleCI, on the head branch of the PR this comment was made on.
