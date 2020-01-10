@@ -84,7 +84,7 @@ This command allows you to trigger a CircleCI job which will run the provided la
 
 This command creates a "CRP Ticket" in our JIRA, which is a JIRA ticket gathering all the tickets that will be part of a release to the Stores in order to validate approval for that release. The creation and approval of this ticket to make a new release is part of our SSDLC. 
 
-For more information about the CRP, visit the dedicated page in your Playbook.
+For more information about the CRP, visit [the dedicated page in your Playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md).
 
 ```
 /crp <repo> branch:<branch>
