@@ -27,22 +27,24 @@ The Stevenson instance used at Babylon, whose code can be found in the `App/` di
 
 Allows us to use a slash command in our Slack to trigger CI workflows.
 
-* Usage documentation can be found [here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/SlackCIIntegration.md)
-* The `SlackCommand` is implemented in `SlackCommand+Fastlane.swift` and then handled in `SlackService.swift` by `func handle(command:on:)`.
+* Usage and supported commands are documented [in our playbook here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/SlackCIIntegration.md).
+* The commands are implemented/defined in `SlackCommand+Fastlane.swift` and then handled in `SlackService.swift` by `func handle(command:on:)`.
 
-Implementation is quite straightforward, parsing the slack command parameters then invoking `CircleCIService.runlane` with them.
+Implementation simply consists of parsing the slack command parameters, then invoking `CircleCIService.runlane` with the right arguments.
 
-Our Slack is configured with a Slack app to send webhooks for those slash commands to the URL of our bot for it to process those requests. See [main README.md](../README.md) for details about configuring your Slack app.
+Our Slack is configured to send webhooks for those slash commands to the URL of our bot for it to process those requests – See [main README.md](../README.md) for details.
 
 ## Responding to a GitHub comment to trigger a CI pipeline
 
 * Usage documentation can be found [here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/SlackCIIntegration.md)
-* Implementation simply consists of a _route_ implemented in `routes.swift` and invoking `GitHubService.issueComment(on:ci:)` in `GitHubService+IssueComment.swift`.  
-  The method parses the request headers and comment body, then calls `CircleCIService.runLane` or `CircleCIService.runPipeline` appropriately to trigger CI.
+* Implementation simply consists of a _route_ implemented in `routes.swift` and invoking `GitHubService.issueComment(on:ci:)` (in `GitHubService+IssueComment.swift`).  
+  The method parses the webhook request headers and the comment body, then calls `CircleCIService.runLane` or `CircleCIService.runPipeline` appropriately to trigger the right CI workflow.
 
-Our GitHub is then configured with a webhook on comments that sends the request to the URL of our bot so it can process it.
+Our GitHub repository is then configured with a webhook on comments, which sends the request to the URL of our bot so it can process it.
 
 ## Generating the CRP ticket
 
-* The CRP process (usage documentation) is described [here in our playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
-* The code for this process is a bit more convoluted and spread out; [implementation details for the CRP code can be found here](CRP.md)
+The CRP process is a process specific to our company's SSDLC
+
+* Usage documentation can be found [in our playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
+* Since the code for this process is a bit more convoluted, [implementation details for the CRP code has its own dedicated document here](CRP.md).
