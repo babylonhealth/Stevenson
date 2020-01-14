@@ -7,6 +7,7 @@ public func routes(
     github: GitHubService,
     ci: CircleCIService,
     slack: SlackService,
+    jira: JiraService,
     commands: [SlackCommand]
 ) throws {
     router.get { req in
@@ -15,6 +16,10 @@ public func routes(
 
     router.post("github/comment") { (request) -> Future<Response> in
         try github.issueComment(on: request, ci: ci)
+    }
+
+    router.get("crp") { (request) -> Future<Response> in
+        try CRPProcess.apiRequest(request: request, github: github, jira: jira)
     }
 
     commands.forEach { command in
