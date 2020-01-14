@@ -63,7 +63,7 @@ enum CRPProcess {
                     )
 
                     createTicket = try jira.create(issue: crpIssue, on: request)
-                        .map { Optional.some($0) }
+                        .map(Optional.some)
                         .catchError(.capture())
                 }
 
