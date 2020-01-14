@@ -87,7 +87,7 @@ To develop locally on this repo:
 * [Install Vapor locally](http://docs.vapor.codes/3.0/install/macos/)
 * Run `vapor xcode` to create the Xcode project
 * Open the Xcode project and work in it
-* You'll need to define some environment variables in your scheme if you want to try to run the [Babylon Stevenson app](Documentation/BabylonCommands.md) locally. Typically declare [the same env variables](Documentation/BabylonCommands.md#environment-variables) that are defined in the hosting environment (like Heroku or AWS on the server side). 
+* You'll need to define some environment variables in your scheme (Edit Scheme > "Run" Action > "Arguments" tab) if you want to try to run the [Babylon Stevenson app](BabylonCommands.md) locally. Typically declare [the same env variables](BabylonCommands.md#environment-variables) that are defined in the hosting environment (like Heroku or AWS on the server side). 
 * Hit Cmd-R to run the Vapor server locally. It will listen at `http://localhost:8080`
 * Try it out by sending fake Slack payloads mimicking a Slack slash command
 
@@ -171,7 +171,7 @@ To set the aforementioned environment variables with the real values on Heroku:
 
 ## 📖 Documentation
 
-* To read the documentation about the Stevenson's instance we use at Babylon and the commands that we implemented to support our processes, see [this page of the documentation](Documentation/BabylonCommands.md)
+* Learn more about the Stevenson's instance we use at Babylon and the commands that we implemented using this framework to support our processes [here](BabylonCommands.md)
 * For instructions on how to use Vapor, visit the Vapor web framework's [documentation](http://docs.vapor.codes).
 
 ## ✨ Take a look at our other OSS projects!

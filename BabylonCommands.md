@@ -44,7 +44,7 @@ Our GitHub repository is then configured with a webhook on comments, which sends
 
 ## Generating the CRP ticket
 
-The CRP process is a process specific to our company's SSDLC
+The CRP process is a process specific to our company's SSDLC and documented in our Playbook repository:
 
-* Usage documentation can be found [in our playbook](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
-* Since the code for this process is a bit more convoluted, [implementation details for the CRP code has its own dedicated document here](CRP.md).
+* [Usage documentation is here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
+* [Implementation details for the CRP code has its own dedicated documentation here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot-ImplementationDetails.md).
