@@ -59,6 +59,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         github: github,
         ci: ci,
         slack: slack,
+        jira: jira,
         commands: [
             .stevenson(ci, jira, github),
             .fastlane(ci),
