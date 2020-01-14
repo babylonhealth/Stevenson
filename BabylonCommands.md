@@ -7,17 +7,12 @@ This Vapor project actually consists of two projects:
 
 # ⚙️ Environment Variables used by our app
 
-The bot instance of Stevenson we use at Babylon uses environment variables to instantiate and configure the various services (see [README.md](../README.md#supported-services)).
+The bot instance of Stevenson we use at Babylon uses environment variables to instantiate and configure the various services (see [README.md](../README.md#supported-services) and `configure.swift`).
 
-See `app.swift` for declaration of those environment variables used in the app, and `configure.swift` for where they are used to instantiate the services.
+The list of all those environment variables we use can be found [in `app.swift` (see `extension Environment { … }`)](https://github.com/babylonhealth/Stevenson/blob/master/Sources/App/app.swift#L13-L21)
 
-ENV Var | Description
---------|--------------
-`SLACK_TOKEN` | Your access token for the Slack API of your team's Slack
-`GITHUB_USERNAME`<br/>`GITHUB_TOKEN`| Login and access token of a user having read access to those repositories
-`CIRCLECI_TOKEN`| Your access token for the CircleCI API
-`JIRA_BASEURL`| Host name of your Jira instance (e.g. `https://myorg.atlassian.net:443`)
-`JIRA_USERNAME`<br/>`JIRA_TOKEN`| Login and access token for the API of your Jira instance
+ * Those environement variables need to be declared on the hosting service on which this bot will be deployed
+ * You will also need to declare these environment variables in your scheme (Edit Scheme > "Run" action > "Arguments" tab) if you want to run our bot instance locally in Xcode for debugging pruposes
 
 # 🕹 Commands implemented in the Babylon Bot
 
@@ -44,7 +39,7 @@ Our GitHub repository is then configured with a webhook on comments, which sends
 
 ## Generating the CRP ticket
 
-The CRP process is a process specific to our company's SSDLC and documented in our Playbook repository:
+The CRP is a process specific to our company's SSDLC; it is documented in our Playbook repository:
 
 * [Usage documentation is here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot.md)
 * [Implementation details for the CRP code has its own dedicated documentation here](https://github.com/babylonhealth/ios-playbook/blob/master/Cookbook/Technical-Documents/CRP-Bot-ImplementationDetails.md).
