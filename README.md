@@ -1,6 +1,6 @@
 # 🤖 Stevenson Bot
 
-`Stevenson` is a Vapor framework designed to build integrations between Slack apps, Github, JIRA and CI services (CircleCI).  
+`Stevenson` is a Vapor framework designed to build integrations between Slack apps, GitHub, JIRA and CI services (CircleCI).
 This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works, check our [playbook](https://github.com/babylonhealth/ios-playbook))
 
 ## 🚀 Usage
@@ -107,7 +107,7 @@ If you need to create a new Slack command:
  1. Go to the Slack Commands config page for your team's Slack app: `https://api.slack.com/apps/<YourSlackAppID>/slash-commands`
  2. Click on "Create New Command"
    * Fill in the slash command (e.g. `/foo`)
-   * Enter the URL this command will trigger – e.g. if your instance will be hosted on Heroku  it will look like `https://<appname>.herokuapp.com/<command>`, replacing `<appname>` with the name of your Heroku app instance (e.g. `stevenson-bot`) and `<command>` by the command name (e.g. `foo`)
+   * Enter the URL this command will trigger – e.g. if your instance will be hosted on Heroku it will look like `https://<appname>.herokuapp.com/<command>`, replacing `<appname>` with the name of your Heroku app instance (e.g. `stevenson-bot`) and `<command>` by the command name (e.g. `foo`)
    * Fill in the short description and the hint for the command
    * Hit "Save"
  3. Open the project in Xcode and add a new handler for the Slack command:
@@ -171,7 +171,7 @@ To set the aforementioned environment variables with the real values on Heroku:
 
 ## 📖 Documentation
 
-* To read the documentation about the Stevenson's instance we use at Babylon and the commands that we implemented in our usage of Stevenson, see [this page of the documentation](Documentation/BabylonCommands.md)
+* To read the documentation about the Stevenson's instance we use at Babylon and the commands that we implemented to support our processes, see [this page of the documentation](Documentation/BabylonCommands.md)
 * For instructions on how to use Vapor, visit the Vapor web framework's [documentation](http://docs.vapor.codes).
 
 ## ✨ Take a look at our other OSS projects!
