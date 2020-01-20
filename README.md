@@ -1,7 +1,7 @@
-# iOS Build Distribution System
+# 🤖 Stevenson Bot
 
-`Stevenson` is a Vapor framework designed to build integrations between Slack apps, Github, JIRA and CI services (CircleCI).
-This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works checkout our [playbook](https://github.com/babylonhealth/ios-playbook))
+`Stevenson` is a Vapor framework designed to build integrations between Slack apps, GitHub, JIRA and CI services (CircleCI).
+This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works, check our [playbook](https://github.com/babylonhealth/ios-playbook))
 
 ## 🚀 Usage
 
@@ -21,8 +21,9 @@ import Stevenson
 
 ### Supported services
 
-`Stevenson` comes with implementation of Slack [slash commands](https://api.slack.com/slash-commands), GitHub, JIRA and CircleCI APIs. At the moment it does not implement complete set of these APIs but only provides bare minimum required for the functionality of the app. 
-To create these services use corresponding type constructors providing required values. It's advised but not required to store these values in the environment variables:
+`Stevenson` comes with implementation of Slack [slash commands](https://api.slack.com/slash-commands), GitHub, JIRA and CircleCI APIs. At the moment it does not implement complete set of these APIs but only provides bare minimum required for the functionality of the app.
+
+To create these services, use corresponding type constructors providing required values. It's advised but not required to store these values in the environment variables:
 
 ```swift
 let slack = SlackService(
@@ -49,7 +50,7 @@ let github = GitHubService(
 
 To create a Slack [slash command](https://api.slack.com/slash-commands) start with registering it in your Slack app following Slack documentation. 
 
-Note: instead of using your own Slack app you may use Slack Slash Commands app. In this case you will register your slash commands in this app but the process will be pretty much the same.
+_Note: instead of using your own Slack app you may use Slack Slash Commands app. In this case you will register your slash commands in this app but the process will be pretty much the same._
 
 Then use the `SlackCommand` type to implement it:
 
@@ -86,12 +87,7 @@ To develop locally on this repo:
 * [Install Vapor locally](http://docs.vapor.codes/3.0/install/macos/)
 * Run `vapor xcode` to create the Xcode project
 * Open the Xcode project and work in it
-* You'll need to define some environment variables in your scheme if you want to try to run the app locally (those variables are defined in the Heroku instance as well).
-  * `SLACK_TOKEN`: your access token for the Slack API of your team's Slack
-  * `GITHUB_USERNAME` and `GITHUB_TOKEN`: login and access token of a user having read access to those repositories
-  * `CIRCLECI_TOKEN`: your access token for the CircleCI API
-  * `JIRA_BASEURL`: host name of your Jira instance (e.g. `https://myorg.atlassian.net:443`)
-  * `JIRA_USERNAME` and `JIRA_TOKEN`: login and access token for the API of your Jira instance
+* You'll need to define some environment variables in your scheme (Edit Scheme > "Run" Action > "Arguments" tab) if you want to try to run the [Babylon Stevenson app](BabylonCommands.md) locally. Typically declare [the same env variables](BabylonCommands.md#environment-variables) that are defined in the hosting environment (like Heroku or AWS on the server side). 
 * Hit Cmd-R to run the Vapor server locally. It will listen at `http://localhost:8080`
 * Try it out by sending fake Slack payloads mimicking a Slack slash command
 
@@ -111,12 +107,11 @@ If you need to create a new Slack command:
  1. Go to the Slack Commands config page for your team's Slack app: `https://api.slack.com/apps/<YourSlackAppID>/slash-commands`
  2. Click on "Create New Command"
    * Fill in the slash command (e.g. `/foo`)
-   * Enter `https://<appname>.herokuapp.com/<command>` as the request URL, replacing `<appname>` with the name of your Heroku app instance (e.g. `stevenson-bot`) and `<command>` by the command name (e.g. `foo`)
+   * Enter the URL this command will trigger – e.g. if your instance will be hosted on Heroku it will look like `https://<appname>.herokuapp.com/<command>`, replacing `<appname>` with the name of your Heroku app instance (e.g. `stevenson-bot`) and `<command>` by the command name (e.g. `foo`)
    * Fill in the short description and the hint for the command
    * Hit "Save"
  3. Open the project in Xcode and add a new handler for the Slack command:
-   * Open `commands.swift`
-   * Implement your command as a static function in the `SlackCommand` namespace:
+   * Implement your command as a static function/constant in a `extension SlackCommand` (see `MainCommand.swift` or `SlackCommand+Fastlane` as examples):
    
    ```swift
 extension SlackCommand {
@@ -141,9 +136,11 @@ extension SlackCommand {
    ])
 ```
 
-## 🚢 Deployment
+## 🚢 Deployment on Heroku
 
-You can skip step 1 and 2 if you have already set it up locally.
+There are just example instructions if you plan to host the app on [Heroku](https://dashboard.heroku.com/apps).
+
+_You can skip step 1 and 2 if you have already set it up locally._
 
 1. Install the Heroku CLI.
    ```bash
@@ -166,12 +163,6 @@ Alternatively, you can deploy a specific branch manually by going to the deploy 
 
 Once the app is deployed, if you need to debug things, you can see the logs using `heroku logs -a <heroku-app-name>`.
 
-## 🌏 Hosting
-
-The app is hosted on [Heroku](https://dashboard.heroku.com/apps).
-
-## ⚙️ Environment Variables
-
 To set the aforementioned environment variables with the real values on Heroku:
 
 * Go to your Heroku dashboard
@@ -180,7 +171,8 @@ To set the aforementioned environment variables with the real values on Heroku:
 
 ## 📖 Documentation
 
-Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use Vapor.
+* Learn more about the Stevenson's instance we use at Babylon and the commands that we implemented using this framework to support our processes [here](BabylonCommands.md)
+* For instructions on how to use Vapor, visit the Vapor web framework's [documentation](http://docs.vapor.codes).
 
 ## ✨ Take a look at our other OSS projects!
 
