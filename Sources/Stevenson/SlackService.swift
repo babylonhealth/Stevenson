@@ -151,7 +151,7 @@ public struct SlackMessage: Content {
             .init(text: text, color: "36a64f")
         }
         public static func warning(_ text: String) -> Attachment {
-            .init(text: text, color: "ffa636")
+            .init(text: text, color: "fff000")
         }
         public static func error(_ text: String) -> Attachment {
             .init(text: text, color: "ff0000")

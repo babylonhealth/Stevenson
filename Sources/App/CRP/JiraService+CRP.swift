@@ -355,7 +355,7 @@ extension JiraService.FixVersionReport {
         } else {
             return """
                 ❌ Some errors occurred when trying to add "\(releaseName)" in the "Fix Version" field of some tickets.
-                Please double-check those tickets, you might need to fix them manually if needed.
+                Please double-check those tickets; you might need to update some of them manually.
                 """
         }
     }
