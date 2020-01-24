@@ -141,18 +141,22 @@ public struct SlackMessage: Content {
 // MARK: Service
 
 public struct SlackService {
-    let token: String
+    /// Verification Token (see SlackBot App settings)
+    let verificationToken: String
+    /// Bot User OAuth Access Token (see SlackBot App settings)
+    let oauthToken: String
 
-    public init(token: String) {
-        self.token = token
+    public init(verificationToken: String, oauthToken: String) {
+        self.verificationToken = verificationToken
+        self.oauthToken = oauthToken
     }
 
     public func handle(command: SlackCommand, on request: Request) throws -> Future<Response> {
         return try request.content
             .decode(SlackCommandMetadata.self)
             .catchError(.capture())
-            .flatMap { [token] metadata in
-                guard metadata.token == token else {
+            .flatMap { [verificationToken] metadata in
+                guard metadata.token == verificationToken else {
                     throw Error.invalidToken
                 }
                 
@@ -174,7 +178,7 @@ public struct SlackService {
     public func post(message: SlackMessage, on container: Container) throws -> Future<Response> {
         let fullURL = URL(string: "https://slack.com/api/chat.postMessage")!
         let headers: HTTPHeaders = [
-            "Authorization": "Bearer \(self.token)"
+            "Authorization": "Bearer \(self.oauthToken)"
         ]
         return try container.client()
             .post(fullURL, headers: headers) {

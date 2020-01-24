@@ -33,7 +33,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     let logger = PrintLogger()
 
     let slack = SlackService(
-        token: try attempt { Environment.slackToken }
+        verificationToken: try attempt { Environment.slackToken },
+        oauthToken: try attempt { Environment.slackOAuthToken }
     )
 
     let ci = CircleCIService(
