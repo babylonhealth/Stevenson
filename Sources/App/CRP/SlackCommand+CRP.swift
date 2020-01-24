@@ -41,7 +41,7 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
+                    .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                         try jira.executeCRPTicketProcess(
                             commitMessages: commitMessages,
                             release: release,

@@ -66,13 +66,13 @@ enum CRPProcess {
 
                 // Spawn a separate Future to trigger the "Fix Version dance" in the background
                 _ = ticketCreated.flatMap { (_, _) in
-                    try jira.createAndSetFixedVersions(
+                    try jira.createAndSetFixVersions(
                         changelogSections: changelogSections,
                         versionName: jiraVersionName,
                         on: request
                     )
                     .catchError(.capture())
-                    .flatMap { (report: JiraService.FixedVersionReport) -> Future<Response> in
+                    .flatMap { (report: JiraService.FixVersionReport) -> Future<Response> in
                         let message = report.fullReportText(releaseName: jiraVersionName)
                         return try slack.postMessage(message, channelID: channelID, on: request)
                             .catchError(.capture())
@@ -96,7 +96,7 @@ enum CRPProcess {
     }
 }
 
-extension JiraService.FixedVersionReport {
+extension JiraService.FixVersionReport {
     func fullReportText(releaseName: String) -> String {
         if messages.isEmpty {
             return "✅ Successfully added '\(releaseName)' in the 'Fix Version' field of all tickets"

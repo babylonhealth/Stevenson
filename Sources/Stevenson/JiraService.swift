@@ -192,7 +192,7 @@ extension JiraService {
         }
     }
 
-    public func setFixedVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Void> {
+    public func setFixVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Void> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
 
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
