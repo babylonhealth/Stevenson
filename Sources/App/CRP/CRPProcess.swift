@@ -38,12 +38,12 @@ enum CRPProcess {
             repo: repoMapping.repository,
             branch: branch
         )
+        let jiraVersionName = repoMapping.crp.jiraVersionName(release)
 
         return try github.changelog(for: release, on: request)
             .catchError(.capture())
-            .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, Response)> in
+            .flatMap { (commitMessages: [String]) -> Future<JiraService.CreatedIssue> in
 
-                let jiraVersionName = repoMapping.crp.jiraVersionName(release)
                 let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
 
                 // Create CRP Issue
@@ -55,17 +55,11 @@ enum CRPProcess {
                     changelog: jira.document(from: changelogSections)
                 )
 
-                let ticketCreated = try jira.create(issue: crpIssue, on: request)
+                let crpResponse = try jira.create(issue: crpIssue, on: request)
                     .catchError(.capture())
-                    .flatMap { crpIssue -> Future<(JiraService.CreatedIssue, Response)> in
-                        let message = "CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
-                        return try slack.postMessage(message, channelID: channelID, on: request)
-                            .catchError(.capture())
-                            .map { (crpIssue, $0) }
-                    }
 
-                // Spawn a separate Future to trigger the "Fix Version dance" in the background
-                _ = ticketCreated.flatMap { (_, _) in
+                // Spawn a separate Future once CRP created, to trigger the "Fix Version dance" in the background
+                _ = crpResponse.flatMap { _ -> Future<Response> in
                     try jira.createAndSetFixVersions(
                         changelogSections: changelogSections,
                         versionName: jiraVersionName,
@@ -79,15 +73,19 @@ enum CRPProcess {
                     }
                 }
 
-                return ticketCreated
+                return crpResponse
             }
-            .catchError(.capture())
-            .map { (crpIssue, slackResponse) in
+            .flatMap { crpIssue -> Future<JiraService.CreatedIssue> in
+                let message = "CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
+                return try slack.postMessage(message, channelID: channelID, on: request)
+                    .map { _ in crpIssue }
+                    .mapIfError { _ in crpIssue }
+            }
+            .map { crpIssue in
                 let json: [String: String] = [
                     "key": crpIssue.key,
                     "id": crpIssue.id,
                     "url": jira.browseURL(issue: crpIssue),
-                    "slack_notification": slackResponse.http.description
                 ]
                 let response = Response(using: request)
                 try response.content.encode(json, as: .json)
