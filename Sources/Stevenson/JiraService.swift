@@ -226,3 +226,12 @@ extension JiraService {
         self.logger.debug("[JIRA-API] response for \(message):\n======>\n\(response)\n<======")
     }
 }
+
+extension JiraService {
+    public func browseURL(issue: CreatedIssue) -> String {
+        return self.browseURL(issue: issue.key)
+    }
+    public func browseURL(issue: String) -> String {
+        return "\(self.baseURL)/browse/\(issue)"
+    }
+}

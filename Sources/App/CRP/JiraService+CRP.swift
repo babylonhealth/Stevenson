@@ -329,9 +329,28 @@ extension JiraService {
                 try self.setFixedVersion(version, for: ticket, on: container)
                     .map { _ in FixedVersionReport() }
                     .mapIfError { error in
-                        return FixedVersionReport("Error setting FixedVersion for \(ticket) - \(error)")
+                        let url = self.browseURL(issue: ticket)
+                        return FixedVersionReport("Error setting FixedVersion for <\(url)|\(ticket)> - \(error.betterLocalizedDescription)")
                 }
             }
             .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
+    }
+}
+
+extension Error {
+    /// Just a nicer translation for some common URLErrors instead of the generic "The operation cound not be completed. (NSURLErrorDomain error N.)"
+    var betterLocalizedDescription: String {
+        guard let error = self as? URLError else { return self.localizedDescription }
+        let message: String? = {
+            switch error.code {
+            case .timedOut: return "Request timed out"
+            case .cannotFindHost: return "Cannot find host"
+            case .cannotConnectToHost: return "Cannot connect to host"
+            case .networkConnectionLost: return "Network connection lost"
+            case .notConnectedToInternet: return "Not connected to internet"
+            default: return nil
+            }
+        }()
+        return message.map({ "\($0) (\(error.code))" }) ?? error.localizedDescription
     }
 }

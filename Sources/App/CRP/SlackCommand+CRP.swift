@@ -52,10 +52,7 @@ extension SlackCommand {
                     }
                     .catchError(.capture())
                     .map { (crpIssue, report) in
-                        let fixVersionReport = report.messages.isEmpty
-                            ? "✅ Successfully added '\(repoMapping.crp.jiraVersionName(release))' in 'Fixed Versions' for all tickets"
-                            : "❌ Some errors occurred when trying to set 'Fixed Versions' on some tickets, you might need to fix them manually\n\(report)"
-
+                        let fixVersionReport = report.fullReportText(releaseName: repoMapping.crp.jiraVersionName(release))
                         return SlackResponse("""
                             ✅ CRP Ticket \(crpIssue.key) created.
                             \(jira.baseURL)/browse/\(crpIssue.key)

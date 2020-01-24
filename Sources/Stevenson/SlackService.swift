@@ -123,6 +123,23 @@ public struct SlackResponse: Content {
     }
 }
 
+public struct SlackMessage: Content {
+    public let channelID: String
+    public let text: String
+
+    enum CodingKeys: String, CodingKey {
+        case channelID = "channel"
+        case text
+    }
+
+    public init(channelID: String, text: String) {
+        self.channelID = channelID
+        self.text = text
+    }
+}
+
+// MARK: Service
+
 public struct SlackService {
     let token: String
 
@@ -154,6 +171,26 @@ public struct SlackService {
             .encode(for: request)
     }
 
+    public func post(message: SlackMessage, on container: Container) throws -> Future<Response> {
+        let fullURL = URL(string: "https://slack.com/api/chat.postMessage")!
+        let headers: HTTPHeaders = [
+            "Authorization": "Bearer \(self.token)"
+        ]
+        return try container.client()
+            .post(fullURL, headers: headers) {
+                try $0.content.encode(message)
+        }
+        .catchError(.capture())
+    }
+
+    /// Convenience for post(message: SlackMessage, on: Container)
+    public func postMessage(_ text: String, channelID: String, on container: Container) throws -> Future<Response> {
+        let message = SlackMessage(
+            channelID: channelID,
+            text: text
+        )
+        return try self.post(message: message, on: container)
+    }
 }
 
 extension Future where T == SlackResponse {
