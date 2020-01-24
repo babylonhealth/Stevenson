@@ -96,21 +96,6 @@ enum CRPProcess {
     }
 }
 
-extension JiraService.FixVersionReport {
-    func fullReportText(releaseName: String) -> String {
-        if messages.isEmpty {
-            return "✅ Successfully added '\(releaseName)' in the 'Fix Version' field of all tickets"
-        } else {
-            return """
-                ❌ Some errors occurred when trying to add \(releaseName) in the 'Fix Version' field of some tickets.
-                Please double-check those tickets, you might need to fix them manually if needed.
-
-                \(self.description)"
-                """
-        }
-    }
-}
-
 extension CRPProcess.Error: Debuggable {
     var identifier: String {
         switch self {

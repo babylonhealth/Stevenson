@@ -289,7 +289,7 @@ extension JiraService {
 
         var description: String {
             return messages
-                .map { " - \($0.description)" }
+                .map { " • \($0.description)" }
                 .joined(separator: "\n")
         }
     }
@@ -344,15 +344,34 @@ extension JiraService {
     }
 }
 
+// MARK: Nice report descriptions
+
+extension JiraService.FixVersionReport {
+    func fullReportText(releaseName: String) -> String {
+        if messages.isEmpty {
+            return """
+                ✅ Successfully added "\(releaseName)" in the "Fix Version" field of all tickets
+                """
+        } else {
+            return """
+                ❌ Some errors occurred when trying to add "\(releaseName)" in the "Fix Version" field of some tickets.
+                Please double-check those tickets, you might need to fix them manually if needed.
+
+                \(self.description)"
+                """
+        }
+    }
+}
+
 extension JiraService.FixVersionReport.Error: CustomStringConvertible {
     var description: String {
         switch self {
         case let .releaseCreationFailed(project, error):
-            return "Error creating JIRA release in board \(project) [\(error.betterLocalizedDescription)]"
+            return "Error creating JIRA release in board `\(project)` – \(error.betterLocalizedDescription)"
         case let .updateFixVersionFailed(ticket, url, error):
-            return "Error setting Fix Version field for <\(url)|\(ticket)> [\(error.betterLocalizedDescription)]"
+            return "Error setting Fix Version field for <\(url)|\(ticket)> – \(error.betterLocalizedDescription)"
         case let .notInWhitelist(project):
-                return "Project \(project) is not part of our whitelist for creating JIRA versions"
+                return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
         }
     }
 }
@@ -371,6 +390,6 @@ extension Error {
             default: return nil
             }
         }()
-        return message.map({ "\($0) (\(error.code))" }) ?? error.localizedDescription
+        return message.map({ "\($0) (\(error.code.rawValue))" }) ?? error.localizedDescription
     }
 }
