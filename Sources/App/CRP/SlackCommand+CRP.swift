@@ -52,11 +52,11 @@ extension SlackCommand {
                     }
                     .catchError(.capture())
                     .map { (crpIssue, report) in
-                        let fixVersionReport = report.fullReportText(releaseName: repoMapping.crp.jiraVersionName(release))
+                        let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
                         return SlackResponse("""
                             ✅ CRP Ticket \(crpIssue.key) created.
                             \(jira.baseURL)/browse/\(crpIssue.key)
-                            \(fixVersionReport)
+                            \(status)\n\(report)
                             """,
                             visibility: .channel
                         )

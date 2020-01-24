@@ -126,15 +126,36 @@ public struct SlackResponse: Content {
 public struct SlackMessage: Content {
     public let channelID: String
     public let text: String
+    public let attachments: [Attachment]?
 
     enum CodingKeys: String, CodingKey {
         case channelID = "channel"
         case text
+        case attachments
     }
 
-    public init(channelID: String, text: String) {
+    public init(channelID: String, text: String, attachments: [Attachment]? = nil) {
         self.channelID = channelID
         self.text = text
+        self.attachments = attachments
+    }
+
+    public struct Attachment: Content {
+        let text: String
+        let color: String
+        public init(text: String, color: String) {
+            self.text = text
+            self.color = color
+        }
+        public static func success(_ text: String) -> Attachment {
+            .init(text: text, color: "36a64f")
+        }
+        public static func warning(_ text: String) -> Attachment {
+            .init(text: text, color: "ffa636")
+        }
+        public static func error(_ text: String) -> Attachment {
+            .init(text: text, color: "ff0000")
+        }
     }
 }
 
@@ -185,15 +206,6 @@ public struct SlackService {
                 try $0.content.encode(message)
         }
         .catchError(.capture())
-    }
-
-    /// Convenience for post(message: SlackMessage, on: Container)
-    public func postMessage(_ text: String, channelID: String, on container: Container) throws -> Future<Response> {
-        let message = SlackMessage(
-            channelID: channelID,
-            text: text
-        )
-        return try self.post(message: message, on: container)
     }
 }
 

@@ -274,9 +274,9 @@ extension JiraService {
     /// Used to report non-fatal errors without failing the Future chain
     struct FixVersionReport: CustomStringConvertible {
         enum Error: Swift.Error {
+            case notInWhitelist(project: String)
             case releaseCreationFailed(project: String, error: Swift.Error)
             case updateFixVersionFailed(ticket: String, url: String, error: Swift.Error)
-            case notInWhitelist(project: String)
         }
         let messages: [FixVersionReport.Error]
 
@@ -347,7 +347,7 @@ extension JiraService {
 // MARK: Nice report descriptions
 
 extension JiraService.FixVersionReport {
-    func fullReportText(releaseName: String) -> String {
+    func statusText(releaseName: String) -> String {
         if messages.isEmpty {
             return """
                 ✅ Successfully added "\(releaseName)" in the "Fix Version" field of all tickets
@@ -356,8 +356,6 @@ extension JiraService.FixVersionReport {
             return """
                 ❌ Some errors occurred when trying to add "\(releaseName)" in the "Fix Version" field of some tickets.
                 Please double-check those tickets, you might need to fix them manually if needed.
-
-                \(self.description)"
                 """
         }
     }
@@ -366,12 +364,12 @@ extension JiraService.FixVersionReport {
 extension JiraService.FixVersionReport.Error: CustomStringConvertible {
     var description: String {
         switch self {
+        case let .notInWhitelist(project):
+                return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
         case let .releaseCreationFailed(project, error):
             return "Error creating JIRA release in board `\(project)` – \(error.betterLocalizedDescription)"
         case let .updateFixVersionFailed(ticket, url, error):
             return "Error setting Fix Version field for <\(url)|\(ticket)> – \(error.betterLocalizedDescription)"
-        case let .notInWhitelist(project):
-                return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
         }
     }
 }
