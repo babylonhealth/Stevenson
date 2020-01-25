@@ -278,17 +278,17 @@ extension JiraService {
             case releaseCreationFailed(project: String, error: Swift.Error)
             case updateFixVersionFailed(ticket: String, url: String, error: Swift.Error)
         }
-        let messages: [FixVersionReport.Error]
+        let errors: [FixVersionReport.Error]
 
-        init(_ message: FixVersionReport.Error) {
-            self.messages = [message]
+        init(_ error: FixVersionReport.Error) {
+            self.errors = [error]
         }
         init(reports: [FixVersionReport] = []) {
-            self.messages = reports.flatMap { $0.messages }
+            self.errors = reports.flatMap { $0.errors }
         }
 
         var description: String {
-            return messages
+            return errors
                 .map { " • \($0.description)" }
                 .joined(separator: "\n")
         }
@@ -348,7 +348,7 @@ extension JiraService {
 
 extension JiraService.FixVersionReport {
     func statusText(releaseName: String) -> String {
-        if messages.isEmpty {
+        if errors.isEmpty {
             return """
                 ✅ Successfully added "\(releaseName)" in the "Fix Version" field of all tickets
                 """

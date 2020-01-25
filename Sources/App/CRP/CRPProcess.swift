@@ -97,10 +97,10 @@ enum CRPProcess {
 
 extension JiraService.FixVersionReport {
     func asSlackAttachments() -> [SlackMessage.Attachment] {
-        return self.messages.map { message -> SlackMessage.Attachment in
-            switch message {
-            case .notInWhitelist: return .warning(message.description)
-            default: return .error(message.description)
+        return self.errors.map { error -> SlackMessage.Attachment in
+            switch error {
+            case .notInWhitelist: return .warning(error.description)
+            default: return .error(error.description)
             }
         }
     }
