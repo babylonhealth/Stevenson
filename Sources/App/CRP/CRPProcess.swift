@@ -77,7 +77,7 @@ enum CRPProcess {
                 return crpResponse
             }
             .flatMap { crpIssue -> Future<JiraService.CreatedIssue> in
-                let message = "CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
+                let message = "✅ CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
                 return try slack.post(message: SlackMessage(channelID: channelID, text: message), on: request)
                     .map { _ in crpIssue }
                     .mapIfError { _ in crpIssue }
