@@ -1,6 +1,10 @@
 import Vapor
 import Stevenson
 
+/**
+ For detailed documentation of this part of the code, see: [Implementation Details documentation in private repo](https://github.com/babylonhealth/babylon-ios/blob/develop/Documentation/Process/Release%20process/CRP-Bot-ImplementationDetails.md#executing-the-crp-process)
+*/
+
 // MARK: Constants
 
 // [CNSMR-1319] TODO: Use a config file to parametrise those
@@ -365,7 +369,7 @@ extension JiraService.FixVersionReport.Error: CustomStringConvertible {
     var description: String {
         switch self {
         case let .notInWhitelist(project):
-                return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
+            return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
         case let .releaseCreationFailed(project, error):
             return "Error creating JIRA release in board `\(project)` – \(error.betterLocalizedDescription)"
         case let .updateFixVersionFailed(ticket, url, error):

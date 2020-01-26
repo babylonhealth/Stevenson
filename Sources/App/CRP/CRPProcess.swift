@@ -2,6 +2,9 @@ import Foundation
 import Vapor
 import Stevenson
 
+/**
+ For detailed documentation of this part of the code, see: [Implementation Details documentation in private repo](https://github.com/babylonhealth/babylon-ios/blob/develop/Documentation/Process/Release%20process/CRP-Bot-ImplementationDetails.md#executing-the-crp-process)
+*/
 enum CRPProcess {
     enum Option: String {
         case repo
