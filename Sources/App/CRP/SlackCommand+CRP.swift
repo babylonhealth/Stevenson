@@ -56,8 +56,9 @@ extension SlackCommand {
                         return SlackService.Response("""
                             ✅ CRP Ticket \(crpIssue.key) created.
                             \(jira.baseURL)/browse/\(crpIssue.key)
-                            \(status)\n\(report)
+                            \(status)
                             """,
+                            attachments: report.asSlackAttachments(),
                             visibility: .channel
                         )
                     }.replyLater(

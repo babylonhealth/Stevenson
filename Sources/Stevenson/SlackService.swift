@@ -179,6 +179,7 @@ extension Future where T == SlackService.Response {
 extension SlackService {
     public struct Response: Content {
         public let text: String
+        public let attachments: [Attachment]?
         public let visibility: Visibility
 
         public enum Visibility: String, Content {
@@ -190,11 +191,13 @@ extension SlackService {
 
         enum CodingKeys: String, CodingKey {
             case text
+            case attachments
             case visibility = "response_type"
         }
 
-        public init(_ text: String, visibility: Visibility = .user) {
+        public init(_ text: String, attachments: [Attachment]? = nil, visibility: Visibility = .user) {
             self.text = text
+            self.attachments = attachments
             self.visibility = visibility
         }
     }
