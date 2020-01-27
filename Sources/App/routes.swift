@@ -29,7 +29,7 @@ public func routes(
                     try slack.handle(command: command, on: req)
                 }
             } catch {
-                return try SlackResponse(error: error).encode(for: req)
+                return try SlackService.Response(error: error).encode(for: req)
             }
         }
     }

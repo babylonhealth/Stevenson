@@ -93,7 +93,7 @@ extension SlackCommand {
         branch: String? = nil,
         ci: CircleCIService,
         on container: Container
-    ) throws -> Future<SlackResponse> {
+    ) throws -> Future<SlackService.Response> {
         let branch = branch
             ?? metadata.value(forOption: .branch)
             ?? RepoMapping.ios.repository.baseBranch
@@ -117,7 +117,7 @@ extension SlackCommand {
         branch: String? = nil,
         ci: CircleCIService,
         on container: Container
-    ) throws -> Future<SlackResponse> {
+    ) throws -> Future<SlackService.Response> {
         let branch = branch
             ?? metadata.value(forOption: .branch)
             ?? RepoMapping.ios.repository.baseBranch
@@ -139,10 +139,10 @@ extension SlackCommand {
         to pipeline: Future<CircleCIService.PipelineResponse>,
         metadata: SlackCommandMetadata,
         on container: Container
-    ) -> Future<SlackResponse> {
+    ) -> Future<SlackService.Response> {
         return pipeline
             .map {
-                SlackResponse("""
+                SlackService.Response("""
                     You asked me: `\(metadata.command) \(metadata.text)`.
                     🚀 Triggered `\(metadata.textComponents[0])` on the `\($0.branch)` branch.
                     \($0.buildURL)
@@ -151,7 +151,10 @@ extension SlackCommand {
                 )
             }
             .replyLater(
-                withImmediateResponse: SlackResponse("👍 (If you don't receive response with the link to the triggered CI job in a few seconds please check CI logs before repeating a command)", visibility: .channel),
+                withImmediateResponse: SlackService.Response(
+                    "👍 (If you don't receive response with the link to the triggered CI job in a few seconds please check CI logs before repeating a command)",
+                    visibility: .channel
+                ),
                 responseURL: metadata.responseURL,
                 on: container
         )

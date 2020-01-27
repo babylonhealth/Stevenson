@@ -71,7 +71,7 @@ enum CRPProcess {
                     .catchError(.capture())
                     .flatMap { (report: JiraService.FixVersionReport) -> Future<Response> in
                         let status = report.statusText(releaseName: jiraVersionName)
-                        let message = SlackMessage(channelID: channelID, text: status, attachments: report.asSlackAttachments())
+                        let message = SlackService.Message(channelID: channelID, text: status, attachments: report.asSlackAttachments())
                         return try slack.post(message: message, on: request)
                             .catchError(.capture())
                     }
@@ -81,7 +81,7 @@ enum CRPProcess {
             }
             .flatMap { crpIssue -> Future<JiraService.CreatedIssue> in
                 let message = "✅ CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
-                return try slack.post(message: SlackMessage(channelID: channelID, text: message), on: request)
+                return try slack.post(message: SlackService.Message(channelID: channelID, text: message), on: request)
                     .map { _ in crpIssue }
                     .mapIfError { _ in crpIssue }
             }
@@ -99,8 +99,8 @@ enum CRPProcess {
 }
 
 extension JiraService.FixVersionReport {
-    func asSlackAttachments() -> [SlackMessage.Attachment] {
-        return self.errors.map { error -> SlackMessage.Attachment in
+    func asSlackAttachments() -> [SlackService.Attachment] {
+        return self.errors.map { error -> SlackService.Attachment in
             switch error {
             case .notInWhitelist: return .warning(error.description)
             default: return .error(error.description)
