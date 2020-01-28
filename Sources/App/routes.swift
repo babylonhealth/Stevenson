@@ -18,8 +18,8 @@ public func routes(
         try github.issueComment(on: request, ci: ci)
     }
 
-    router.get("crp") { (request) -> Future<Response> in
-        try CRPProcess.apiRequest(request: request, github: github, jira: jira)
+    router.post("api/crp") { (request) -> Future<Response> in
+        try CRPProcess.apiRequest(request: request, github: github, jira: jira, slack: slack)
     }
 
     commands.forEach { command in
@@ -29,7 +29,7 @@ public func routes(
                     try slack.handle(command: command, on: req)
                 }
             } catch {
-                return try SlackResponse(error: error).encode(for: req)
+                return try SlackService.Response(error: error).encode(for: req)
             }
         }
     }

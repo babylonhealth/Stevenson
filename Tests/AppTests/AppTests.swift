@@ -157,6 +157,35 @@ final class AppTests: XCTestCase {
         let error4 = try decoder.decode(JiraService.ServiceError.self, from: errorResponse4)
         XCTAssertEqual(error4.reason, "Unknown error")
     }
+
+    func testFixVersionReport() {
+        let reports: [[JiraService.FixVersionReport]] = [
+            [.init(),.init(),.init()],
+            [.init(.notInWhitelist(project: "PRJ"))],
+            [.init(.releaseCreationFailed(project: "PRJ", error: URLError(.badServerResponse)))],
+            [
+                .init(),
+                .init(),
+                .init(.updateFixVersionFailed(ticket: "PRJ-123", url: "http://example.jira.org/browse/PRJ-123", error: URLError(.timedOut))),
+                .init(),
+                .init()
+            ],
+            [
+                .init(),
+                .init(.updateFixVersionFailed(ticket: "PRJ-456", url: "http://example.jira.org/browse/PRJ-456", error: URLError(.timedOut))),
+                .init()
+            ],
+            [.init(),.init(),.init(),]
+        ]
+        let reportsPerProject = reports.map(JiraService.FixVersionReport.init(reports:))
+        let consolidated = JiraService.FixVersionReport(reports: reportsPerProject)
+        XCTAssertEqual(consolidated.description, """
+             • Project `PRJ` is not part of our whitelist for creating JIRA versions
+             • Error creating JIRA release in board `PRJ` – The operation couldn’t be completed. (NSURLErrorDomain error -1011.)
+             • Error setting Fix Version field for <http://example.jira.org/browse/PRJ-123|PRJ-123> – Request timed out (-1001)
+             • Error setting Fix Version field for <http://example.jira.org/browse/PRJ-456|PRJ-456> – Request timed out (-1001)
+            """)
+    }
 }
 
 

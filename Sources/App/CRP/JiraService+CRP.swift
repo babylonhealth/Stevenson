@@ -1,6 +1,10 @@
 import Vapor
 import Stevenson
 
+/**
+ For detailed documentation of this part of the code, see: [Implementation Details documentation in private repo](https://github.com/babylonhealth/babylon-ios/blob/develop/Documentation/Process/Release%20process/CRP-Bot-ImplementationDetails.md#executing-the-crp-process)
+*/
+
 // MARK: Constants
 
 // [CNSMR-1319] TODO: Use a config file to parametrise those
@@ -63,7 +67,7 @@ extension JiraService {
         repoMapping: RepoMapping,
         crpProjectID: JiraService.FieldType.ObjectID,
         container: Request
-    ) throws -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> {
+    ) throws -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> {
 
         let jiraVersionName = repoMapping.crp.jiraVersionName(release)
         let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
@@ -79,9 +83,9 @@ extension JiraService {
 
         return try self.create(issue: crpIssue, on: container)
             .catchError(.capture())
-            .flatMap { (crpIssue: JiraService.CreatedIssue) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
+            .flatMap { (crpIssue: JiraService.CreatedIssue) -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                 // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                return try self.createAndSetFixedVersions(
+                return try self.createAndSetFixVersions(
                     changelogSections: changelogSections,
                     versionName: jiraVersionName,
                     on: container
@@ -272,32 +276,39 @@ extension JiraService {
 
 extension JiraService {
     /// Used to report non-fatal errors without failing the Future chain
-    struct FixedVersionReport: CustomStringConvertible {
-        let messages: [String]
-        init(_ message: String = "") {
-            self.messages = message.isEmpty ? [] : [message]
+    struct FixVersionReport: CustomStringConvertible {
+        enum Error: Swift.Error {
+            case notInWhitelist(project: String)
+            case releaseCreationFailed(project: String, error: Swift.Error)
+            case updateFixVersionFailed(ticket: String, url: String, error: Swift.Error)
         }
-        init(reports: [FixedVersionReport]) {
-            self.messages = reports.flatMap { $0.messages }
+        let errors: [FixVersionReport.Error]
+
+        init(_ error: FixVersionReport.Error) {
+            self.errors = [error]
         }
+        init(reports: [FixVersionReport] = []) {
+            self.errors = reports.flatMap { $0.errors }
+        }
+
         var description: String {
-            return messages
-                .map { " - \($0)" }
+            return errors
+                .map { " • \($0.description)" }
                 .joined(separator: "\n")
         }
     }
 
-    func createAndSetFixedVersions(
+    func createAndSetFixVersions(
         changelogSections: [ChangelogSection],
         versionName: String,
         on container: Container
-    ) throws -> Future<FixedVersionReport> {
+    ) throws -> Future<FixVersionReport> {
         return try changelogSections
             .compactMap { $0.tickets() }
-            .map { (project: (key: String, tickets: [String])) -> Future<FixedVersionReport> in
+            .map { (project: (key: String, tickets: [String])) -> Future<FixVersionReport> in
                 guard let projectID = self.knownProjects[project.key] else {
                     return container.future(
-                        FixedVersionReport("Project \(project.key) is not part of our whitelist for creating JIRA versions")
+                        FixVersionReport(.notInWhitelist(project: project.key))
                     )
                 }
 
@@ -315,23 +326,72 @@ extension JiraService {
                             return try self.createVersion(version, on: container)
                         }
                     }
-                    .flatMap { try self.batchSetFixedVersions($0, tickets: project.tickets, on: container) }
+                    .flatMap { try self.batchSetFixVersions($0, tickets: project.tickets, on: container) }
                     .mapIfError { error in
-                        return FixedVersionReport("Error creating JIRA version in board \(project.key) - \(error)")
+                        return FixVersionReport(.releaseCreationFailed(project: project.key, error: error))
                     }
             }
-            .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
+            .map(to: FixVersionReport.self, on: container, FixVersionReport.init) // collect an array of reports into a single one
     }
 
-    func batchSetFixedVersions(_ version: JiraService.Version, tickets: [String], on container: Container) throws -> Future<FixedVersionReport> {
+    func batchSetFixVersions(_ version: JiraService.Version, tickets: [String], on container: Container) throws -> Future<FixVersionReport> {
         return try tickets
-            .map { (ticket: String) -> Future<FixedVersionReport> in
-                try self.setFixedVersion(version, for: ticket, on: container)
-                    .map { _ in FixedVersionReport() }
+            .map { (ticket: String) -> Future<FixVersionReport> in
+                try self.setFixVersion(version, for: ticket, on: container)
+                    .map { _ in FixVersionReport() }
                     .mapIfError { error in
-                        return FixedVersionReport("Error setting FixedVersion for \(ticket) - \(error)")
+                        let url = self.browseURL(issue: ticket)
+                        return FixVersionReport(.updateFixVersionFailed(ticket: ticket, url: url, error: error))
                 }
             }
-            .map(to: FixedVersionReport.self, on: container, FixedVersionReport.init)
+            .map(to: FixVersionReport.self, on: container, FixVersionReport.init) // collect an array of reports into a single one
+    }
+}
+
+// MARK: Nice report descriptions
+
+extension JiraService.FixVersionReport {
+    func statusText(releaseName: String) -> String {
+        if errors.isEmpty {
+            return """
+                ✅ Successfully added "\(releaseName)" in the "Fix Version" field of all tickets
+                """
+        } else {
+            return """
+                ❌ Some errors occurred when trying to add "\(releaseName)" in the "Fix Version" field of some tickets.
+                Please double-check those tickets; you might need to update some of them manually.
+                """
+        }
+    }
+}
+
+extension JiraService.FixVersionReport.Error: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case let .notInWhitelist(project):
+            return "Project `\(project)` is not part of our whitelist for creating JIRA versions"
+        case let .releaseCreationFailed(project, error):
+            return "Error creating JIRA release in board `\(project)` – \(error.betterLocalizedDescription)"
+        case let .updateFixVersionFailed(ticket, url, error):
+            return "Error setting Fix Version field for <\(url)|\(ticket)> – \(error.betterLocalizedDescription)"
+        }
+    }
+}
+
+extension Error {
+    /// Just a nicer translation for some common URLErrors instead of the generic "The operation cound not be completed. (NSURLErrorDomain error N.)"
+    var betterLocalizedDescription: String {
+        guard let error = self as? URLError else { return self.localizedDescription }
+        let message: String? = {
+            switch error.code {
+            case .timedOut: return "Request timed out"
+            case .cannotFindHost: return "Cannot find host"
+            case .cannotConnectToHost: return "Cannot connect to host"
+            case .networkConnectionLost: return "Network connection lost"
+            case .notConnectedToInternet: return "Not connected to internet"
+            default: return nil
+            }
+        }()
+        return message.map({ "\($0) (\(error.code.rawValue))" }) ?? error.localizedDescription
     }
 }

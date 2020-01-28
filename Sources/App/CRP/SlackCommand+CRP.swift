@@ -41,7 +41,7 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixedVersionReport)> in
+                    .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                         try jira.executeCRPTicketProcess(
                             commitMessages: commitMessages,
                             release: release,
@@ -52,19 +52,17 @@ extension SlackCommand {
                     }
                     .catchError(.capture())
                     .map { (crpIssue, report) in
-                        let fixVersionReport = report.messages.isEmpty
-                            ? "✅ Successfully added '\(repoMapping.crp.jiraVersionName(release))' in 'Fixed Versions' for all tickets"
-                            : "❌ Some errors occurred when trying to set 'Fixed Versions' on some tickets, you might need to fix them manually\n\(report)"
-
-                        return SlackResponse("""
+                        let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
+                        return SlackService.Response("""
                             ✅ CRP Ticket \(crpIssue.key) created.
                             \(jira.baseURL)/browse/\(crpIssue.key)
-                            \(fixVersionReport)
+                            \(status)
                             """,
+                            attachments: report.asSlackAttachments(),
                             visibility: .channel
                         )
                     }.replyLater(
-                        withImmediateResponse: SlackResponse("🎫 Creating ticket...", visibility: .channel),
+                        withImmediateResponse: SlackService.Response("🎫 Creating ticket...", visibility: .channel),
                         responseURL: metadata.responseURL,
                         on: container
                 )

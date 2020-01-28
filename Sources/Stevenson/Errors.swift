@@ -215,7 +215,7 @@ extension Future {
     }
 }
 
-extension SlackResponse {
+extension SlackService.Response {
     public init(error: Error, visibility: Visibility = .user) {
         #if DEBUG
         self.init(String(describing: error), visibility: visibility)

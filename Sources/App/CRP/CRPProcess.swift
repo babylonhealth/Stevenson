@@ -2,12 +2,14 @@ import Foundation
 import Vapor
 import Stevenson
 
+/**
+ For detailed documentation of this part of the code, see: [Implementation Details documentation in private repo](https://github.com/babylonhealth/babylon-ios/blob/develop/Documentation/Process/Release%20process/CRP-Bot-ImplementationDetails.md#executing-the-crp-process)
+*/
 enum CRPProcess {
     enum Option: String {
         case repo
         case branch
-        case skipTicket
-        case skipFixVersion
+        case slackChannelID = "slack_channel_id"
 
         func get<T: Decodable>(from request: Request) throws -> T {
             guard let result = request.query[T.self, at: self.rawValue] else {
@@ -22,11 +24,10 @@ enum CRPProcess {
         case missingParameter(String)
     }
 
-    static func apiRequest(request: Request, github: GitHubService, jira: JiraService) throws -> Future<Response> {
+    static func apiRequest(request: Request, github: GitHubService, jira: JiraService, slack: SlackService) throws -> Future<Response> {
         let repo: String = try Option.repo.get(from: request)
         let branch: String = try Option.branch.get(from: request)
-        let skipTicket: Bool = (try? Option.skipTicket.get(from: request)) ?? false
-        let skipFixVersion: Bool = (try? Option.skipFixVersion.get(from: request)) ?? false
+        let channelID: String = try Option.slackChannelID.get(from: request)
 
         guard let repoMapping = RepoMapping.all[repo.lowercased()] else {
             throw CRPProcess.Error.invalidParameter(
@@ -40,64 +41,71 @@ enum CRPProcess {
             repo: repoMapping.repository,
             branch: branch
         )
+        let jiraVersionName = repoMapping.crp.jiraVersionName(release)
 
         return try github.changelog(for: release, on: request)
             .catchError(.capture())
-            .flatMap { (commitMessages: [String]) -> Future<(JiraService.CreatedIssue?, JiraService.FixedVersionReport?)> in
+            .flatMap { (commitMessages: [String]) -> Future<JiraService.CreatedIssue> in
 
-                let jiraVersionName = repoMapping.crp.jiraVersionName(release)
                 let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
 
-                // Create CRP ticket, unless skipped
-                let createTicket: Future<JiraService.CreatedIssue?>
-                if skipTicket {
-                    createTicket = request.future(nil)
-                } else {
-                    // Create CRP Issue
-                    let crpIssue = JiraService.makeCRPIssue(
-                        jiraBaseURL: jira.baseURL,
-                        crpProjectID: JiraService.crpProjectID,
-                        crpConfig: repoMapping.crp,
-                        release: release,
-                        changelog: jira.document(from: changelogSections)
+                // Create CRP Issue
+                let crpIssue = JiraService.makeCRPIssue(
+                    jiraBaseURL: jira.baseURL,
+                    crpProjectID: JiraService.crpProjectID,
+                    crpConfig: repoMapping.crp,
+                    release: release,
+                    changelog: jira.document(from: changelogSections)
+                )
+
+                let crpResponse = try jira.create(issue: crpIssue, on: request)
+                    .catchError(.capture())
+
+                // Spawn a separate Future once CRP created, to trigger the "Fix Version dance" in the background
+                _ = crpResponse.flatMap { _ -> Future<Response> in
+                    try jira.createAndSetFixVersions(
+                        changelogSections: changelogSections,
+                        versionName: jiraVersionName,
+                        on: request
                     )
-
-                    createTicket = try jira.create(issue: crpIssue, on: request)
-                        .map(Optional.some)
-                        .catchError(.capture())
+                    .catchError(.capture())
+                    .flatMap { (report: JiraService.FixVersionReport) -> Future<Response> in
+                        let status = report.statusText(releaseName: jiraVersionName)
+                        let message = SlackService.Message(channelID: channelID, text: status, attachments: report.asSlackAttachments())
+                        return try slack.post(message: message, on: request)
+                            .catchError(.capture())
+                    }
                 }
 
-                return createTicket
-                    .flatMap { (crpIssue: JiraService.CreatedIssue?) -> Future<(JiraService.CreatedIssue?, JiraService.FixedVersionReport?)> in
-                        guard !skipFixVersion else {
-                            return request.future( (crpIssue, nil) )
-                        }
-                        // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                        return try jira.createAndSetFixedVersions(
-                            changelogSections: changelogSections,
-                            versionName: jiraVersionName,
-                            on: request
-                        ).map { (crpIssue, Optional.some($0)) }
-                }
+                return crpResponse
             }
-            .catchError(.capture())
-            .map { (crpIssue, report) in
-                var json: [String: AnyCodable] = [:]
-                if let ticket = crpIssue {
-                    json["ticket"] = AnyCodable([
-                        "key": ticket.key,
-                        "id": ticket.id,
-                        "url": "\(jira.baseURL)/browse/\(ticket.key)"
-                    ])
-                }
-                if let report = report {
-                    json["success"] = AnyCodable(report.messages.isEmpty)
-                    json["messages"] = AnyCodable(report.messages)
-                }
+            .flatMap { crpIssue -> Future<JiraService.CreatedIssue> in
+                let message = "✅ CRP Ticket created: <\(jira.browseURL(issue: crpIssue))|\(crpIssue.key)>"
+                return try slack.post(message: SlackService.Message(channelID: channelID, text: message), on: request)
+                    .map { _ in crpIssue }
+                    .mapIfError { _ in crpIssue }
+            }
+            .map { crpIssue in
+                let json: [String: String] = [
+                    "key": crpIssue.key,
+                    "id": crpIssue.id,
+                    "url": jira.browseURL(issue: crpIssue),
+                ]
                 let response = Response(using: request)
                 try response.content.encode(json, as: .json)
                 return response
             }
+    }
+}
+
+extension JiraService.FixVersionReport {
+    func asSlackAttachments() -> [SlackService.Attachment] {
+        return self.errors.map { error -> SlackService.Attachment in
+            switch error {
+            case .notInWhitelist: return .warning(error.description)
+            default: return .error(error.description)
+            }
+        }
     }
 }
 
@@ -120,3 +128,4 @@ extension CRPProcess.Error: Debuggable {
         }
     }
 }
+
