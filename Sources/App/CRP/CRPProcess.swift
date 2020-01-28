@@ -9,7 +9,7 @@ enum CRPProcess {
     enum Option: String {
         case repo
         case branch
-        case slack_channel_id
+        case slackChannelID = "slack_channel_id"
 
         func get<T: Decodable>(from request: Request) throws -> T {
             guard let result = request.query[T.self, at: self.rawValue] else {
@@ -27,7 +27,7 @@ enum CRPProcess {
     static func apiRequest(request: Request, github: GitHubService, jira: JiraService, slack: SlackService) throws -> Future<Response> {
         let repo: String = try Option.repo.get(from: request)
         let branch: String = try Option.branch.get(from: request)
-        let channelID: String = try Option.slack_channel_id.get(from: request)
+        let channelID: String = try Option.slackChannelID.get(from: request)
 
         guard let repoMapping = RepoMapping.all[repo.lowercased()] else {
             throw CRPProcess.Error.invalidParameter(
