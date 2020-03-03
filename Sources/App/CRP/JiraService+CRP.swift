@@ -385,7 +385,7 @@ extension JiraService.FixVersionReport.Error: CustomStringConvertible {
 }
 
 extension Error {
-    /// Just a nicer translation for some common URLErrors instead of the generic "The operation cound not be completed. (NSURLErrorDomain error N.)"
+    /// Just a nicer translation for some common URLErrors instead of the generic "The operation could not be completed. (NSURLErrorDomain error N.)"
     var betterLocalizedDescription: String {
         guard let error = self as? URLError else { return self.localizedDescription }
         let message: String? = {
