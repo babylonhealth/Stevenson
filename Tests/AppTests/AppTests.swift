@@ -372,7 +372,7 @@ extension AppTests {
             "summary" : "Fake-Publish Dummy App v1.2.3",
             "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
             "customfield_11505" : {
-              "name" : "mark.bates"
+              "accountId" : "5d77d4701e81950d2d821307"
             },
             "customfield_12592" : [
               {
