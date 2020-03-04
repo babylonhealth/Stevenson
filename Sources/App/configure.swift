@@ -3,6 +3,7 @@ import Stevenson
 
 // Use https://babylonpartners.atlassian.net/rest/api/3/project/<ProjectKey> to get the corresponding ID
 private let jiraProjects = [
+    "ACP"   : 17420, // Assistant Chat Platform
     "AND"   : 13700, // Android Engineering
     "ANDRP" : 17264, // Android Platform
     "APPTS" : 16875, // Booking/Appointments
