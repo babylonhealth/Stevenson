@@ -7,8 +7,10 @@ extension AppTests {
     // to regenerate.
     static let __allTests__AppTests = [
         ("testAddVersion", testAddVersion),
+        ("testFixVersionReport", testFixVersionReport),
         ("testJiraDocumentFromCommits", testJiraDocumentFromCommits),
         ("testJiraErrors", testJiraErrors),
+        ("testReleaseType", testReleaseType),
         ("testVersion", testVersion),
     ]
 }

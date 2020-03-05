@@ -8,14 +8,19 @@ import Stevenson
 // MARK: Constants
 
 // [CNSMR-1319] TODO: Use a config file to parametrise those
+extension JiraService.FieldType.User  {
+      // To find the accountId to use here, open https://babylonpartners.atlassian.net/rest/api/3/user?username=<name> in your browser
+      static let RyanCovill = JiraService.FieldType.User(accountId: "557058:8e407515-77cf-4466-a468-b3d386676a7f")
+      static let MarkBates = JiraService.FieldType.User(accountId: "5d77d4701e81950d2d821307")
+}
+
 extension JiraService {
     /// Official CRP Board
     static let crpProjectID = FieldType.ObjectID(id: "13402")
 
-    static func accountablePerson(release: GitHubService.Release) -> String {
+    static func accountablePerson(release: GitHubService.Release) -> FieldType.User {
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
-        // Ensure to use a valid username key, check with https://babylonpartners.atlassian.net/rest/api/3/user?username=<name>
-        return isTelus ? "ryan.covill" : "mark.bates"
+        return isTelus ? .RyanCovill : .MarkBates
     }
 
     /// Estimate time between when the CRP ticket is created and the app is released to the AppStore
@@ -44,7 +49,7 @@ extension JiraService {
             releaseType: .init(version: release.version),
             targetDate: targetDate ?? guessTargetDate(),
             changelog: changelog,
-            accountablePersonName: accountablePerson
+            accountablePerson: accountablePerson
         )
         return CRPIssue(fields: fields)
     }
@@ -172,7 +177,7 @@ extension JiraService {
             releaseType: ReleaseType,
             targetDate: Date,
             changelog: FieldType.TextArea.Document,
-            accountablePersonName: String
+            accountablePerson: FieldType.User
         ) {
             self.project = crpProjectID
             self.summary = summary
@@ -184,7 +189,7 @@ extension JiraService {
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "TBD")
-            self.accountablePerson = FieldType.User(name: accountablePersonName)
+            self.accountablePerson = accountablePerson
             self.infoSecChecked = .no
         }
     }
@@ -379,7 +384,7 @@ extension JiraService.FixVersionReport.Error: CustomStringConvertible {
 }
 
 extension Error {
-    /// Just a nicer translation for some common URLErrors instead of the generic "The operation cound not be completed. (NSURLErrorDomain error N.)"
+    /// Just a nicer translation for some common URLErrors instead of the generic "The operation could not be completed. (NSURLErrorDomain error N.)"
     var betterLocalizedDescription: String {
         guard let error = self as? URLError else { return self.localizedDescription }
         let message: String? = {
