@@ -30,6 +30,7 @@ private let jiraProjects = [
     "PRSCR" : 16840, // Prescriptions
     "REFER" : 17244, // Referrals (next-gen)
     "SDK"   : 16975, // SDK
+    "SDKS"  : 17288, // SDK UI (next-gen)
     "TC"    : 17353, // Triage Comprehension (next-gen)
     "TEL"   : 16857, // Telus
     // TODO: [IOSP-101/268] Re-enable TEN once this board have migrated away from NextGen board
