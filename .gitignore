@@ -5,3 +5,8 @@ xcuserdata
 *.xcodeproj
 DerivedData/
 .DS_Store
+
+# Used to store some local test scripts commonly used while experimenting
+#   or debug things, that we want to keep around but locally only, and
+#   should not commit remotely (as it might contain API tokens and similar)
+_local

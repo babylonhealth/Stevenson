@@ -77,9 +77,9 @@ extension JiraService {
         }
 
         public struct User: Content {
-            let name: String
-            public init(name: String) {
-                self.name = name
+            let accountId: String
+            public init(accountId: String) {
+                self.accountId = accountId
             }
         }
     }
