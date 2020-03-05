@@ -17,8 +17,6 @@ private let jiraProjects = [
     "ETR"   : 17372, // Engagement Tribe - Retain
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
-    // TODO: [IOSP-101/IOSP-147] Re-enable IDM once this board have migrated away from NextGen board
-    // "IDM"   : 16903, // Identity Platform / Identity Management
     "IDP"   : 17228, // Identity Access Management
     "IOSP"  : 17263, // iOS Native Apps Platform
     "MC"    : 17006, // Member Communications (next-gen)
@@ -33,8 +31,6 @@ private let jiraProjects = [
     "SDKS"  : 17288, // SDK UI (next-gen)
     "TC"    : 17353, // Triage Comprehension (next-gen)
     "TEL"   : 16857, // Telus
-    // TODO: [IOSP-101/268] Re-enable TEN once this board have migrated away from NextGen board
-    // "TEN"   : 16955,
     "TK"    : 17299, // Test Kits
     "TM"    : 17343, // Triage Metrics (next-gen)
     "WH"    : 17112, // Women's Health
