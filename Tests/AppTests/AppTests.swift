@@ -84,6 +84,22 @@ final class AppTests: XCTestCase {
         XCTAssertEqualJSON(issue, AppTests.expectedTicketJson, "Ticket JSON Mismatch")
     }
 
+    func testFilteredCommitsForSDK() throws {
+        let release = try GitHubService.Release(
+            repo: GitHubService.Repository(fullName: "company/project", baseBranch: "develop"),
+            branch: "release/sdk/1.2.3"
+        )
+
+        let entries = ChangelogSection.makeSections(from: AppTests.fakeCommits, for: release)
+        XCTAssertEqual(entries.count, 2)
+        XCTAssertEqual(entries[0].board, "SDK")
+        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
+        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["SDK-4142"])
+        XCTAssertEqual(entries[1].board, "SDKS")
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[SDKS-1337] Commit 4"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["SDKS-1337"])
+    }
+
     func testVersion() throws {
         addAttachment(name: "Version JSON", object: AppTests.fakeVersion)
 
