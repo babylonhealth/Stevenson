@@ -13,6 +13,7 @@ final class AppTests: XCTestCase {
         "[CNSMR-2045] Commit 3",
         // It's a trap! We don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE board
         "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
+        "[IOSP-456] Nothing touching the SDK here",
         "[SDKS-1337] Commit 4",
     ]
 
@@ -54,8 +55,8 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(entries[0].commits.map { $0.message }, ["[CNSMR-2044] Commit 1", "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)", "[CNSMR-2045] Commit 3"])
         XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["CNSMR-2044", "CNSMR-1763", "CNSMR-2045"])
         XCTAssertEqual(entries[1].board, "IOSP")
-        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[IOSP-123] Update things here and there including in the #SDK"])
-        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["IOSP-123"])
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[IOSP-123] Update things here and there including in the #SDK", "[IOSP-456] Nothing touching the SDK here"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["IOSP-123", "IOSP-456"])
         XCTAssertEqual(entries[2].board, "SDK")
         XCTAssertEqual(entries[2].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
         XCTAssertEqual(entries[2].commits.map { $0.ticket?.key }, ["SDK-4142"])
@@ -98,7 +99,7 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(entries.count, 3)
         XCTAssertEqual(entries[0].board, "IOSP")
         XCTAssertEqual(entries[0].commits.map { $0.message }, ["[IOSP-123] Update things here and there including in the #SDK"])
-        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["IOSP-123"])
+        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["IOSP-123"]) // but not IOSP-456 :)
         XCTAssertEqual(entries[1].board, "SDK")
         XCTAssertEqual(entries[1].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
         XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["SDK-4142"])
@@ -333,6 +334,26 @@ extension AppTests {
                             {
                               "type" : "text",
                               "text" : " Update things here and there including in the #SDK"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/IOSP-456#icft=IOSP-456"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Nothing touching the SDK here"
                             }
                           ]
                         }
