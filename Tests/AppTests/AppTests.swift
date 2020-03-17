@@ -6,12 +6,15 @@ import XCTest
 final class AppTests: XCTestCase {
     static let fakeCommits = [
         "[CNSMR-2044] Commit 1",
-        // trap: we don't want it to match "sdk-core" as a ticket reference from the SDK board
+        // It's a trap! We don't want it to match "sdk-core" as a ticket reference from the SDK board
         "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)",
         "[SDK-4142] Commit 2",
+        "[IOSP-123] Update things here and there including in the #SDK",
         "[CNSMR-2045] Commit 3",
-        // trap: we don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE board
+        // It's a trap! We don't want it to match "remote-tracking" as a ticket from the (non-existing) REMOTE board
         "Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop",
+        "[IOSP-456] Nothing touching the SDK here",
+        "[SDKS-1337] Commit 4",
     ]
 
     static let fakeVersion = JiraService.Version(
@@ -47,16 +50,22 @@ final class AppTests: XCTestCase {
         )
 
         let entries = ChangelogSection.makeSections(from: AppTests.fakeCommits, for: release)
-        XCTAssertEqual(entries.count, 3)
+        XCTAssertEqual(entries.count, 5)
         XCTAssertEqual(entries[0].board, "CNSMR")
         XCTAssertEqual(entries[0].commits.map { $0.message }, ["[CNSMR-2044] Commit 1", "[CNSMR-1763] Migrate sdk-nhsgp into sdk-core (#8163)", "[CNSMR-2045] Commit 3"])
         XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["CNSMR-2044", "CNSMR-1763", "CNSMR-2045"])
-        XCTAssertEqual(entries[1].board, "SDK")
-        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
-        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["SDK-4142"])
-        XCTAssertEqual(entries[2].board, nil)
-        XCTAssertEqual(entries[2].commits.map { $0.message }, ["Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop"])
-        XCTAssertEqual(entries[2].commits.map { $0.ticket?.key }, [nil])
+        XCTAssertEqual(entries[1].board, "IOSP")
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[IOSP-123] Update things here and there including in the #SDK", "[IOSP-456] Nothing touching the SDK here"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["IOSP-123", "IOSP-456"])
+        XCTAssertEqual(entries[2].board, "SDK")
+        XCTAssertEqual(entries[2].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
+        XCTAssertEqual(entries[2].commits.map { $0.ticket?.key }, ["SDK-4142"])
+        XCTAssertEqual(entries[3].board, "SDKS")
+        XCTAssertEqual(entries[3].commits.map { $0.message }, ["[SDKS-1337] Commit 4"])
+        XCTAssertEqual(entries[3].commits.map { $0.ticket?.key }, ["SDKS-1337"])
+        XCTAssertEqual(entries[4].board, nil)
+        XCTAssertEqual(entries[4].commits.map { $0.message }, ["Merge remote-tracking branch 'origin/release/babylon/4.4.0' into develop"])
+        XCTAssertEqual(entries[4].commits.map { $0.ticket?.key }, [nil])
 
         let jiraBaseURL = URL(string: "https://babylonpartners.atlassian.net:443")!
         let changelogDoc = JiraService.document(from: entries, jiraBaseURL: jiraBaseURL)
@@ -78,6 +87,25 @@ final class AppTests: XCTestCase {
         addAttachment(name: "Ticket", object: issue)
 
         XCTAssertEqualJSON(issue, AppTests.expectedTicketJson, "Ticket JSON Mismatch")
+    }
+
+    func testFilteredCommitsForSDK() throws {
+        let release = try GitHubService.Release(
+            repo: GitHubService.Repository(fullName: "company/project", baseBranch: "develop"),
+            branch: "release/sdk/1.2.3"
+        )
+
+        let entries = ChangelogSection.makeSections(from: AppTests.fakeCommits, for: release)
+        XCTAssertEqual(entries.count, 3)
+        XCTAssertEqual(entries[0].board, "IOSP")
+        XCTAssertEqual(entries[0].commits.map { $0.message }, ["[IOSP-123] Update things here and there including in the #SDK"])
+        XCTAssertEqual(entries[0].commits.map { $0.ticket?.key }, ["IOSP-123"]) // but not IOSP-456 :)
+        XCTAssertEqual(entries[1].board, "SDK")
+        XCTAssertEqual(entries[1].commits.map { $0.message }, ["[SDK-4142] Commit 2"])
+        XCTAssertEqual(entries[1].commits.map { $0.ticket?.key }, ["SDK-4142"])
+        XCTAssertEqual(entries[2].board, "SDKS")
+        XCTAssertEqual(entries[2].commits.map { $0.message }, ["[SDKS-1337] Commit 4"])
+        XCTAssertEqual(entries[2].commits.map { $0.ticket?.key }, ["SDKS-1337"])
     }
 
     func testVersion() throws {
@@ -284,6 +312,63 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
+                      "text" : "IOSP tickets"
+                    }
+                  ]
+                },
+                {
+                  "type" : "bulletList",
+                  "content" : [
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/IOSP-123#icft=IOSP-123"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Update things here and there including in the #SDK"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/IOSP-456#icft=IOSP-456"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Nothing touching the SDK here"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type" : "heading",
+                  "attrs" : {
+                    "level" : 3
+                  },
+                  "content" : [
+                    {
+                      "type" : "text",
                       "text" : "SDK tickets"
                     }
                   ]
@@ -306,6 +391,43 @@ extension AppTests {
                             {
                               "type" : "text",
                               "text" : " Commit 2"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type" : "heading",
+                  "attrs" : {
+                    "level" : 3
+                  },
+                  "content" : [
+                    {
+                      "type" : "text",
+                      "text" : "SDKS tickets"
+                    }
+                  ]
+                },
+                {
+                  "type" : "bulletList",
+                  "content" : [
+                    {
+                      "type" : "listItem",
+                      "content" : [
+                        {
+                          "type" : "paragraph",
+                          "content" : [
+                            {
+                              "type" : "inlineCard",
+                              "attrs" : {
+                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/SDKS-1337#icft=SDKS-1337"
+                              }
+                            },
+                            {
+                              "type" : "text",
+                              "text" : " Commit 4"
                             }
                           ]
                         }
