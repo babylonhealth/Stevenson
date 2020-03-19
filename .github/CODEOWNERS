@@ -1,6 +1,6 @@
 # Global rule for the whole codebase.
 #  - Every PR needs to be reviewed by at least one member of the `ios-bot-owners` team.
-#  - The empty `iOS-PullAssigner` team will act as a proxy for the PullAssigner bot.
-#    When a new PR arrives, PullAssigner will be triggered, which will then pick members from the iOS-Admin team
+#  - When a new PR arrives, GitHub auto reviewer assignment feature will be triggered, which will then pick 
+#    members from the `iOS-Devs` team
 
-* @babylonhealth/iOS-PullAssigner @babylonhealth/ios-bot-owners
+* @babylonhealth/ios-devs @babylonhealth/ios-bot-owners
