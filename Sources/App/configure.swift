@@ -12,6 +12,7 @@ private let jiraProjects = [
     "CNSMR" : 16968, // Consumer Apps (Native/Core)
     "COCO"  : 17344, // Continuous Compliance
     "COREUS": 17127, // Babylon US Core Product
+    "COVIDBUGS": 17459, // COVID-19 hotfix bugs
     "CW"    : 16832, // Consumer Web
     "ETA"   : 17369, // Engagement Tribe - Activate
     "ETR"   : 17372, // Engagement Tribe - Retain
