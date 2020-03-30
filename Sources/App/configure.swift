@@ -32,7 +32,7 @@ private let jiraProjects = [
     "SDK"   : 16975, // SDK
     "SDKS"  : 17288, // SDK UI (next-gen)
     "TC"    : 17353, // Triage Comprehension (next-gen)
-    "TCN"   : 17431, // Triage comprehension (not sure about this one)
+    "TCN"   : 17431, // Triage comprehension (new)
     "TEL"   : 16857, // Telus
     "TK"    : 17299, // Test Kits
     "TM"    : 17343, // Triage Metrics (next-gen)
