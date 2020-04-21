@@ -16,6 +16,7 @@ private let jiraProjects = [
     "CW"    : 16832, // Consumer Web
     "ETA"   : 17369, // Engagement Tribe - Activate
     "ETR"   : 17372, // Engagement Tribe - Retain
+    "EXPCORE"   : 17372, // Experience Tribe - Core Apps
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
     "IDP"   : 17228, // Identity Access Management
