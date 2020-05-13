@@ -27,6 +27,7 @@ private let jiraProjects = [
     "MUL"   : 16852, // Multimedia
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
+    "PAYE"  : 17510, // Payments & Eligibility
     "PRO"   : 16980, // Professional Services
     "PRSCR" : 16840, // Prescriptions
     "REFER" : 17244, // Referrals (next-gen)
