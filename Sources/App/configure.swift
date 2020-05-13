@@ -39,6 +39,7 @@ private let jiraProjects = [
     "TK"    : 17299, // Test Kits
     "TM"    : 17343, // Triage Metrics (next-gen)
     "UNDANDINF"   : 17335, // Understand and Inform (next-gen)
+    "USD"   : 17512, // US Agile Delivery
     "WH"    : 17112, // Women's Health
 ]
 
