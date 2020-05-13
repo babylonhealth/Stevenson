@@ -24,8 +24,10 @@ private let jiraProjects = [
     "MC"    : 17006, // Member Communications (next-gen)
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
+    "MUL"   : 16852, // Multimedia
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
+    "PAYE"  : 17510, // Payments & Eligibility
     "PRO"   : 16980, // Professional Services
     "PRSCR" : 16840, // Prescriptions
     "REFER" : 17244, // Referrals (next-gen)
@@ -39,6 +41,7 @@ private let jiraProjects = [
     "TK"    : 17299, // Test Kits
     "TM"    : 17343, // Triage Metrics (next-gen)
     "UNDANDINF"   : 17335, // Understand and Inform (next-gen)
+    "USD"   : 17512, // US Agile Delivery
     "WH"    : 17112, // Women's Health
 ]
 
