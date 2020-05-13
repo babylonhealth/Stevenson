@@ -24,6 +24,7 @@ private let jiraProjects = [
     "MC"    : 17006, // Member Communications (next-gen)
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
+    "MUL"   : 16852, // Multimedia
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
     "PRO"   : 16980, // Professional Services
