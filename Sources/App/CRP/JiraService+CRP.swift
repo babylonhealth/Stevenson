@@ -10,8 +10,10 @@ import Stevenson
 // [CNSMR-1319] TODO: Use a config file to parametrise those
 extension JiraService.FieldType.User  {
       // To find the accountId to use here, open https://babylonpartners.atlassian.net/rest/api/3/user?username=<name> in your browser
+      // or just type their name with `@` (mention) anywhere in JIRA ticket for editor to autocomplete it and replace with user id
       static let RyanCovill = JiraService.FieldType.User(accountId: "557058:8e407515-77cf-4466-a468-b3d386676a7f")
       static let MarkBates = JiraService.FieldType.User(accountId: "5d77d4701e81950d2d821307")
+      static let WilsonAmadi = JiraService.FieldType.User(accountId: "5d0d1f7a4e8b120bc5cf9666")
 }
 
 extension JiraService {
@@ -20,7 +22,8 @@ extension JiraService {
 
     static func accountablePerson(release: GitHubService.Release) -> FieldType.User {
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
-        return isTelus ? .RyanCovill : .MarkBates
+        let isUS = release.appName.caseInsensitiveCompare("BabylonUS") == .orderedSame
+        return isTelus ? .RyanCovill : isUS ? .WilsonAmadi : .MarkBates
     }
 
     /// Estimate time between when the CRP ticket is created and the app is released to the AppStore
