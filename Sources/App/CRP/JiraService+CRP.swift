@@ -23,7 +23,7 @@ extension JiraService {
     static func accountablePerson(release: GitHubService.Release) -> FieldType.User {
         let isTelus = release.appName.caseInsensitiveCompare("Telus") == .orderedSame
         let isUS = release.appName.caseInsensitiveCompare("BabylonUS") == .orderedSame
-        return isTelus ? .RyanCovill : isUS ? .WilsonAmadi : .MarkBates
+        return isTelus ? .RyanCovill : isUS ? .MarkBates : .MarkBates
     }
 
     /// Estimate time between when the CRP ticket is created and the app is released to the AppStore
