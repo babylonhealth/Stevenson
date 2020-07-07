@@ -13,7 +13,6 @@ extension JiraService.FieldType.User  {
       // or just type their name with `@` (mention) anywhere in JIRA ticket for editor to autocomplete it and replace with user id
       static let RyanCovill = JiraService.FieldType.User(accountId: "557058:8e407515-77cf-4466-a468-b3d386676a7f")
       static let MarkBates = JiraService.FieldType.User(accountId: "5d77d4701e81950d2d821307")
-      static let MarkBates = JiraService.FieldType.User(accountId: "5d77d4701e81950d2d821307")
 }
 
 extension JiraService {
