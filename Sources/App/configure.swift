@@ -21,6 +21,7 @@ private let jiraProjects = [
     "HC"    : 17251, // HealthCheck (next-gen)
     "IDP"   : 17228, // Identity Access Management
     "IOSP"  : 17263, // iOS Native Apps Platform
+    "LANG"  : 17168, // Language Services
     "MC"    : 17006, // Member Communications (next-gen)
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
