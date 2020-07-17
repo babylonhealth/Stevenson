@@ -14,8 +14,6 @@ private let jiraProjects = [
     "COREUS": 17127, // Babylon US Core Product
     "COVIDBUGS": 17459, // COVID-19 hotfix bugs
     "CW"    : 16832, // Consumer Web
-    "ETA"   : 17369, // Engagement Tribe - Activate - TO BE REMOVED ONCE MIGRATED TO EXPCORE
-    "ETR"   : 17372, // Engagement Tribe - Retain - TO BE REMOVED AFTER 4.21.0 CUT
     "EXPCORE"   : 17372, // Experience Tribe - Core Apps
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
@@ -23,6 +21,7 @@ private let jiraProjects = [
     "IOSP"  : 17263, // iOS Native Apps Platform
     "LANG"  : 17168, // Language Services
     "MC"    : 17006, // Member Communications (next-gen)
+    "MP"    : 17494, // Monitor Product
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
     "MUL"   : 16852, // Multimedia
