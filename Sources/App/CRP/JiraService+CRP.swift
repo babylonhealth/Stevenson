@@ -133,6 +133,20 @@ extension JiraService {
             static let no = InfoSecStatus(id: "11941")
         }
 
+        struct ClinicalApprovalType: Content {
+            let id: String
+            static let approved = ClinicalApprovalType(id: "12568")
+            static let unapproved = ClinicalApprovalType(id: "12566")
+            static let notRequired = ClinicalApprovalType(id: "12567")
+        }
+
+        struct RegulatoryApprovalType: Content {
+            let id: String
+            static let approved = RegulatoryApprovalType(id: "12571")
+            static let unapproved = RegulatoryApprovalType(id: "12569")
+            static let notRequired = RegulatoryApprovalType(id: "12570")
+        }
+
         // MARK: Fields
 
         var project: FieldType.ObjectID
@@ -143,29 +157,35 @@ extension JiraService {
         var releaseType: ReleaseType
         @CustomCodable<YMDDate>
         var targetDate: Date
-        var businessImpact: FieldType.TextArea.Document
+        var changeScope: FieldType.TextArea.Document
         let jiraReleaseURL: String
         let githubReleaseURL: String
         var testing: FieldType.TextArea.Document
         var accountablePerson: FieldType.User
         var infoSecChecked: InfoSecStatus
+        var serviceChanges: FieldType.TextArea.Document
+        var clinicalApproval: ClinicalApprovalType
+        var regulatoryApproval: RegulatoryApprovalType
 
         // MARK: Content keys
 
         enum CodingKeys: String, CodingKey {
-            case project = "project"                     // required
-            case issueType = "issuetype"                 // required
-            case summary = "summary"                     // required
-            case changelog = "customfield_12537"         // required
-            case environments = "customfield_12592"      // required
-            case releaseType = "customfield_12794"       // required
-            case targetDate = "customfield_11514"        // required
-            case businessImpact = "customfield_12538"    // required
-            case jiraReleaseURL = "customfield_12540"    // optional
-            case githubReleaseURL = "customfield_12541"  // optional
-            case testing = "customfield_11512"           // required
-            case accountablePerson = "customfield_11505" // required
-            case infoSecChecked = "customfield_12527"    // required
+            case project = "project"                      // required
+            case issueType = "issuetype"                  // required
+            case summary = "summary"                      // required
+            case changelog = "customfield_12537"          // required
+            case environments = "customfield_12592"       // required
+            case releaseType = "customfield_12794"        // required
+            case targetDate = "customfield_11514"         // required
+            case changeScope = "customfield_12538"        // required
+            case jiraReleaseURL = "customfield_12540"     // optional
+            case githubReleaseURL = "customfield_12541"   // optional
+            case testing = "customfield_11512"            // required
+            case accountablePerson = "customfield_11505"  // required
+            case infoSecChecked = "customfield_12527"     // required
+            case serviceChanges = "customfield_13350"     // required
+            case clinicalApproval = "customfield_12762"   // required
+            case regulatoryApproval = "customfield_12763" // required
         }
 
         // MARK: Inits
@@ -187,12 +207,15 @@ extension JiraService {
             self.environments = environments
             self.releaseType = releaseType
             self.targetDate = targetDate
-            self.businessImpact = FieldType.TextArea.Document(text: "TBD")
+            self.changeScope = FieldType.TextArea.Document(text: "TBD")
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "TBD")
             self.accountablePerson = accountablePerson
             self.infoSecChecked = .no
+            self.serviceChanges = FieldType.TextArea.Document(text: "TBD")
+            self.clinicalApproval = .unapproved
+            self.regulatoryApproval = .unapproved
         }
     }
 }

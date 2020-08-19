@@ -1,0 +1,324 @@
+{
+    "fields" : {
+        "customfield_12537" : {
+            "type" : "doc",
+            "content" : [
+                {
+                    "type" : "heading",
+                    "attrs" : {
+                        "level" : 3
+                    },
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "CNSMR tickets"
+                        }
+                    ]
+                },
+                {
+                    "type" : "bulletList",
+                    "content" : [
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-2044#icft=CNSMR-2044"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Commit 1"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-1763#icft=CNSMR-1763"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Migrate sdk-nhsgp into sdk-core (#8163)"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/CNSMR-2045#icft=CNSMR-2045"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Commit 3"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "heading",
+                    "attrs" : {
+                        "level" : 3
+                    },
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "IOSP tickets"
+                        }
+                    ]
+                },
+                {
+                    "type" : "bulletList",
+                    "content" : [
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/IOSP-123#icft=IOSP-123"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Update things here and there including in the #SDK"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/IOSP-456#icft=IOSP-456"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Nothing touching the SDK here"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "heading",
+                    "attrs" : {
+                        "level" : 3
+                    },
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "SDK tickets"
+                        }
+                    ]
+                },
+                {
+                    "type" : "bulletList",
+                    "content" : [
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/SDK-4142#icft=SDK-4142"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Commit 2"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "heading",
+                    "attrs" : {
+                        "level" : 3
+                    },
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "SDKS tickets"
+                        }
+                    ]
+                },
+                {
+                    "type" : "bulletList",
+                    "content" : [
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "inlineCard",
+                                            "attrs" : {
+                                                "url" : "https:\/\/babylonpartners.atlassian.net:443\/browse\/SDKS-1337#icft=SDKS-1337"
+                                            }
+                                        },
+                                        {
+                                            "type" : "text",
+                                            "text" : " Commit 4"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "heading",
+                    "attrs" : {
+                        "level" : 3
+                    },
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "Other"
+                        }
+                    ]
+                },
+                {
+                    "type" : "bulletList",
+                    "content" : [
+                        {
+                            "type" : "listItem",
+                            "content" : [
+                                {
+                                    "type" : "paragraph",
+                                    "content" : [
+                                        {
+                                            "type" : "text",
+                                            "text" : "Merge remote-tracking branch 'origin\/release\/babylon\/4.4.0' into develop"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "version" : 1
+        },
+        "customfield_11514" : "2019-10-31",
+        "customfield_12763" : {
+            "id" : "12569"
+        },
+        "issuetype" : {
+            "id" : "11439"
+        },
+        "project" : {
+            "id" : "12345"
+        },
+        "customfield_12762" : {
+            "id" : "12566"
+        },
+        "customfield_13350" : {
+            "type" : "doc",
+            "content" : [
+                {
+                    "type" : "paragraph",
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "TBD"
+                        }
+                    ]
+                }
+            ],
+            "version" : 1
+        },
+        "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
+        "customfield_11512" : {
+            "type" : "doc",
+            "content" : [
+                {
+                    "type" : "paragraph",
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "TBD"
+                        }
+                    ]
+                }
+            ],
+            "version" : 1
+        },
+        "summary" : "Fake-Publish Dummy App v1.2.3",
+        "customfield_12540" : "https:\/\/babylonpartners.atlassian.net:443\/secure\/Dashboard.jspa?selectPageId=15452",
+        "customfield_11505" : {
+            "accountId" : "5d77d4701e81950d2d821307"
+        },
+        "customfield_12592" : [
+            {
+                "id" : "12395"
+            }
+        ],
+        "customfield_12527" : {
+            "id" : "11941"
+        },
+        "customfield_12794" : {
+            "id" : "12653"
+        },
+        "customfield_12538" : {
+            "type" : "doc",
+            "content" : [
+                {
+                    "type" : "paragraph",
+                    "content" : [
+                        {
+                            "type" : "text",
+                            "text" : "TBD"
+                        }
+                    ]
+                }
+            ],
+            "version" : 1
+        }
+    }
+}
