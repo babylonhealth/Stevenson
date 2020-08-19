@@ -12,10 +12,7 @@ let package = Package(
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(
             name: "AppTests",
-            dependencies: ["App"],
-            resources: [
-                .process("Stevenson/Tests/AppTests/response.json"),
-            ]),
+            dependencies: ["App"]
         )
     ],
     swiftLanguageVersions: [.v5]
