@@ -490,9 +490,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "Product Changes:
-                      Service Changes:
-                      BOM: "
+                      "text" : "TBD"
                     }
                   ]
                 }
@@ -508,10 +506,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit#heading=h.1jdzrbj14q2r)
-                      TestRail milestone (automated & manual test runs) -
-                      CircleCI branch pipeline (automated unit tests and build) -
-                      Internal release notes/QA sign-off -"
+                      "text" : "TBD"
                     }
                   ]
                 }
@@ -542,7 +537,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "There are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:"
+                      "text" : "TBD"
                     }
                   ]
                 }
