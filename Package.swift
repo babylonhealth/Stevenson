@@ -14,7 +14,7 @@ let package = Package(
             name: "AppTests",
             dependencies: ["App"],
             resources: [
-                .copy("Stevenson/Tests/AppTests/response.json"),
+                .process("Stevenson/Tests/AppTests/response.json"),
             ]),
         )
     ],
