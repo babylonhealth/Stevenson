@@ -470,11 +470,32 @@ extension AppTests {
               "version" : 1
             },
             "customfield_11514" : "2019-10-31",
+            "customfield_12763" : {
+              "id" : "12569"
+            },
             "issuetype" : {
               "id" : "11439"
             },
             "project" : {
               "id" : "12345"
+            },
+            "customfield_12762" : {
+              "id" : "12566"
+            },
+            "customfield_13350" : {
+              "type" : "doc",
+              "content" : [
+                {
+                  "type" : "paragraph",
+                  "content" : [
+                    {
+                      "type" : "text",
+                      "text" : "Product Changes:\nService Changes:\nBOM:"
+                    }
+                  ]
+                }
+              ],
+              "version" : 1
             },
             "customfield_12541" : "https:\/\/github.com\/company\/project\/releases\/tag\/app\/1.2.3",
             "customfield_11512" : {
@@ -485,7 +506,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "TBD"
+                      "text" : "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit)\nTestRail milestone (automated & manual test runs) -\nCircleCI branch pipeline (automated unit tests and build) -\nInternal release notes/QA sign-off -"
                     }
                   ]
                 }
@@ -516,7 +537,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "TBD"
+                      "text" : "There are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:"
                     }
                   ]
                 }
