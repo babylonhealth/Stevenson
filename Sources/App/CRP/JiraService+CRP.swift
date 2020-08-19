@@ -211,12 +211,7 @@ extension JiraService {
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
 
-            let testingContent = """
-                Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit)
-                TestRail milestone (automated & manual test runs) -
-                CircleCI branch pipeline (automated unit tests and build) -
-                Internal release notes/QA sign-off -
-            """
+            let testingContent = "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit)\nTestRail milestone (automated & manual test runs) -\nCircleCI branch pipeline (automated unit tests and build) -\nInternal release notes/QA sign-off -"
             self.testing = FieldType.TextArea.Document(text: testingContent)
             self.accountablePerson = accountablePerson
             self.infoSecChecked = .no
