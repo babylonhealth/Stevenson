@@ -211,14 +211,14 @@ extension JiraService {
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
             self.testing = FieldType.TextArea.Document(text: "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit#heading=h.1jdzrbj14q2r)
-            TestRail milestone (automated & manual test runs) -
-            CircleCI branch pipeline (automated unit tests and build) -
-            Internal release notes/QA sign-off -")
+            TestRail milestone (automated & manual test runs)
+            CircleCI branch pipeline (automated unit tests and build)
+            Internal release notes/QA sign-off")
             self.accountablePerson = accountablePerson
             self.infoSecChecked = .no
-            self.serviceChanges = FieldType.TextArea.Document(text: "Product Changes:
-            Service Changes:
-            BOM: ")
+            self.serviceChanges = FieldType.TextArea.Document(text: "Product Changes
+            Service Changes
+            BOM")
             self.clinicalApproval = .unapproved
             self.regulatoryApproval = .unapproved
         }
