@@ -211,11 +211,11 @@ extension JiraService {
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
 
-            let testingContent = "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit)\nTestRail milestone (automated & manual test runs) -\nCircleCI branch pipeline (automated unit tests and build) -\nInternal release notes/QA sign-off -"
+            let testingContent = "Android & iOS native mobile apps PED Test Plan - https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit#heading=h.1jdzrbj14q2r \nTestRail milestone (automated & manual test runs) -\nCI branch pipeline (automated unit tests and build) - \nInternal release notes/QA sign-off -"
             self.testing = FieldType.TextArea.Document(text: testingContent)
             self.accountablePerson = accountablePerson
             self.infoSecChecked = .no
-            self.serviceChanges = FieldType.TextArea.Document(text: "Product Changes:\nService Changes:\nBOM:")
+            self.serviceChanges = FieldType.TextArea.Document(text: "Product Changes: \nService Changes: \nBOM:")
             self.clinicalApproval = .unapproved
             self.regulatoryApproval = .unapproved
         }
