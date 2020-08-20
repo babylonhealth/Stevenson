@@ -13,7 +13,7 @@ struct RepoMapping {
 }
 
 extension RepoMapping {
-    // [CNSMR-1319] TODO: Use a config file to parametrise repo list
+    // [CNSMR-1319] TODO: Use a config file to parameterise repo list
     static let ios = RepoMapping(
         repository: GitHubService.Repository(
             fullName: "babylonhealth/babylon-ios",
@@ -56,8 +56,30 @@ extension RepoMapping {
         )
     )
 
+    static let tangerine = RepoMapping(
+        repository: GitHubService.Repository(
+            fullName: "babylonhealth/mobile-test-crp",
+            baseBranch: "master"
+        ),
+        crp: CRP(
+            environment: .notApplicable, // TODO?
+            jiraVersionName: {
+                let appName = $0.isSDK ? $0.appName.uppercased() : $0.appName
+                return "Tangerine \(appName) \($0.version)"
+            },
+            jiraSummary: {
+                if $0.isSDK {
+                    return "Publish Tangerine SDK v\($0.version) to our partners"
+                } else {
+                    return "Publish Tangerine \($0.appName) App v\($0.version) to the Store"
+                }
+            }
+        )
+    )
+
     static let all: [String: RepoMapping] = [
         "ios": ios,
-        "android": android
+        "android": android,
+        "tangerine": tangerine,
     ]
 }
