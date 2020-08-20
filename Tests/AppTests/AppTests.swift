@@ -490,7 +490,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "Product Changes:\nService Changes:\nBOM:"
+                      "text" : "Product Changes: \nService Changes: \nBOM:"
                     }
                   ]
                 }
@@ -506,7 +506,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "Test Plan - [Android & iOS native mobile apps PED](https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit)\nTestRail milestone (automated & manual test runs) -\nCircleCI branch pipeline (automated unit tests and build) -\nInternal release notes/QA sign-off -"
+                      "text" : "Android & iOS native mobile apps PED Test Plan - https://docs.google.com/document/d/1GlvBD7DL0B24WOdky_sCJp3bewmwuHHkYfYcrPWDQEI/edit#heading=h.1jdzrbj14q2r \nTestRail milestone (automated & manual test runs) -\nCI branch pipeline (automated unit tests and build) - \nInternal release notes/QA sign-off -"
                     }
                   ]
                 }
