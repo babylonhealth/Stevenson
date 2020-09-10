@@ -17,6 +17,7 @@ private let jiraProjects = [
     "EXPCORE"   : 17372, // Experience Tribe - Core Apps
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
+    "HCS"   : 17373, // HealthCheck Backend Support (next-gen)
     "IDP"   : 17228, // Identity Access Management
     "IOSP"  : 17263, // iOS Native Apps Platform
     "LANG"  : 17168, // Language Services
