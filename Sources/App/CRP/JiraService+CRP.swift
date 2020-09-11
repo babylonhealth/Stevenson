@@ -7,7 +7,7 @@ import Stevenson
 
 // MARK: Constants
 
-// [CNSMR-1319] TODO: Use a config file to parametrise those
+// [PDT-1633] TODO: Use a config file to parametrise those
 extension JiraService.FieldType.User  {
       // To find the accountId to use here, open https://babylonpartners.atlassian.net/rest/api/3/user?username=<name> in your browser
       // or just type their name with `@` (mention) anywhere in JIRA ticket for editor to autocomplete it and replace with user id
@@ -32,13 +32,15 @@ extension JiraService {
 // MARK: - CRP Ticket Dance
 
 extension JiraService {
+    /// - Parameters:
+    ///   - targetDate: will use `guessTargetDate()` if nil
     static func makeCRPIssue(
         jiraBaseURL: URL,
         crpProjectID: JiraService.FieldType.ObjectID,
         crpConfig: RepoMapping.CRP,
         release: GitHubService.Release,
         changelog: FieldType.TextArea.Document,
-        targetDate: Date? = nil // will use `guessTargetDate()` if nil
+        targetDate: Date? = nil
     ) -> CRPIssue {
         let accountablePerson = JiraService.accountablePerson(release: release)
         let changelog = changelog

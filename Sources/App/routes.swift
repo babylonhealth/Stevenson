@@ -19,7 +19,7 @@ public func routes(
     }
 
     router.post("github/pr") { (request) -> Future<Response> in
-        try github.pullrequestEvent(on: request, ci: ci)
+        try github.pullrequestEvent(on: request, jira: jira)
     }
 
     router.post("api/crp") { (request) -> Future<Response> in
