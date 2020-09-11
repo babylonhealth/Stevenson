@@ -59,6 +59,10 @@ extension GitHubService {
             self.isMatchingTag = isMatchingTag
         }
     }
+
+    public struct PingAction: Content {
+        let zen: String
+    }
 }
 
 extension GitHubService {
@@ -129,5 +133,19 @@ extension GitHubService {
         return try request(.capture()) {
             try container.client().get(url, headers: headers)
         }
+    }
+}
+
+extension GitHubService {
+    public func webhook<T: Decodable>(from request: Request) throws -> Future<T> {
+        let headers = request.http.headers
+
+        guard
+            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
+            else {
+                throw Abort(.badRequest)
+        }
+
+        return try request.content.decode(T.self)
     }
 }

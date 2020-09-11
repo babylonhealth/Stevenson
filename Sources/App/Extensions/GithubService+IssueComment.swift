@@ -1,10 +1,6 @@
 import Vapor
 import Stevenson
 
-struct PingAction: Content {
-    let zen: String
-}
-
 struct CommentAction: Content {
     let action: String
     let comment: Comment
@@ -25,27 +21,13 @@ struct CommentAction: Content {
 }
 
 extension GitHubService {
-    func webhook<T: Decodable>(from request: Request) throws -> Future<T> {
-        let headers = request.http.headers
-
-        guard
-            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
-        else {
-            throw Abort(.badRequest)
-        }
-
-        return try request.content.decode(T.self)
-    }
-}
-
-extension GitHubService {
     // Handle incoming webhook for issue or PR comment
     // https://developer.github.com/v3/activity/events/types/#issuecommentevent
     func issueComment(
         on request: Request,
         ci: CircleCIService
     ) throws -> Future<Response> {
-        return try webhook(from: request).flatMap { (action: CommentAction) in
+        try webhook(from: request).flatMap { (action: CommentAction) in
             let headers = request.http.headers
             let textComponents = action.comment.body.split(separator: " ")
 

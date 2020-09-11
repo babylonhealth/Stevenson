@@ -18,6 +18,10 @@ public func routes(
         try github.issueComment(on: request, ci: ci)
     }
 
+    router.post("github/pr") { (request) -> Future<Response> in
+        try github.pullrequestEvent(on: request, ci: ci)
+    }
+
     router.post("api/crp") { (request) -> Future<Response> in
         try CRPProcess.apiRequest(request: request, github: github, jira: jira, slack: slack)
     }
