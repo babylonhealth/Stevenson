@@ -1,8 +1,8 @@
 import Vapor
 import Stevenson
 
-struct PullRequest: Equatable {
-    enum Action: String {
+extension GitHubService {
+    enum PullRequestAcion: String {
         case assigned
         case unassigned
         case reviewRequested = "review_requested"
@@ -15,31 +15,31 @@ struct PullRequest: Equatable {
         case reopened
         case synchronize
     }
-}
 
-enum Constants {
-    static let jiraProjectPrefixPattern = jiraProjects
-        .map(\.prefix)
-        .joined(separator: "|")
-    static let jiraProjects: [JiraService.Project] = [
-        .core,
-        .v3,
-        .nhs,
-        .consultations,
-        .prescriptions,
-        .avalon,
-        .consumer,
-        .sdk,
-        .triage,
-        .monitor,
-        .testKits,
-        .platform,
-        .coreUS,
-        .realTimeMatching,
-        .appointments1,
-        .paymentsEligibility,
-        .partnership,
-    ]
+    enum Constants {
+        static let jiraProjectPrefixPattern = jiraProjects
+            .map(\.prefix)
+            .joined(separator: "|")
+        static let jiraProjects: [JiraService.Project] = [
+            .core,
+            .v3,
+            .nhs,
+            .consultations,
+            .prescriptions,
+            .avalon,
+            .consumer,
+            .sdk,
+            .triage,
+            .monitor,
+            .testKits,
+            .platform,
+            .coreUS,
+            .realTimeMatching,
+            .appointments1,
+            .paymentsEligibility,
+            .partnership,
+        ]
+    }
 }
 
 extension GitHubService {
@@ -92,7 +92,7 @@ extension GitHubService {
             return "Release"
         }()
 
-        #error("TODO get PR title")
+        #warning("TODO get PR title")
         let title = "[ABC-123] PR title"
 
         let pattern = try NSRegularExpression(pattern: "(" + Constants.jiraProjectPrefixPattern + ")-([0-9]{1,})(#[0-9]{0,})?", options: [])
@@ -114,19 +114,22 @@ extension GitHubService {
                     guard let issue = try jira.search("key = \(ticketId)").first
                         else { continue }
 
-                    let getTransitionId: (JiraIssueFields) -> Int
+                    #warning("TODO should be IssueType")
+                    let getTransitionId: (String) -> Int
+                    #warning("TODO")
+                    let action = PullRequestAcion.opened
                     switch action {
                     case .closed:
                         // Move the tickets to "Awaiting Build" if the PR is merged.
                         guard context.isMerged
                             else { return }
-                        getTransitionId = { ($0 == .subtask && project != Project.avalon)
+                        getTransitionId = { ($0 == .subtask && project != JiraService.Project.avalon)
                             ? project.transactionIds.done
                             : project.transactionIds.awaitingBuild
                         }
 
                     case .labeled, .unlabeled, .opened:
-                        #error("TODO we don't care about label, check for draft/published")
+                        #warning("TODO we don't care about label, check for draft/published")
 //                        let labels = try github.getLabels(forPullRequestNumber: context.pullRequest.number)
 //                        if labels.contains(Label.readyForReview) {
 //                            // Move the tickets to "Peer Review" if the PR is ready for review.
@@ -149,8 +152,10 @@ extension GitHubService {
 
                     let transitionId = getTransitionId(issue.type)
 
-                    try jira.moveTickets(forTicketId: String(ticketId),
-                                         transitionId: transitionId)
+                    try jira.moveTickets(
+                        forTicketId: String(ticketId),
+                        transitionId: transitionId
+                    )
 
                     if transitionId == project.transactionIds.awaitingBuild {
                         try? jira.addLabel(forTicketId: String(ticketId), label: buildType)
