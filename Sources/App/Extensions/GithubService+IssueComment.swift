@@ -25,7 +25,7 @@ struct CommentAction: Content {
 }
 
 extension GitHubService {
-    func webhook<T: Decodable>(from request: Request) throws -> Future<T> {
+    func webhook<T: Decodable>(from request: Request) throws -> EventLoopFuture<T> {
         let headers = request.http.headers
 
         guard
@@ -44,7 +44,7 @@ extension GitHubService {
     func issueComment(
         on request: Request,
         ci: CircleCIService
-    ) throws -> Future<Response> {
+    ) throws -> EventLoopFuture<Response> {
         return try webhook(from: request).flatMap { (action: CommentAction) in
             let headers = request.http.headers
             let textComponents = action.comment.body.split(separator: " ")
@@ -84,7 +84,7 @@ extension GitHubService {
                     ).flatMap { _ in try HTTPResponse(status: .ok).encode(for: request) }
                 }
             }
-        }.catchFlatMap { error -> Future<Response> in
+        }.catchFlatMap { error -> EventLoopFuture<Response> in
             try request.content.decode(PingAction.self)
                 .map { _ in HTTPResponse(status: .ok) }
                 .catchMap { _ in HTTPResponse(status: .badRequest) }

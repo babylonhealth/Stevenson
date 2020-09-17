@@ -122,33 +122,33 @@ public final class SlowClient: Service {
         })
     }
 
-    func send(_ request: Request) -> Future<Response> {
+    func send(_ request: Request) -> EventLoopFuture<Response> {
         return slowMode.process(request, on: request.eventLoop)
     }
 }
 
 extension SlowClient {
-    func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         return send(.GET, headers: headers, to: url, on: container, beforeSend: beforeSend)
     }
 
-    func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         return send(.POST, headers: headers, to: url, on: container, beforeSend: beforeSend)
     }
 
-    func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         return send(.PATCH, headers: headers, to: url, on: container, beforeSend: beforeSend)
     }
 
-    func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         return send(.PUT, headers: headers, to: url, on: container, beforeSend: beforeSend)
     }
 
-    func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         return send(.DELETE, headers: headers, to: url, on: container, beforeSend: beforeSend)
     }
 
-    func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         do {
             let req = Request(http: .init(method: method, url: url, headers: headers), using: container)
             try beforeSend(req)

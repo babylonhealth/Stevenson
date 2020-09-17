@@ -15,14 +15,14 @@ public struct SlackCommand {
     /// If subCommands are provided, it will first try to select the appropriate sub-command
     /// by the first word in the command text, and if it finds one then this command will be executed,
     /// otherwise this closure is called
-    public let run: (SlackCommandMetadata, Request) throws -> Future<SlackService.Response>
+    public let run: (SlackCommandMetadata, Request) throws -> EventLoopFuture<SlackService.Response>
 
     public init(
         name: String,
         help: String,
         allowedChannels: Set<String>,
         subCommands: [SlackCommand] = [],
-        run: @escaping (SlackCommandMetadata, Request) throws -> Future<SlackService.Response>
+        run: @escaping (SlackCommandMetadata, Request) throws -> EventLoopFuture<SlackService.Response>
     ) {
         self.name = name
         self.allowedChannels = allowedChannels
@@ -37,7 +37,7 @@ public struct SlackCommand {
             Run `/\(name) <sub-command> help` for help on a sub-command.
             """
         }
-        self.run = { (metadata, container) throws -> Future<SlackService.Response> in
+        self.run = { (metadata, container) throws -> EventLoopFuture<SlackService.Response> in
             guard let subCommand = subCommands.first(where: { metadata.text.hasPrefix($0.name) }) else {
                 return try run(metadata, container)
             }
@@ -115,7 +115,7 @@ public struct SlackService {
         self.oauthToken = oauthToken
     }
 
-    public func handle(command: SlackCommand, on request: Request) throws -> Future<Vapor.Response> {
+    public func handle(command: SlackCommand, on request: Request) throws -> EventLoopFuture<Vapor.Response> {
         return try request.content
             .decode(SlackCommandMetadata.self)
             .catchError(.capture())
@@ -139,7 +139,7 @@ public struct SlackService {
             .encode(for: request)
     }
 
-    public func post(message: Message, on container: Container) throws -> Future<Vapor.Response> {
+    public func post(message: Message, on container: Container) throws -> EventLoopFuture<Vapor.Response> {
         let fullURL = URL(string: "https://slack.com/api/chat.postMessage")!
         let headers: HTTPHeaders = [
             "Authorization": "Bearer \(self.oauthToken)"
@@ -152,12 +152,12 @@ public struct SlackService {
     }
 }
 
-extension Future where T == SlackService.Response {
+extension EventLoopFuture where T == SlackService.Response {
     public func replyLater(
         withImmediateResponse now: SlackService.Response,
         responseURL: String?,
         on container: Container
-    ) -> Future<SlackService.Response> {
+    ) -> EventLoopFuture<SlackService.Response> {
         guard let responseURL = responseURL else {
             return container.eventLoop.future(now)
         }

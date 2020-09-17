@@ -1,29 +1,29 @@
 import Vapor
 import Stevenson
 
-/// Register your application's routes here.
+/// Register your application's routes here
 public func routes(
-    router: Router,
+    _ app: Application,
     github: GitHubService,
     ci: CircleCIService,
     slack: SlackService,
     jira: JiraService,
     commands: [SlackCommand]
 ) throws {
-    router.get { req in
+    app.get { req in
         return "It works!"
     }
-
-    router.post("github/comment") { (request) -> Future<Response> in
+    
+    app.post("github/comment") { (request) -> EventLoopFuture<Response> in
         try github.issueComment(on: request, ci: ci)
     }
 
-    router.post("api/crp") { (request) -> Future<Response> in
+    app.post("api/crp") { (request) -> EventLoopFuture<Response> in
         try CRPProcess.apiRequest(request: request, github: github, jira: jira, slack: slack)
     }
 
     commands.forEach { command in
-        router.post(command.name) { req -> Future<Response> in
+        app.post(command.name) { req -> EventLoopFuture<Response> in
             do {
                 return try attempt {
                     try slack.handle(command: command, on: req)

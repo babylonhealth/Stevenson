@@ -1,4 +1,3 @@
-import Foundation
 import Vapor
 
 public struct GitHubService: Service {
@@ -7,7 +6,7 @@ public struct GitHubService: Service {
 
     public init(username: String, token: String) {
         var headers = HTTPHeaders()
-        headers.add(name: HTTPHeaderName.accept, value: MediaType.json.description)
+        headers.add(name: HTTPHeaders.Name.accept, value: HTTPMediaType.json.description)
         headers.basicAuthorization = BasicAuthorization(username: username, password: token)
         self.headers = headers
     }
@@ -66,7 +65,7 @@ extension GitHubService {
         in repo: Repository,
         name: String,
         on container: Container
-    ) throws -> Future<GitHubService.Reference> {
+    ) throws -> EventLoopFuture<GitHubService.Reference> {
         let url = URL(string: "/repos/\(repo.fullName)/git/refs/heads/\(name)", relativeTo: baseURL)!
         return try request(.capture()) {
             try container.client().get(url, headers: headers)
@@ -78,7 +77,7 @@ extension GitHubService {
         name: String,
         from ref: GitHubService.Reference,
         on container: Container
-    ) throws -> Future<GitHubService.Reference> {
+    ) throws -> EventLoopFuture<GitHubService.Reference> {
         let url = URL(string: "/repos/\(repo.fullName)/git/refs", relativeTo: baseURL)!
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
@@ -99,7 +98,7 @@ extension GitHubService {
     public func releases(
         in repo: Repository,
         on container: Container
-    ) throws -> Future<[String]> {
+    ) throws -> EventLoopFuture<[String]> {
         struct Response: Content {
             let tag_name: String
         }
@@ -124,7 +123,7 @@ extension GitHubService {
         number: Int,
         in repo: Repository,
         on container: Container
-    ) throws -> Future<PullRequest> {
+    ) throws -> EventLoopFuture<PullRequest> {
         let url = URL(string: "/repos/\(repo.fullName)/pulls/\(number)", relativeTo: baseURL)!
         return try request(.capture()) {
             try container.client().get(url, headers: headers)

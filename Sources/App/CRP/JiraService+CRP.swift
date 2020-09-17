@@ -74,7 +74,7 @@ extension JiraService {
         repoMapping: RepoMapping,
         crpProjectID: JiraService.FieldType.ObjectID,
         container: Request
-    ) throws -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> {
+    ) throws -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> {
 
         let jiraVersionName = repoMapping.crp.jiraVersionName(release)
         let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
@@ -90,7 +90,7 @@ extension JiraService {
 
         return try self.create(issue: crpIssue, on: container)
             .catchError(.capture())
-            .flatMap { (crpIssue: JiraService.CreatedIssue) -> Future<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
+            .flatMap { (crpIssue: JiraService.CreatedIssue) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                 // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
                 return try self.createAndSetFixVersions(
                     changelogSections: changelogSections,
@@ -334,10 +334,10 @@ extension JiraService {
         changelogSections: [ChangelogSection],
         versionName: String,
         on container: Container
-    ) throws -> Future<FixVersionReport> {
+    ) throws -> EventLoopFuture<FixVersionReport> {
         return try changelogSections
             .compactMap { $0.tickets() }
-            .map { (project: (key: String, tickets: [String])) -> Future<FixVersionReport> in
+            .map { (project: (key: String, tickets: [String])) -> EventLoopFuture<FixVersionReport> in
                 guard let projectID = self.knownProjects[project.key] else {
                     return container.future(
                         FixVersionReport(.notInWhitelist(project: project.key))
@@ -366,9 +366,9 @@ extension JiraService {
             .map(to: FixVersionReport.self, on: container, FixVersionReport.init) // collect an array of reports into a single one
     }
 
-    func batchSetFixVersions(_ version: JiraService.Version, tickets: [String], on container: Container) throws -> Future<FixVersionReport> {
+    func batchSetFixVersions(_ version: JiraService.Version, tickets: [String], on container: Container) throws -> EventLoopFuture<FixVersionReport> {
         return try tickets
-            .map { (ticket: String) -> Future<FixVersionReport> in
+            .map { (ticket: String) -> EventLoopFuture<FixVersionReport> in
                 try self.setFixVersion(version, for: ticket, on: container)
                     .map { _ in FixVersionReport() }
                     .mapIfError { error in

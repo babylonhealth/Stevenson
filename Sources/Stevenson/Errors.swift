@@ -37,8 +37,8 @@ protocol FailableService: Service {
 extension FailableService {
     public func request<T: Decodable>(
         _ sourceLocation: SourceLocation,
-        _ makeRequest: () throws -> Future<Response>
-    ) throws -> Future<T> {
+        _ makeRequest: () throws -> EventLoopFuture<Response>
+    ) throws -> EventLoopFuture<T> {
         return try makeRequest()
             .flatMap { response in
                 try response.content
@@ -54,8 +54,8 @@ extension FailableService {
 
     public func request(
         _ sourceLocation: SourceLocation,
-        _ makeRequest: () throws -> Future<Response>
-    ) throws -> Future<Void> {
+        _ makeRequest: () throws -> EventLoopFuture<Response>
+    ) throws -> EventLoopFuture<Void> {
         return try makeRequest()
             .flatMap { response in
                 guard response.http.status == .noContent else {
@@ -207,8 +207,8 @@ public func attempt<T>(
     }
 }
 
-extension Future {
-    public func catchError(_ sourceLocation: SourceLocation) -> Future<Expectation> {
+extension EventLoopFuture {
+    public func catchError(_ sourceLocation: SourceLocation) -> EventLoopFuture<Expectation> {
         return catchFlatMap { (error) -> EventLoopFuture<T> in
             throw ThrowError(error: error, sourceLocation: sourceLocation)
         }

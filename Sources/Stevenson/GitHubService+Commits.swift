@@ -33,7 +33,7 @@ extension GitHubService {
         from: String,
         to: String,
         on container: Container
-    ) throws -> Future<CommitList> {
+    ) throws -> EventLoopFuture<CommitList> {
         let url = URL(string: "/repos/\(repo.fullName)/compare/\(from)...\(to)", relativeTo: baseURL)!
         return try request(.capture()) {
             try container.client().get(url, headers: headers)
@@ -53,8 +53,8 @@ extension GitHubService {
     public func changelog(
         for release: Release,
         on container: Container
-    ) throws -> Future<[String]> {
-        return try releases(in: release.repository, on: container).flatMap { (tags: [String]) -> Future<[String]> in
+    ) throws -> EventLoopFuture<[String]> {
+        return try releases(in: release.repository, on: container).flatMap { (tags: [String]) -> EventLoopFuture<[String]> in
             guard let latestAppTag = tags.first(where: release.isMatchingTag) else {
                 throw ServiceError(message: "Failed to find previous tag matching '\(release.appName)/*' to build the CHANGELOG")
             }

@@ -93,7 +93,7 @@ extension SlackCommand {
         branch: String? = nil,
         ci: CircleCIService,
         on container: Container
-    ) throws -> Future<SlackService.Response> {
+    ) throws -> EventLoopFuture<SlackService.Response> {
         let branch = branch
             ?? metadata.value(forOption: .branch)
             ?? RepoMapping.ios.repository.baseBranch
@@ -117,7 +117,7 @@ extension SlackCommand {
         branch: String? = nil,
         ci: CircleCIService,
         on container: Container
-    ) throws -> Future<SlackService.Response> {
+    ) throws -> EventLoopFuture<SlackService.Response> {
         let branch = branch
             ?? metadata.value(forOption: .branch)
             ?? RepoMapping.ios.repository.baseBranch
@@ -136,10 +136,10 @@ extension SlackCommand {
     }
 
     private static func respond(
-        to pipeline: Future<CircleCIService.PipelineResponse>,
+        to pipeline: EventLoopFuture<CircleCIService.PipelineResponse>,
         metadata: SlackCommandMetadata,
         on container: Container
-    ) -> Future<SlackService.Response> {
+    ) -> EventLoopFuture<SlackService.Response> {
         return pipeline
             .map {
                 SlackService.Response("""

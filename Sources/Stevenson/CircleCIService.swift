@@ -47,7 +47,7 @@ extension CircleCIService {
         project: String,
         branch: String,
         on container: Container
-    ) throws -> Future<BuildResponse> {
+    ) throws -> EventLoopFuture<BuildResponse> {
         let url = buildURL(project: project, branch: branch)
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
@@ -138,14 +138,14 @@ extension CircleCIService {
         project: String,
         branch: String,
         on container: Container
-    ) throws -> Future<PipelineResponse> {
+    ) throws -> EventLoopFuture<PipelineResponse> {
         let url = pipelineURL(project: project)
 
         return try request(.capture()) {
             try container.client().post(url, headers: headers) {
                 try $0.content.encode(json: PipelineRequest(branch: branch, parameters: parameters))
             }
-        }.flatMap { (pipelineID: PipelineID) -> Future<(Pipeline, PipelineWorkflows)> in
+        }.flatMap { (pipelineID: PipelineID) -> EventLoopFuture<(Pipeline, PipelineWorkflows)> in
             // workflows are not created immediately so we wait a bit
             // hoping that when we request pipeline the workflow id will be there
             sleep(5)

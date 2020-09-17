@@ -7,7 +7,7 @@ extension CircleCIService {
         branch: String,
         project: String,
         on container: Container
-    ) throws -> Future<PipelineResponse> {
+    ) throws -> EventLoopFuture<PipelineResponse> {
         let pipeline = String(textComponents[0])
         let optionsKeysValues = textComponents.dropFirst()
             .compactMap { (component: String.SubSequence) -> (String, CircleCIService.PipelineRequest.Parameter)? in
@@ -39,7 +39,7 @@ extension CircleCIService {
         branch: String,
         project: String,
         on container: Container
-    ) throws -> Future<PipelineResponse> {
+    ) throws -> EventLoopFuture<PipelineResponse> {
         let lane = String(textComponents[0])
         let options = textComponents.dropFirst().joined(separator: " ")
 

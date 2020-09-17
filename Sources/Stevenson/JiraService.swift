@@ -97,7 +97,7 @@ extension JiraService {
         }
     }
 
-    public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> Future<CreatedIssue> {
+    public func create<Fields>(issue: Issue<Fields>, on container: Container) throws -> EventLoopFuture<CreatedIssue> {
         let fullURL = URL(string: "/rest/api/3/issue", relativeTo: baseURL)!
 
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
@@ -136,7 +136,7 @@ extension JiraService {
         }
     }
 
-    public func getVersions(project projectID: Int, on container: Container) throws -> Future<[Version]> {
+    public func getVersions(project projectID: Int, on container: Container) throws -> EventLoopFuture<[Version]> {
         let fullURL = URL(string: "/rest/api/3/project/\(projectID)/versions", relativeTo: baseURL)!
 
         let projectKey = self.knownProjects.first(where: { $0.value == projectID })?.key ?? "#\(projectID)"
@@ -154,7 +154,7 @@ extension JiraService {
         }
     }
 
-    public func createVersion(_ version: Version, on container: Container) throws -> Future<Version> {
+    public func createVersion(_ version: Version, on container: Container) throws -> EventLoopFuture<Version> {
         let fullURL = URL(string: "/rest/api/3/version", relativeTo: baseURL)!
 
         let projectKey = self.knownProjects.first(where: { $0.value == version.projectId })?.key ?? "#\(version.projectId)"
@@ -192,7 +192,7 @@ extension JiraService {
         }
     }
 
-    public func setFixVersion(_ version: Version, for ticket: String, on container: Container) throws -> Future<Void> {
+    public func setFixVersion(_ version: Version, for ticket: String, on container: Container) throws -> EventLoopFuture<Void> {
         let fullURL = URL(string: "/rest/api/3/issue/\(ticket)", relativeTo: baseURL)!
 
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
