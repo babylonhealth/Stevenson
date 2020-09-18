@@ -140,7 +140,7 @@ extension SlackCommand {
         metadata: SlackCommandMetadata,
         on container: Container
     ) -> EventLoopFuture<SlackService.Response> {
-        return pipeline
+        pipeline
             .map {
                 SlackService.Response("""
                     You asked me: `\(metadata.command) \(metadata.text)`.

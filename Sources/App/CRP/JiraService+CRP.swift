@@ -324,7 +324,7 @@ extension JiraService {
         }
 
         var description: String {
-            return errors
+            errors
                 .map { " • \($0.description)" }
                 .joined(separator: "\n")
         }
@@ -335,7 +335,7 @@ extension JiraService {
         versionName: String,
         on container: Container
     ) throws -> EventLoopFuture<FixVersionReport> {
-        return try changelogSections
+        try changelogSections
             .compactMap { $0.tickets() }
             .map { (project: (key: String, tickets: [String])) -> EventLoopFuture<FixVersionReport> in
                 guard let projectID = self.knownProjects[project.key] else {

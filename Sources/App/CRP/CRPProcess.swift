@@ -23,7 +23,12 @@ enum CRPProcess {
         case missingParameter(String)
     }
 
-    static func apiRequest(request: Request, github: GitHubService, jira: JiraService, slack: SlackService) throws -> EventLoopFuture<Response> {
+    static func apiRequest(
+        request: Request,
+        github: GitHubService,
+        jira: JiraService,
+        slack: SlackService
+    ) throws -> EventLoopFuture<Response> {
         let repo: String = try Option.repo.get(from: request)
         let branch: String = try Option.branch.get(from: request)
         let channelID: String = try Option.slackChannelID.get(from: request)
@@ -99,7 +104,7 @@ enum CRPProcess {
 
 extension JiraService.FixVersionReport {
     func asSlackAttachments() -> [SlackService.Attachment] {
-        return self.errors.map { error -> SlackService.Attachment in
+        self.errors.map { error -> SlackService.Attachment in
             switch error {
             case .notInWhitelist: return .warning(error.description)
             default: return .error(error.description)
