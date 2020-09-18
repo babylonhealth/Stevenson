@@ -20,7 +20,6 @@ public struct CircleCIService {
 }
 
 extension CircleCIService {
-
     struct BuildRequest: Content {
         let buildParameters: [String: String]
 
@@ -50,20 +49,19 @@ extension CircleCIService {
         parameters: [String: String],
         project: String,
         branch: String,
-        on container: Container
+        req: Request
     ) throws -> EventLoopFuture<BuildResponse> {
-        let url = buildURL(project: project, branch: branch)
-        return try request(.capture()) {
-            try container.client().post(url, headers: headers) {
-                try $0.content.encode(BuildRequest(buildParameters: parameters))
-            }
+        let url = URI(string: buildURL(project: project, branch: branch).absoluteString)
+        return req.client.post(url, headers: headers) {
+            try $0.content.encode(BuildRequest(buildParameters: parameters))
+        }.flatMapThrowing {
+            try $0.content.decode(BuildResponse.self)
         }
     }
 
 }
 
 extension CircleCIService {
-
     public struct PipelineRequest: Encodable {
         let branch: String
         let parameters: [String: Parameter]
