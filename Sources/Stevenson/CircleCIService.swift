@@ -19,6 +19,7 @@ public struct CircleCIService {
 
 }
 
+// MARK: - Job
 extension CircleCIService {
     struct BuildRequest: Content {
         let buildParameters: [String: String]
@@ -61,6 +62,8 @@ extension CircleCIService {
 
 }
 
+
+// MARK: - Pipeline
 extension CircleCIService {
     public struct PipelineRequest: Encodable {
         let branch: String
@@ -108,28 +111,28 @@ extension CircleCIService {
     }
 
     private func pipelineURL(project: String) -> URL {
-        return URL(
+        URL(
             string: "/api/v2/project/github/\(project)/pipeline?circle-token=\(token)",
             relativeTo: baseURL
         )!
     }
 
     private func pipelineURL(pipelineID: String) -> URL {
-        return URL(
+        URL(
             string: "/api/v2/pipeline/\(pipelineID)?circle-token=\(token)",
             relativeTo: baseURL
         )!
     }
 
     private func pipelineWorkflowsURL(pipelineID: String) -> URL {
-        return URL(
+        URL(
             string: "/api/v2/pipeline/\(pipelineID)/workflow?circle-token=\(token)",
             relativeTo: baseURL
         )!
     }
 
     private func workflowURL(workflowID: String) -> URL {
-        return URL(
+        URL(
             string: "/workflow-run/\(workflowID)",
             relativeTo: baseURL
         )!
@@ -139,32 +142,42 @@ extension CircleCIService {
         parameters: [String: PipelineRequest.Parameter],
         project: String,
         branch: String,
-        on container: Container
+        req: Request
     ) throws -> EventLoopFuture<PipelineResponse> {
-        let url = pipelineURL(project: project)
+        let url = URI(string: pipelineURL(project: project).absoluteString)
 
-        return try request(.capture()) {
-            try container.client().post(url, headers: headers) {
-                try $0.content.encode(json: PipelineRequest(branch: branch, parameters: parameters))
-            }
-        }.flatMap { (pipelineID: PipelineID) -> EventLoopFuture<(Pipeline, PipelineWorkflows)> in
+        return req.client.post(url, headers: headers) {
+            try $0.content.encode(
+                PipelineRequest(branch: branch, parameters: parameters),
+                using: JSONEncoder()
+            )
+        }.flatMapThrowing {
+            try $0.content.decode(PipelineID.self)
+        }.flatMapThrowing { (pipelineID: PipelineID) -> EventLoopFuture<(Pipeline, PipelineWorkflows)> in
             // workflows are not created immediately so we wait a bit
             // hoping that when we request pipeline the workflow id will be there
             sleep(5)
-            return try self.request(.capture()) {
-                try container.client().get(self.pipelineURL(pipelineID: pipelineID.id), headers: self.headers)
-            }.and(
-                try self.request(.capture()) {
-                    try container.client().get(self.pipelineWorkflowsURL(pipelineID: pipelineID.id), headers: self.headers)
-                }
-            )
-        }.map { (pipeline, workflows) -> PipelineResponse in
-            return PipelineResponse(
-                branch: pipeline.vcs.branch,
-                buildURL: workflows.items.first.map {
-                    self.workflowURL(workflowID: $0.id).absoluteURL
-                } ?? self.baseURL
-            )
+            return req.client.get(
+                URI(string: self.pipelineURL(pipelineID: pipelineID.id).absoluteString),
+                headers: self.headers
+            ).and(
+                req.client.get(
+                    URI(string: self.pipelineWorkflowsURL(pipelineID: pipelineID.id).absoluteString),
+                    headers: self.headers
+                )
+            ).flatMapThrowing { (pipelineResponse, pipelineWorkflowsResponse) in
+                (try pipelineResponse.content.decode(Pipeline.self),
+                 try pipelineWorkflowsResponse.content.decode(PipelineWorkflows.self))
+            }
+        }.flatMap { future in
+            future.map { (pipeline, workflows) -> PipelineResponse in
+                PipelineResponse(
+                    branch: pipeline.vcs.branch,
+                    buildURL: workflows.items.first.map {
+                        self.workflowURL(workflowID: $0.id).absoluteURL
+                    } ?? self.baseURL
+                )
+            }
         }
     }
 }
