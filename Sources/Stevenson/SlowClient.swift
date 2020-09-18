@@ -22,7 +22,7 @@ private final class SlowMode<T, U> {
     }
 
     func process(_ input: T, on eventLoop: EventLoop) -> EventLoopFuture<U> {
-        let promise = eventLoop.newPromise(U.self)
+        let promise = eventLoop.makePromise(of: U.self)
         queue.async { self.dispatch((input, promise)) }
         return promise.futureResult
     }

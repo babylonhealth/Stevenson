@@ -36,7 +36,7 @@ protocol FailableService: Service {
 
 extension FailableService {
     public func request<T: Decodable>(
-        _ sourceLocation: SourceLocation,
+        _ errorSource: ErrorSource,
         _ makeRequest: () throws -> EventLoopFuture<Response>
     ) throws -> EventLoopFuture<T> {
         return try makeRequest()
@@ -49,11 +49,11 @@ extension FailableService {
                             .thenThrowing { throw $0 }
                 }
             }
-            .catchError(sourceLocation)
+            .catchError(errorSource)
     }
 
     public func request(
-        _ sourceLocation: SourceLocation,
+        _ errorSource: ErrorSource,
         _ makeRequest: () throws -> EventLoopFuture<Response>
     ) throws -> EventLoopFuture<Void> {
         return try makeRequest()
@@ -65,7 +65,7 @@ extension FailableService {
                 }
                 return response.future(())
             }
-            .catchError(sourceLocation)
+            .catchError(errorSource)
     }
 }
 
@@ -121,12 +121,12 @@ public struct ThrowError: Error, DebuggableError {
     public let error: Error
     public let identifier: String
     public let reason: String
-    public let sourceLocation: SourceLocation?
+    public let sourceLocation: ErrorSource?
 
-    init(error: Error, sourceLocation: SourceLocation) {
+    init(error: Error, sourceLocation: ErrorSource) {
         self.error = error
 
-        let _sourceLocation: SourceLocation?
+        let _sourceLocation: ErrorSource?
         if let throwError = error as? ThrowError {
             self.identifier = throwError.identifier
             self.reason = throwError.reason
@@ -134,7 +134,7 @@ public struct ThrowError: Error, DebuggableError {
         } else if let debuggable = error as? DebuggableError {
             self.identifier = "\(type(of: debuggable)).\(debuggable.identifier)"
             self.reason = debuggable.reason
-            _sourceLocation = debuggable.sourceLocation
+            _sourceLocation = debuggable.source
         } else {
             self.identifier = "\(type(of: error))"
             self.reason = error.localizedDescription
@@ -151,7 +151,7 @@ public struct ThrowError: Error, DebuggableError {
     init(error: Error, file: String, line: UInt, column: UInt, function: String) {
         self.init(
             error: error,
-            sourceLocation: SourceLocation(
+            sourceLocation: ErrorSource(
                 file: file,
                 function: function,
                 line: line,
@@ -208,9 +208,9 @@ public func attempt<T>(
 }
 
 extension EventLoopFuture {
-    public func catchError(_ sourceLocation: SourceLocation) -> EventLoopFuture<Expectation> {
+    public func catchError(_ errorSource: ErrorSource) -> EventLoopFuture<Expectation> {
         return catchFlatMap { (error) -> EventLoopFuture<T> in
-            throw ThrowError(error: error, sourceLocation: sourceLocation)
+            throw ThrowError(error: error, sourceLocation: errorSource)
         }
     }
 }

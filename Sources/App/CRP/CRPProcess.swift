@@ -108,7 +108,7 @@ extension JiraService.FixVersionReport {
     }
 }
 
-extension CRPProcess.Error: Debuggable {
+extension CRPProcess.Error: DebuggableError {
     var identifier: String {
         switch self {
         case .invalidParameter(key: let key, value: _, expected: _):
