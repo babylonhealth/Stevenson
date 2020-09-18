@@ -2,7 +2,7 @@ import Foundation
 import Vapor
 
 extension SlackService {
-    public enum Error: Swift.Error, Debuggable {
+    public enum Error: Swift.Error, DebuggableError {
         case invalidToken
         case invalidChannel(String, allowed: Set<String>)
         case missingParameter(key: String)
@@ -31,7 +31,7 @@ extension SlackService {
 }
 
 protocol FailableService: Service {
-    associatedtype ServiceError: Error & Decodable & Debuggable
+    associatedtype ServiceError: Error & Decodable & DebuggableError
 }
 
 extension FailableService {
@@ -70,7 +70,7 @@ extension FailableService {
 }
 
 extension CircleCIService: FailableService {
-    struct ServiceError: Swift.Error, Decodable, Debuggable {
+    struct ServiceError: Swift.Error, Decodable, DebuggableError {
         let message: String
         let identifier: String = "CircleCIService"
 
@@ -81,7 +81,7 @@ extension CircleCIService: FailableService {
 }
 
 extension GitHubService: FailableService {
-    struct ServiceError: Swift.Error, Decodable, Debuggable {
+    struct ServiceError: Swift.Error, Decodable, DebuggableError {
         let message: String
         let identifier: String = "GitHubService"
 
@@ -92,7 +92,7 @@ extension GitHubService: FailableService {
 }
 
 extension JiraService: FailableService {
-    public struct ServiceError: Swift.Error, Decodable, Debuggable {
+    public struct ServiceError: Swift.Error, Decodable, DebuggableError {
         // See https://developer.atlassian.com/cloud/jira/platform/rest/v3/#status-codes for schema
         public let errorMessages: [String]
         public let errors: [String: String]
@@ -112,12 +112,12 @@ extension JiraService: FailableService {
     }
 }
 
-public struct NilValueError: Error, Debuggable {
+public struct NilValueError: Error, DebuggableError {
     public let identifier = "nilValue"
     public let reason = "Unexpected nil value"
 }
 
-public struct ThrowError: Error, Debuggable {
+public struct ThrowError: Error, DebuggableError {
     public let error: Error
     public let identifier: String
     public let reason: String
@@ -131,7 +131,7 @@ public struct ThrowError: Error, Debuggable {
             self.identifier = throwError.identifier
             self.reason = throwError.reason
             _sourceLocation = throwError.sourceLocation
-        } else if let debuggable = error as? Debuggable {
+        } else if let debuggable = error as? DebuggableError {
             self.identifier = "\(type(of: debuggable)).\(debuggable.identifier)"
             self.reason = debuggable.reason
             _sourceLocation = debuggable.sourceLocation
