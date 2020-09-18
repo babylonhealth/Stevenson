@@ -1,5 +1,9 @@
 import Vapor
 
+struct CircleCIServiceKey: StorageKey {
+    typealias Value = CircleCIService
+}
+
 public struct CircleCIService {
     private let baseURL = URL(string: "https://circleci.com")!
     private let headers: HTTPHeaders = [

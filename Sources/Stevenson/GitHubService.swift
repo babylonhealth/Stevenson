@@ -1,6 +1,10 @@
 import Vapor
 
-public struct GitHubService: Service {
+struct GitHubServiceKey: StorageKey {
+    typealias Value = GitHubService
+}
+
+public struct GitHubService {
     public let baseURL = URL(string: "https://api.github.com:443")!
     public let headers: HTTPHeaders
 

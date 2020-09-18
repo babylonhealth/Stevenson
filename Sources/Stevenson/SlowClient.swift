@@ -2,7 +2,6 @@
 /// Borrowed from: https://gist.github.com/vzsg/3287030a9c9bdfc4aa726a5b0556e09e
 
 // SlowMode
-import Foundation
 import Dispatch
 import NIO
 // SlowClient
@@ -93,7 +92,7 @@ private final class SlowMode<T, U> {
 
 // MARK: SlowClient
 
-public final class SlowClient: Service {
+public final class SlowClient {
     private let slowMode: SlowMode<Request, Response>
 
     public init() {

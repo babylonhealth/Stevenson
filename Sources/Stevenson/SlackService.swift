@@ -104,6 +104,10 @@ public struct SlackCommandMetadata: Content {
 
 // MARK: Service
 
+struct SlackServiceKey: StorageKey {
+    typealias Value = SlackService
+}
+
 public struct SlackService {
     /// Verification Token (see SlackBot App settings)
     let verificationToken: String

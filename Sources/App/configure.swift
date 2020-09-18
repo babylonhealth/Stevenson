@@ -48,53 +48,79 @@ private let jiraProjects = [
 ]
 
 /// Called before your application initializes.
-public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
-    let logger = PrintLogger()
+public func configure(_ app: Application) throws {
 
-    let slack = SlackService(
+    app.slack = .init(
         verificationToken: try attempt { Environment.slackToken },
         oauthToken: try attempt { Environment.slackOAuthToken }
     )
 
-    let ci = CircleCIService(
-        token: try attempt { Environment.circleciToken }
-    )
+    app.ci = .init(token: try attempt { Environment.circleciToken })
 
-    let jira = JiraService(
+    app.jira = .init(
         baseURL: try attempt { Environment.jiraBaseURL.flatMap(URL.init(string:)) },
         username: try attempt { Environment.jiraUsername },
         password: try attempt { Environment.jiraToken },
         knownProjects: jiraProjects,
-        logger: logger
+        logger: PrintLogger()
     )
 
-    let github = GitHubService(
+    app.github = .init(
         username: try attempt { Environment.githubUsername },
         token: try attempt { Environment.githubToken }
     )
 
-    let router = EngineRouter.default()
     try routes(
-        router: router,
-        github: github,
-        ci: ci,
-        slack: slack,
-        jira: jira,
+        app,
         commands: [
-            .stevenson(ci, jira, github),
-            .fastlane(ci),
-            .appcenter(ci),
-            .testflight(ci),
-            .crp(jira, github)
+            .stevenson(app.ci, app.jira, app.github),
+            .fastlane(app.ci),
+            .appcenter(app.ci),
+            .testflight(app.ci),
+            .crp(app.jira, app.github)
         ]
     )
-    services.register(router, as: Router.self)
+}
 
-    var middlewares = MiddlewareConfig()
-    middlewares.use(ErrorMiddleware.self)
-    services.register(middlewares)
+extension Application {
+    var slack: SlackService {
+        get {
+            self.storage[SlackServiceKey.self]
+        }
+        set {
+            self.storage[SlackServiceKey.self] = newValue
+        }
+    }
+
+    var ci: CircleCIService {
+        get {
+            self.storage[CircleCIServiceKey.self]
+        }
+        set {
+            self.storage[CircleCIServiceKey.self] = newValue
+        }
+    }
+
+    var jira: JiraService {
+        get {
+            self.storage[JiraServiceKey.self]
+        }
+        set {
+            self.storage[JiraServiceKey.self] = newValue
+        }
+    }
+
+    var github: GitHubService {
+        get {
+            self.storage[GitHubServiceKey.self]
+        }
+        set {
+            self.storage[GitHubServiceKey.self] = newValue
+        }
+    }
 
     // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
-    let slowClient = SlowClient()
-    services.register(slowClient)
+    var slowClient: SlowClient {
+        .init()
+    }
 }

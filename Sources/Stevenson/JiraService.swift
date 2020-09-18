@@ -1,5 +1,8 @@
-import Foundation
 import Vapor
+
+struct JiraServiceKey: StorageKey {
+    typealias Value = JiraService
+}
 
 public struct JiraService {
     public let baseURL: URL
