@@ -61,7 +61,7 @@ public func configure(_ app: Application) throws {
         username: try attempt { Environment.jiraUsername },
         password: try attempt { Environment.jiraToken },
         knownProjects: jiraProjects,
-        logger: PrintLogger()
+        logger: app.logger
     )
 
     app.github = .init(
