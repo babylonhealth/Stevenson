@@ -40,29 +40,31 @@ extension SlackCommand {
 
                 return try github.changelog(for: release, on: request)
                     .catchError(.capture())
-                    .flatMapThrowing { (commitMessages: [String]) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
-                        try jira.executeCRPTicketProcess(
-                            commitMessages: commitMessages,
-                            release: release,
-                            repoMapping: repoMapping,
-                            crpProjectID: JiraService.crpProjectID,
-                            request: request
-                        )
+                    .flatMap { (commitMessages: [String]) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
+                        do {
+                            return try jira.executeCRPTicketProcess(
+                                commitMessages: commitMessages,
+                                release: release,
+                                repoMapping: repoMapping,
+                                crpProjectID: JiraService.crpProjectID,
+                                request: request
+                            )
+                        } catch {
+                            return request.eventLoop.makeFailedFuture(error)
+                        }
                     }
                     .catchError(.capture())
-                    .flatMap {
-                        $0.map { (crpIssue, report) -> SlackService.Response in
-                            let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
+                    .map { (crpIssue, report) -> SlackService.Response in
+                        let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
 
-                            return SlackService.Response("""
-                                ✅ CRP Ticket \(crpIssue.key) created.
-                                \(jira.baseURL)/browse/\(crpIssue.key)
-                                \(status)
-                                """,
-                                attachments: report.asSlackAttachments(),
-                                visibility: .channel
-                            )
-                        }
+                        return SlackService.Response("""
+                            ✅ CRP Ticket \(crpIssue.key) created.
+                            \(jira.baseURL)/browse/\(crpIssue.key)
+                            \(status)
+                            """,
+                            attachments: report.asSlackAttachments(),
+                            visibility: .channel
+                        )
                     }
                     .replyLater(
                         withImmediateResponse: SlackService.Response("🎫 Creating ticket...", visibility: .channel),

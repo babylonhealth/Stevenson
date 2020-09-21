@@ -348,7 +348,7 @@ extension JiraService {
                 }
 
                 return try self.getVersions(project: projectID, on: request)
-                    .flatMapThrowing { allVersions -> EventLoopFuture<Version> in
+                    .flatMap { allVersions -> EventLoopFuture<Version> in
                         if let existingVersion = allVersions.first(where: { $0.name == versionName }) {
                             return request.eventLoop.future(existingVersion)
                         } else {
@@ -358,13 +358,15 @@ extension JiraService {
                                 description: versionName,
                                 startDate: Date()
                             )
-                            return try self.createVersion(version, on: request)
+                            do {
+                                return try self.createVersion(version, on: request)
+                            } catch {
+                                return request.eventLoop.makeFailedFuture(error)
+                            }
                         }
                     }
-                    .flatMap {
-                        $0.flatMap { version in
-                            self.batchSetFixVersions(version, tickets: tickets, on: request)
-                        }
+                    .flatMap { version in
+                        self.batchSetFixVersions(version, tickets: tickets, on: request)
                     }.recover { error in
                         FixVersionReport(.releaseCreationFailed(project: key, error: error))
                     }
