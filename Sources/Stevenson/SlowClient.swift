@@ -96,29 +96,36 @@ public final class SlowClient {
     private let slowMode: SlowMode<Request, Response>
 
     public init() {
-        slowMode = SlowMode(work: { req in
-            do {
-                let client = try req.client()
-                return client.send(req)
-            } catch {
-                return req.future(error: error)
-            }
-        }, verify: { response in
-            guard response.http.status.code == 429 else {
-                return (true, nil)
-            }
+        self.slowMode = SlowMode(
+            work: { (req: Request) -> EventLoopFuture<Response> in
+                let clientRequest = ClientRequest(
+                    method: req.method,
+                    url: req.url,
+                    headers: req.headers,
+                    body: req.body.data
+                )
 
-            let delayUntil: Date
+                return req.client
+                    .send(clientRequest)
+                    .encodeResponse(for: req)
+            },
+            verify: { (response: Response) -> (Bool, Date?) in
+                guard response.status.code == 429 else {
+                    return (true, nil)
+                }
 
-            if let resetHeader = response.http.headers["X-RateLimit-Reset"].first,
-                let resetTime = TimeInterval(resetHeader) {
-                delayUntil = Date(timeIntervalSince1970: resetTime)
-            } else {
-                delayUntil = Date(timeIntervalSinceNow: 1)
+                let delayUntil: Date
+
+                if let resetHeader = response.headers["X-RateLimit-Reset"].first,
+                   let resetTime = TimeInterval(resetHeader) {
+                    delayUntil = Date(timeIntervalSince1970: resetTime)
+                } else {
+                    delayUntil = Date(timeIntervalSinceNow: 1)
+                }
+
+                return (false, delayUntil)
             }
-
-            return (false, delayUntil)
-        })
+        )
     }
 
     func send(_ request: Request) -> EventLoopFuture<Response> {
