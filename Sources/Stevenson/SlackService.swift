@@ -22,6 +22,7 @@ public struct SlackCommand {
         help: String,
         allowedChannels: Set<String>,
         subCommands: [SlackCommand] = [],
+        request: Request,
         run: @escaping (SlackCommandMetadata, Request) throws -> EventLoopFuture<SlackService.Response>
     ) {
         self.name = name
@@ -43,7 +44,7 @@ public struct SlackCommand {
             }
 
             if metadata.textComponents[1] == "help" {
-                return container.future(SlackService.Response(subCommand.help))
+                return request.eventLoop.future(SlackService.Response(subCommand.help))
             } else {
                 let metadata = SlackCommandMetadata(
                     token: metadata.token,
@@ -119,40 +120,56 @@ public struct SlackService {
         self.oauthToken = oauthToken
     }
 
-    public func handle(command: SlackCommand, on request: Request) throws -> EventLoopFuture<Vapor.Response> {
-        return try request.content
+    public func handle(
+        command: SlackCommand,
+        on request: Request
+    ) throws -> EventLoopFuture<Vapor.Response> {
+        let metadata = try request.content
             .decode(SlackCommandMetadata.self)
-            .catchError(.capture())
-            .flatMap { [verificationToken] metadata in
-                guard metadata.token == verificationToken else {
-                    throw Error.invalidToken
-                }
-                
-                guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
-                    throw Error.invalidChannel(metadata.channelName, allowed: command.allowedChannels)
-                }
-                
-                if metadata.text == "help" {
-                    return request.future(SlackService.Response(command.help))
-                } else {
-                    return try command.run(metadata, request)
-                }
-            }
-            .catchError(.capture())
-            .mapIfError { SlackService.Response(error: $0) }
-            .encode(for: request)
+        guard metadata.token == verificationToken else {
+            throw ThrowError(
+                error: Error.invalidToken,
+                sourceLocation: .capture()
+            )
+        }
+
+        guard command.allowedChannels.isEmpty || command.allowedChannels.contains(metadata.channelName) else {
+            throw ThrowError(
+                error: Error.invalidChannel(metadata.channelName, allowed: command.allowedChannels),
+                sourceLocation: .capture()
+            )
+        }
+
+        if metadata.text == "help" {
+            return request.eventLoop
+                .future(SlackService.Response(command.help))
+                .recover { SlackService.Response(error: $0) }
+                .encodeResponse(for: request)
+        } else {
+            return try command.run(metadata, request)
+                .recover { SlackService.Response(error: $0) }
+                .encodeResponse(for: request)
+        }
     }
 
-    public func post(message: Message, on container: Container) throws -> EventLoopFuture<Vapor.Response> {
-        let fullURL = URL(string: "https://slack.com/api/chat.postMessage")!
+    public func post(
+        message: Message,
+        on request: Request
+    ) throws -> EventLoopFuture<Vapor.Response> {
+        let fullURL = URI(string: "https://slack.com/api/chat.postMessage")
         let headers: HTTPHeaders = [
             "Authorization": "Bearer \(self.oauthToken)"
         ]
-        return try container.client()
+
+        return request.client
             .post(fullURL, headers: headers) {
-                try $0.content.encode(message)
-        }
-        .catchError(.capture())
+                do {
+                    try $0.content.encode(message)
+                } catch {
+                    throw ThrowError(error: error, sourceLocation: .capture())
+                }
+            }
+            .encodeResponse(for: request)
     }
 }
 
