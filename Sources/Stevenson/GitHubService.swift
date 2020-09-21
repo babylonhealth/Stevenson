@@ -155,7 +155,7 @@ extension GitHubService {
     public func pullRequest(
         number: Int,
         in repo: Repository,
-        request: Request
+        on request: Request
     ) throws -> EventLoopFuture<PullRequest> {
         let url = URI(
             string: URL(

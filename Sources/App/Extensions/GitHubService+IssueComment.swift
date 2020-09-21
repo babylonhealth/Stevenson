@@ -47,50 +47,70 @@ extension GitHubService {
         ci: CircleCIService
     ) throws -> EventLoopFuture<Response> {
         try webhook(from: request)
-            .flatMapThrowing { (action: CommentAction) -> EventLoopFuture<Response> in
-            let headers = request.headers
-            let textComponents = action.comment.body.split(separator: " ")
+            .flatMap { (action: CommentAction) -> EventLoopFuture<Response> in
+                let headers = request.headers
+                let textComponents = action.comment.body.split(separator: " ")
 
-            guard
-                headers.first(name: .init("X-GitHub-Event")) == "issue_comment",
-                action.comment.body.hasPrefix("@ios-bot-babylon"),
-                textComponents.count >= 2,
-                let repo = RepoMapping.all.first(where: { _, mapping in
-                    action.repository.full_name == mapping.repository.fullName
-                })?.value.repository
-            else {
-                // return ok code so that we don't have hooks reported as failed on github
-                return request.eventLoop.future(Response(status: .ok))
-            }
+                guard
+                    headers.first(name: .init("X-GitHub-Event")) == "issue_comment",
+                    action.comment.body.hasPrefix("@ios-bot-babylon"),
+                    textComponents.count >= 2,
+                    let repo = RepoMapping.all.first(where: { _, mapping in
+                        action.repository.full_name == mapping.repository.fullName
+                    })?.value.repository
+                else {
+                    // return ok code so that we don't have hooks reported as failed on github
+                    return request.eventLoop.future(Response(status: .ok))
+                }
 
-            return try self.pullRequest(
-                number: action.issue.number,
-                in: repo,
-                on: request
-            ).flatMapThrowing { pullRequest in
-                let branch = pullRequest.head.ref
-
-                if textComponents[1] == "fastlane" {
-                    return try ci.runLane(
-                        textComponents: Array(textComponents.dropFirst(2)),
-                        branch: branch,
-                        project: repo.fullName,
+                do {
+                    return try self.pullRequest(
+                        number: action.issue.number,
+                        in: repo,
                         on: request
-                    ).flatMapThrowing { _ in try HTTPResponseStatus.ok.encode(for: request) }
-                } else {
-                    return try ci.runPipeline(
-                        textComponents: Array(textComponents.dropFirst()),
-                        branch: branch,
-                        project: repo.fullName,
-                        on: request
-                    ).flatMapThrowing { _ in try HTTPResponseStatus.ok.encode(for: request) }
+                    )
+                    .flatMap { pullRequest -> EventLoopFuture<Response> in
+                        let branch = pullRequest.head.ref
+
+                        if textComponents[1] == "fastlane" {
+                            do {
+                                return try ci.runLane(
+                                    textComponents: Array(textComponents.dropFirst(2)),
+                                    branch: branch,
+                                    project: repo.fullName,
+                                    on: request
+                                )
+                                .flatMap { _ in HTTPResponseStatus.ok.encodeResponse(for: request) }
+                            } catch {
+                                return request.eventLoop.makeFailedFuture(error)
+                            }
+                        } else {
+                            do {
+                                return try ci.runPipeline(
+                                    textComponents: Array(textComponents.dropFirst()),
+                                    branch: branch,
+                                    project: repo.fullName,
+                                    on: request
+                                )
+                                .flatMap { _ in HTTPResponseStatus.ok.encodeResponse(for: request) }
+                            } catch {
+                                return request.eventLoop.makeFailedFuture(error)
+                            }
+                        }
+                    }
+                    .flatMapError { (error) -> EventLoopFuture<Response> in
+                        do {
+                            return try request.content.decode(PingAction.self)
+                                .encodeResponse(for: request)
+                                .map { _ in HTTPResponseStatus.ok }
+                                .encodeResponse(for: request)
+                        } catch {
+                            return HTTPResponseStatus.badRequest.encodeResponse(for: request)
+                        }
+                    }
+                } catch {
+                    return request.eventLoop.makeFailedFuture(error)
                 }
             }
-        }.catchFlatMap { error -> EventLoopFuture<Response> in
-            try request.content.decode(PingAction.self)
-                .map { _ in HTTPResponse(status: .ok) }
-                .catchMap { _ in HTTPResponse(status: .badRequest) }
-                .encode(for: request)
-        }
     }
 }
