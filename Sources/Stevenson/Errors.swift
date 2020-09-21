@@ -197,6 +197,35 @@ public func attempt<T>(
     }
 }
 
+extension EventLoopFuture {
+    public func catchError(_ errorSource: ErrorSource) throws -> EventLoopFuture<Value> {
+        catchFlatMap { (error) -> EventLoopFuture<Value> in
+            throw ThrowError(error: error, sourceLocation: errorSource)
+        }
+    }
+
+    private func catchFlatMap(
+        _ callback: @escaping (Error) throws -> (EventLoopFuture<Value>)
+    ) -> EventLoopFuture<Value> {
+        let promise = eventLoop.makePromise(of: Value.self)
+
+        _ = self.always { result in
+            switch result {
+            case let .success(e):
+                promise.succeed(e)
+            case let .failure(error):
+                do {
+                    try callback(error).cascade(to: promise)
+                } catch {
+                    promise.fail(error)
+                }
+            }
+        }
+
+        return promise.futureResult
+    }
+}
+
 extension SlackService.Response {
     public init(error: Error, visibility: Visibility = .user) {
         #if DEBUG

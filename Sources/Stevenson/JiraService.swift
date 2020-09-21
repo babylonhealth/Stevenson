@@ -122,14 +122,16 @@ extension JiraService {
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
         self.logInfo(logMessage)
 
-        return request.slowClient.post(
+        return try request.slowClient.post(
             fullURL,
             headers: self.headers,
             on: request.application
         ) { request in
             try request.content.encode(issue)
             self.logRequest(logMessage, request)
-        }.flatMapThrowing {
+        }
+        .catchError(.capture())
+        .flatMapThrowing {
             try $0.content.decode(CreatedIssue.self)
         }
         #warning("TODO log success")
@@ -175,13 +177,15 @@ extension JiraService {
         let logMessage = "Fetching JIRA versions for board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return request.slowClient.get(
+        return try request.slowClient.get(
             fullURL,
             headers: self.headers,
             on: request.application
         ) { request in
             self.logRequest(logMessage, request)
-        }.flatMapThrowing {
+        }
+        .catchError(.capture())
+        .flatMapThrowing {
             try $0.content.decode([Version].self)
         }
         #warning("TODO log success")
@@ -202,14 +206,16 @@ extension JiraService {
         let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return request.slowClient.get(
+        return try request.slowClient.get(
             fullURL,
             headers: self.headers,
             on: request.application
         ) { request in
             try request.content.encode(version)
             self.logRequest(logMessage, request)
-        }.flatMapThrowing {
+        }
+        .catchError(.capture())
+        .flatMapThrowing {
             try $0.content.decode(Version.self)
         }
         #warning("TODO log success")
@@ -249,14 +255,16 @@ extension JiraService {
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
         self.logInfo(logMessage)
 
-        return request.slowClient.put(
+        return try request.slowClient.put(
             fullURL,
             headers: self.headers,
             on: request.application
         ) { request in
             try request.content.encode(VersionAddUpdate(version: version))
             self.logRequest(logMessage, request)
-        }.map { _ in () }
+        }
+        .catchError(.capture())
+        .map { _ in () }
         #warning("TODO log success")
 //        .whenSuccess { response in
 //            self.logResponse(logMessage, response)

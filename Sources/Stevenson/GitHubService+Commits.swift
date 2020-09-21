@@ -32,17 +32,18 @@ extension GitHubService {
         from: String,
         to: String,
         request: Request
-    ) -> EventLoopFuture<CommitList> {
+    ) throws -> EventLoopFuture<CommitList> {
         let url = URI(
             string: URL(
                 string: "/repos/\(repo.fullName)/compare/\(from)...\(to)",
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.get(url, headers: headers)
+        return try request.client.get(url, headers: headers)
             .flatMapThrowing { response -> CommitList in
                 try response.content.decode(CommitList.self)
             }
+            .catchError(.capture())
     }
 
     /// Return the list of commits between a release branch and the last matching tag.
@@ -66,7 +67,8 @@ extension GitHubService {
             guard let latestAppTag = tags.first(where: release.isMatchingTag) else {
                 throw ServiceError(message: "Failed to find previous tag matching '\(release.appName)/*' to build the CHANGELOG")
             }
-            return self.commitList(
+
+            return try self.commitList(
                 in: release.repository,
                 from: latestAppTag,
                 to: release.branch,

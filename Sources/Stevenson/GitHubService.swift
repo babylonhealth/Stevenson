@@ -87,9 +87,9 @@ extension GitHubService {
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.get(url, headers: headers).flatMapThrowing {
+        return try request.client.get(url, headers: headers).flatMapThrowing {
             try $0.content.decode(GitHubService.Reference.self)
-        }
+        }.catchError(.capture())
     }
 
     public func createBranch(
@@ -104,9 +104,11 @@ extension GitHubService {
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.post(url, headers: headers) {
+        return try request.client.post(url, headers: headers) {
             try $0.content.encode(["ref": "refs/heads/\(name)", "sha": ref.sha])
-        }.flatMapThrowing {
+        }
+        .catchError(.capture())
+        .flatMapThrowing {
             try $0.content.decode(GitHubService.Reference.self)
         }
     }
@@ -133,7 +135,8 @@ extension GitHubService {
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.get(url, headers: headers)
+        return try request.client.get(url, headers: headers)
+            .catchError(.capture())
             .flatMapThrowing{ try $0.content.decode([Response].self) }
             .map { (response: [Response]) -> [String] in
                 response.map { $0.tag_name }

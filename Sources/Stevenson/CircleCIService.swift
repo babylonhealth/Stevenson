@@ -64,11 +64,11 @@ extension CircleCIService {
         on request: Request
     ) throws -> EventLoopFuture<BuildResponse> {
         let url = URI(string: buildURL(project: project, branch: branch).absoluteString)
-        return request.client.post(url, headers: headers) {
+        return try request.client.post(url, headers: headers) {
             try $0.content.encode(BuildRequest(buildParameters: parameters))
         }.flatMapThrowing {
             try $0.content.decode(BuildResponse.self)
-        }
+        }.catchError(.capture())
     }
 
 }
@@ -157,25 +157,30 @@ extension CircleCIService {
     ) throws -> EventLoopFuture<PipelineResponse> {
         let url = URI(string: pipelineURL(project: project).absoluteString)
 
-        return request.client.post(url, headers: headers) {
+        return try request.client.post(url, headers: headers) {
             try $0.content.encode(
                 PipelineRequest(branch: branch, parameters: parameters),
                 using: JSONEncoder()
             )
-        }.flatMapThrowing {
+        }
+        .catchError(.capture())
+        .flatMapThrowing {
             try $0.content.decode(PipelineID.self)
         }.flatMapThrowing { (pipelineID: PipelineID) -> EventLoopFuture<(Pipeline, PipelineWorkflows)> in
             // workflows are not created immediately so we wait a bit
             // hoping that when we request pipeline the workflow id will be there
             sleep(5)
-            return request.client.get(
+            return try request.client.get(
                 URI(string: self.pipelineURL(pipelineID: pipelineID.id).absoluteString),
                 headers: self.headers
-            ).and(
-                request.client.get(
+            )
+            .catchError(.capture())
+            .and(
+                try request.client.get(
                     URI(string: self.pipelineWorkflowsURL(pipelineID: pipelineID.id).absoluteString),
                     headers: self.headers
                 )
+                .catchError(.capture())
             ).flatMapThrowing { (pipelineResponse, pipelineWorkflowsResponse) in
                 (try pipelineResponse.content.decode(Pipeline.self),
                  try pipelineWorkflowsResponse.content.decode(PipelineWorkflows.self))

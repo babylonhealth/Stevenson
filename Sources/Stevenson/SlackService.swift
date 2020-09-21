@@ -136,6 +136,7 @@ public struct SlackService {
     ) throws -> EventLoopFuture<Vapor.Response> {
         let metadata = try request.content
             .decode(SlackCommandMetadata.self)
+
         guard metadata.token == verificationToken else {
             throw ThrowError(
                 error: Error.invalidToken,
@@ -151,12 +152,14 @@ public struct SlackService {
         }
 
         if metadata.text == "help" {
-            return request.eventLoop
+            return try request.eventLoop
                 .future(SlackService.Response(command.help))
+                .catchError(.capture())
                 .recover { SlackService.Response(error: $0) }
                 .encodeResponse(for: request)
         } else {
             return try command.run(metadata, request)
+                .catchError(.capture())
                 .recover { SlackService.Response(error: $0) }
                 .encodeResponse(for: request)
         }
@@ -171,14 +174,11 @@ public struct SlackService {
             "Authorization": "Bearer \(self.oauthToken)"
         ]
 
-        return request.client
+        return try request.client
             .post(fullURL, headers: headers) {
-                do {
-                    try $0.content.encode(message)
-                } catch {
-                    throw ThrowError(error: error, sourceLocation: .capture())
-                }
+                try $0.content.encode(message)
             }
+            .catchError(.capture())
             .encodeResponse(for: request)
     }
 }
@@ -196,14 +196,11 @@ extension EventLoopFuture where Value == SlackService.Response {
         _ = self
             .recover { SlackService.Response(error: $0) }
             .flatMapThrowing { response in
-                request.client
+                try request.client
                     .post(URI(string: responseURL)) {
-                        do {
-                            try $0.content.encode(response)
-                        } catch {
-                            throw ThrowError(error: error, sourceLocation: .capture())
-                        }
+                        try $0.content.encode(response)
                     }
+                    .catchError(.capture())
         }
 
         return request.eventLoop.future(now)
