@@ -22,7 +22,6 @@ public struct SlackCommand {
         help: String,
         allowedChannels: Set<String>,
         subCommands: [SlackCommand] = [],
-        request: Request,
         run: @escaping (SlackCommandMetadata, Request) throws -> EventLoopFuture<SlackService.Response>
     ) {
         self.name = name
@@ -38,9 +37,9 @@ public struct SlackCommand {
             Run `/\(name) <sub-command> help` for help on a sub-command.
             """
         }
-        self.run = { (metadata, container) throws -> EventLoopFuture<SlackService.Response> in
+        self.run = { (metadata, request) throws -> EventLoopFuture<SlackService.Response> in
             guard let subCommand = subCommands.first(where: { metadata.text.hasPrefix($0.name) }) else {
-                return try run(metadata, container)
+                return try run(metadata, request)
             }
 
             if metadata.textComponents[1] == "help" {
@@ -53,7 +52,7 @@ public struct SlackCommand {
                     text: metadata.textComponents.dropFirst().joined(separator: " "),
                     responseURL: metadata.responseURL
                 )
-                return try subCommand.run(metadata, container)
+                return try subCommand.run(metadata, request)
             }
         }
     }
@@ -188,7 +187,7 @@ extension EventLoopFuture where Value == SlackService.Response {
     public func replyLater(
         withImmediateResponse now: SlackService.Response,
         responseURL: String?,
-        request: Request
+        on request: Request
     ) -> EventLoopFuture<SlackService.Response> {
         guard let responseURL = responseURL else {
             return request.eventLoop.future(now)

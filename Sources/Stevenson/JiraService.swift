@@ -113,7 +113,7 @@ extension JiraService {
 
     public func create<Fields>(
         issue: Issue<Fields>,
-        request: Request
+        on request: Request
     ) throws -> EventLoopFuture<CreatedIssue> {
         let fullURL = URI(
             string: URL(string: "/rest/api/3/issue", relativeTo: baseURL)!.absoluteString

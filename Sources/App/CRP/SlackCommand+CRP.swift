@@ -1,4 +1,3 @@
-import Foundation
 import Vapor
 import Stevenson
 
@@ -17,7 +16,7 @@ extension SlackCommand {
             `/crp ios \(Option.branch.value):release/babylon/4.1.0`
             """,
             allowedChannels: ["ios-launchpad"],
-            run: { metadata, container in
+            run: { metadata, request in
                 guard let repo = metadata.textComponents.first else {
                     throw SlackService.Error.missingParameter(key: Option.repo.value)
                 }
@@ -39,19 +38,19 @@ extension SlackCommand {
                     branch: branch
                 )
 
-                return try github.changelog(for: release, on: container)
                     .catchError(.capture())
-                    .flatMap { (commitMessages: [String]) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
+                return try github.changelog(for: release, on: request)
+                    .flatMapThrowing { (commitMessages: [String]) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                         try jira.executeCRPTicketProcess(
                             commitMessages: commitMessages,
                             release: release,
                             repoMapping: repoMapping,
                             crpProjectID: JiraService.crpProjectID,
-                            container: container
+                            request: request
                         )
                     }
                     .catchError(.capture())
-                    .map { (crpIssue, report) in
+                    .map { (crpIssue, report) -> SlackService.Response in
                         let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
                         return SlackService.Response("""
                             ✅ CRP Ticket \(crpIssue.key) created.
@@ -64,8 +63,9 @@ extension SlackCommand {
                     }.replyLater(
                         withImmediateResponse: SlackService.Response("🎫 Creating ticket...", visibility: .channel),
                         responseURL: metadata.responseURL,
-                        on: container
-                )
-        })
+                        on: request
+                    )
+            }
+        )
     }
 }

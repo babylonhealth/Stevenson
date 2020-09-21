@@ -26,15 +26,16 @@ struct CommentAction: Content {
 
 extension GitHubService {
     func webhook<T: Decodable>(from request: Request) throws -> EventLoopFuture<T> {
-        let headers = request.http.headers
+        let headers = request.headers
 
         guard
-            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
+            headers.first(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
         else {
             throw Abort(.badRequest)
         }
 
-        return try request.content.decode(T.self)
+        let requestContent = try request.content.decode(T.self)
+        return request.eventLoop.future(requestContent)
     }
 }
 
@@ -45,12 +46,13 @@ extension GitHubService {
         on request: Request,
         ci: CircleCIService
     ) throws -> EventLoopFuture<Response> {
-        return try webhook(from: request).flatMap { (action: CommentAction) in
-            let headers = request.http.headers
+        try webhook(from: request)
+            .flatMapThrowing { (action: CommentAction) -> EventLoopFuture<Response> in
+            let headers = request.headers
             let textComponents = action.comment.body.split(separator: " ")
 
             guard
-                headers.firstValue(name: .init("X-GitHub-Event")) == "issue_comment",
+                headers.first(name: .init("X-GitHub-Event")) == "issue_comment",
                 action.comment.body.hasPrefix("@ios-bot-babylon"),
                 textComponents.count >= 2,
                 let repo = RepoMapping.all.first(where: { _, mapping in
@@ -58,14 +60,14 @@ extension GitHubService {
                 })?.value.repository
             else {
                 // return ok code so that we don't have hooks reported as failed on github
-                return request.future(request.response(http: .init(status: .ok)))
+                return request.eventLoop.future(Response(status: .ok))
             }
 
             return try self.pullRequest(
                 number: action.issue.number,
                 in: repo,
                 on: request
-            ).flatMap { pullRequest in
+            ).flatMapThrowing { pullRequest in
                 let branch = pullRequest.head.ref
 
                 if textComponents[1] == "fastlane" {
@@ -74,14 +76,14 @@ extension GitHubService {
                         branch: branch,
                         project: repo.fullName,
                         on: request
-                    ).flatMap { _ in try HTTPResponse(status: .ok).encode(for: request) }
+                    ).flatMapThrowing { _ in try HTTPResponseStatus.ok.encode(for: request) }
                 } else {
                     return try ci.runPipeline(
                         textComponents: Array(textComponents.dropFirst()),
                         branch: branch,
                         project: repo.fullName,
                         on: request
-                    ).flatMap { _ in try HTTPResponse(status: .ok).encode(for: request) }
+                    ).flatMapThrowing { _ in try HTTPResponseStatus.ok.encode(for: request) }
                 }
             }
         }.catchFlatMap { error -> EventLoopFuture<Response> in

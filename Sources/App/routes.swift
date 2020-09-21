@@ -23,13 +23,13 @@ public func routes(
     }
 
     commands.forEach { command in
-        app.post(command.name) { req -> EventLoopFuture<Response> in
+        app.post(PathComponent(stringLiteral: command.name)) { req -> EventLoopFuture<Response> in
             do {
                 return try attempt {
                     try app.slack.handle(command: command, on: req)
                 }
             } catch {
-                return try SlackService.Response(error: error).encode(for: req)
+                return SlackService.Response(error: error).encodeResponse(for: req)
             }
         }
     }

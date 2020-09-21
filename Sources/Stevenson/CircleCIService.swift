@@ -61,10 +61,10 @@ extension CircleCIService {
         parameters: [String: String],
         project: String,
         branch: String,
-        req: Request
+        on request: Request
     ) throws -> EventLoopFuture<BuildResponse> {
         let url = URI(string: buildURL(project: project, branch: branch).absoluteString)
-        return req.client.post(url, headers: headers) {
+        return request.client.post(url, headers: headers) {
             try $0.content.encode(BuildRequest(buildParameters: parameters))
         }.flatMapThrowing {
             try $0.content.decode(BuildResponse.self)
@@ -153,11 +153,11 @@ extension CircleCIService {
         parameters: [String: PipelineRequest.Parameter],
         project: String,
         branch: String,
-        req: Request
+        on request: Request
     ) throws -> EventLoopFuture<PipelineResponse> {
         let url = URI(string: pipelineURL(project: project).absoluteString)
 
-        return req.client.post(url, headers: headers) {
+        return request.client.post(url, headers: headers) {
             try $0.content.encode(
                 PipelineRequest(branch: branch, parameters: parameters),
                 using: JSONEncoder()
@@ -168,11 +168,11 @@ extension CircleCIService {
             // workflows are not created immediately so we wait a bit
             // hoping that when we request pipeline the workflow id will be there
             sleep(5)
-            return req.client.get(
+            return request.client.get(
                 URI(string: self.pipelineURL(pipelineID: pipelineID.id).absoluteString),
                 headers: self.headers
             ).and(
-                req.client.get(
+                request.client.get(
                     URI(string: self.pipelineWorkflowsURL(pipelineID: pipelineID.id).absoluteString),
                     headers: self.headers
                 )

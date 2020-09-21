@@ -57,7 +57,7 @@ extension GitHubService {
     /// - Returns: List of commits between the release branch and the last tag matching the release.appName
     public func changelog(
         for release: Release,
-        request: Request
+        on request: Request
     ) throws -> EventLoopFuture<[String]> {
         try releases(
             in: release.repository,
