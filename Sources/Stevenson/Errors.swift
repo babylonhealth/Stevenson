@@ -1,4 +1,3 @@
-import Foundation
 import Vapor
 
 extension SlackService {
@@ -9,7 +8,7 @@ extension SlackService {
         case invalidParameter(key: String, value: String, expected: String)
 
         public var identifier: String {
-            return "SlackService.Error"
+            "SlackService.Error"
         }
 
         public var reason: String {
@@ -30,7 +29,8 @@ extension SlackService {
     }
 }
 
-protocol FailableService: Service {
+#warning("TODO")
+protocol FailableService { //: Service {
     associatedtype ServiceError: Error & Decodable & DebuggableError
 }
 
@@ -39,55 +39,45 @@ extension FailableService {
         _ errorSource: ErrorSource,
         _ makeRequest: () throws -> EventLoopFuture<Response>
     ) throws -> EventLoopFuture<T> {
-        return try makeRequest()
-            .flatMap { response in
-                try response.content
-                    .decode(T.self)
-                    .catchFlatMap { _ in
-                        try response.content
-                            .decode(ServiceError.self)
-                            .thenThrowing { throw $0 }
+        try makeRequest()
+            .flatMapThrowing { response -> T in
+                do {
+                    return try response.content
+                        .decode(T.self)
+                } catch {
+                    throw try response.content
+                        .decode(ServiceError.self)
                 }
             }
-            .catchError(errorSource)
     }
 
     public func request(
         _ errorSource: ErrorSource,
         _ makeRequest: () throws -> EventLoopFuture<Response>
     ) throws -> EventLoopFuture<Void> {
-        return try makeRequest()
-            .flatMap { response in
-                guard response.http.status == .noContent else {
-                    return try response.content
+        try makeRequest()
+            .flatMapThrowing { (response) in
+                guard response.status == .noContent else {
+                    throw try response.content
                         .decode(ServiceError.self)
-                        .thenThrowing { throw $0 }
                 }
-                return response.future(())
             }
-            .catchError(errorSource)
     }
 }
 
 extension CircleCIService: FailableService {
     struct ServiceError: Swift.Error, Decodable, DebuggableError {
         let message: String
-        let identifier: String = "CircleCIService"
-
-        var reason: String {
-            return message
-        }
+        var identifier: String { "CircleCIService" }
+        var reason: String { message }
     }
 }
 
 extension GitHubService: FailableService {
     struct ServiceError: Swift.Error, Decodable, DebuggableError {
         let message: String
-        let identifier: String = "GitHubService"
-
-        var reason: String {
-            return message
-        }
+        var identifier: String { "GitHubService" }
+        var reason: String { message }
     }
 }
 
@@ -96,7 +86,7 @@ extension JiraService: FailableService {
         // See https://developer.atlassian.com/cloud/jira/platform/rest/v3/#status-codes for schema
         public let errorMessages: [String]
         public let errors: [String: String]
-        public let identifier: String = "JiraService"
+        public var identifier: String { "JiraService" }
 
         public var reason: String {
             let allErrors = errorMessages + errors.sorted(by: <).map { "\($0): \($1)" }
@@ -165,13 +155,13 @@ public struct ThrowError: Error, DebuggableError {
 #if !DEBUG
 extension SlackService.Error {
     public var errorDescription: String? {
-        return reason
+        reason
     }
 }
 
 extension ThrowError: LocalizedError {
     public var errorDescription: String? {
-        return reason
+        reason
     }
 }
 #endif
@@ -204,14 +194,6 @@ public func attempt<T>(
         return try expr()
     } catch {
         throw ThrowError(error: error, file: "\(file)", line: line, column: column, function: "\(function)")
-    }
-}
-
-extension EventLoopFuture {
-    public func catchError(_ errorSource: ErrorSource) -> EventLoopFuture<Expectation> {
-        return catchFlatMap { (error) -> EventLoopFuture<T> in
-            throw ThrowError(error: error, sourceLocation: errorSource)
-        }
     }
 }
 
