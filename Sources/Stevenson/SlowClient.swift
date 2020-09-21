@@ -62,7 +62,7 @@ private final class SlowMode<T, U> {
             self.queue.async {
                 if success {
                     self.delayUntil = delayUntil
-                    promise.succeed(result: result)
+                    promise.succeed(result)
                 } else {
                     // try again
                     self.deferredTasks.append(task)
@@ -73,7 +73,7 @@ private final class SlowMode<T, U> {
         }
 
         result.whenFailure { error in
-            promise.fail(error: error)
+            promise.fail(error)
 
             self.queue.async {
                 self.dispatchNext()
@@ -122,38 +122,43 @@ public final class SlowClient {
     }
 
     func send(_ request: Request) -> EventLoopFuture<Response> {
-        return slowMode.process(request, on: request.eventLoop)
+        slowMode.process(request, on: request.eventLoop)
     }
 }
 
 extension SlowClient {
-    func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
-        return send(.GET, headers: headers, to: url, on: container, beforeSend: beforeSend)
+    func get(_ url: URI, headers: HTTPHeaders = [:], on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+        send(.GET, headers: headers, to: url, on: application, beforeSend: beforeSend)
     }
 
-    func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
-        return send(.POST, headers: headers, to: url, on: container, beforeSend: beforeSend)
+    func post(_ url: URI, headers: HTTPHeaders = [:], on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+        send(.POST, headers: headers, to: url, on: application, beforeSend: beforeSend)
     }
 
-    func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
-        return send(.PATCH, headers: headers, to: url, on: container, beforeSend: beforeSend)
+    func patch(_ url: URI, headers: HTTPHeaders = [:], on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+        send(.PATCH, headers: headers, to: url, on: application, beforeSend: beforeSend)
     }
 
-    func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
-        return send(.PUT, headers: headers, to: url, on: container, beforeSend: beforeSend)
+    func put(_ url: URI, headers: HTTPHeaders = [:], on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+        send(.PUT, headers: headers, to: url, on: application, beforeSend: beforeSend)
     }
 
-    func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
-        return send(.DELETE, headers: headers, to: url, on: container, beforeSend: beforeSend)
+    func delete(_ url: URI, headers: HTTPHeaders = [:], on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+        send(.DELETE, headers: headers, to: url, on: application, beforeSend: beforeSend)
     }
 
-    func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, on container: Container, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
+    func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URI, on application: Application, beforeSend: (Request) throws -> () = { _ in }) -> EventLoopFuture<Response> {
         do {
-            let req = Request(http: .init(method: method, url: url, headers: headers), using: container)
+            let req = Request(
+                application: application,
+                method: method,
+                url: url,
+                on: application.client.eventLoop
+            )
             try beforeSend(req)
             return send(req)
         } catch {
-            return container.eventLoop.newFailedFuture(error: error)
+            return application.client.eventLoop.makeFailedFuture(error)
         }
     }
 }
