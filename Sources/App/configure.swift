@@ -69,14 +69,21 @@ public func configure(_ app: Application) throws {
         token: try attempt { Environment.githubToken }
     )
 
+    guard app.slack != nil,
+          let ci = app.ci,
+          let jira = app.jira,
+          let github = app.github else {
+        fatalError("Services are not set up")
+    }
+
     try routes(
         app,
         commands: [
-            .stevenson(app.ci, app.jira, app.github),
-            .fastlane(app.ci),
-            .appcenter(app.ci),
-            .testflight(app.ci),
-            .crp(app.jira, app.github)
+            .stevenson(ci, jira, github),
+            .fastlane(ci),
+            .appcenter(ci),
+            .testflight(ci),
+            .crp(jira, github)
         ]
     )
 }

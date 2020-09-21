@@ -105,7 +105,7 @@ public struct SlackCommandMetadata: Content {
 // MARK: Service
 
 extension Application {
-    public var slack: SlackService {
+    public var slack: SlackService? {
         get {
             self.storage[SlackServiceKey.self]
         }

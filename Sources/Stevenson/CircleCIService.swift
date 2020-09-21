@@ -1,7 +1,7 @@
 import Vapor
 
 extension Application {
-    public var ci: CircleCIService {
+    public var ci: CircleCIService? {
         get {
             self.storage[CircleCIServiceKey.self]
         }

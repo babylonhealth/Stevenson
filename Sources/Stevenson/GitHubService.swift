@@ -1,7 +1,7 @@
 import Vapor
 
 extension Application {
-    public var github: GitHubService {
+    public var github: GitHubService? {
         get {
             self.storage[GitHubServiceKey.self]
         }
