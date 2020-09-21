@@ -62,6 +62,7 @@ extension FailableService {
                         .decode(ServiceError.self)
                 }
             }
+            .catchError(.capture())
     }
 }
 

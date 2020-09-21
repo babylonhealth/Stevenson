@@ -49,7 +49,7 @@ enum CRPProcess {
 
         return try github.changelog(for: release, on: request)
             .catchError(.capture())
-            .flatMap { (commitMessages: [String]) -> EventLoopFuture<JiraService.CreatedIssue> in
+            .flatMapThrowing { (commitMessages: [String]) -> EventLoopFuture<JiraService.CreatedIssue> in
 
                 let changelogSections = ChangelogSection.makeSections(from: commitMessages, for: release)
 

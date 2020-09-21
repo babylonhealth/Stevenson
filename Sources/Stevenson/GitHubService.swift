@@ -163,8 +163,10 @@ extension GitHubService {
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.get(url, headers: headers).flatMapThrowing {
-            try $0.content.decode(PullRequest.self)
-        }
+        return try request.client.get(url, headers: headers)
+            .catchError(.capture())
+            .flatMapThrowing {
+                try $0.content.decode(PullRequest.self)
+            }
     }
 }
