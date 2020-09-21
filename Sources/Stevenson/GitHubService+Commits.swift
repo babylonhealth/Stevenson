@@ -39,9 +39,10 @@ extension GitHubService {
                 relativeTo: baseURL
             )!.absoluteString
         )
-        return request.client.get(url, headers: headers).flatMapThrowing {
-            try $0.content.decode(CommitList.self)
-        }
+        return request.client.get(url, headers: headers)
+            .flatMapThrowing { response -> CommitList in
+                try response.content.decode(CommitList.self)
+            }
     }
 
     /// Return the list of commits between a release branch and the last matching tag.
