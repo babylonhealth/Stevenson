@@ -1,5 +1,16 @@
 import Vapor
 
+extension Application {
+    var github: GitHubService {
+        get {
+            self.storage[GitHubServiceKey.self]
+        }
+        set {
+            self.storage[GitHubServiceKey.self] = newValue
+        }
+    }
+}
+
 struct GitHubServiceKey: StorageKey {
     typealias Value = GitHubService
 }

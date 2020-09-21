@@ -92,10 +92,19 @@ private final class SlowMode<T, U> {
 
 // MARK: SlowClient
 
+extension Request {
+    // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
+    var slowClient: SlowClient {
+        .init(client: self.client)
+    }
+}
+
 public final class SlowClient {
     private let slowMode: SlowMode<Request, Response>
+    let client: Client
 
-    public init() {
+    public init(client: Client) {
+        self.client = client
         self.slowMode = SlowMode(
             work: { (req: Request) -> EventLoopFuture<Response> in
                 let clientRequest = ClientRequest(
@@ -105,7 +114,7 @@ public final class SlowClient {
                     body: req.body.data
                 )
 
-                return req.client
+                return client
                     .send(clientRequest)
                     .encodeResponse(for: req)
             },

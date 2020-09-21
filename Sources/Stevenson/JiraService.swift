@@ -1,5 +1,16 @@
 import Vapor
 
+extension Application {
+    var jira: JiraService {
+        get {
+            self.storage[JiraServiceKey.self]
+        }
+        set {
+            self.storage[JiraServiceKey.self] = newValue
+        }
+    }
+}
+
 struct JiraServiceKey: StorageKey {
     typealias Value = JiraService
 }

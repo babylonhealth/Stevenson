@@ -105,6 +105,17 @@ public struct SlackCommandMetadata: Content {
 
 // MARK: Service
 
+extension Application {
+    var slack: SlackService {
+        get {
+            self.storage[SlackServiceKey.self]
+        }
+        set {
+            self.storage[SlackServiceKey.self] = newValue
+        }
+    }
+}
+
 struct SlackServiceKey: StorageKey {
     typealias Value = SlackService
 }
@@ -173,27 +184,30 @@ public struct SlackService {
     }
 }
 
-extension EventLoopFuture where T == SlackService.Response {
+extension EventLoopFuture where Value == SlackService.Response {
     public func replyLater(
         withImmediateResponse now: SlackService.Response,
         responseURL: String?,
-        on container: Container
+        request: Request
     ) -> EventLoopFuture<SlackService.Response> {
         guard let responseURL = responseURL else {
-            return container.eventLoop.future(now)
+            return request.eventLoop.future(now)
         }
 
         _ = self
-            .mapIfError { SlackService.Response(error: $0) }
-            .flatMap { response in
-                try container.client()
-                    .post(responseURL) {
-                        try $0.content.encode(response)
+            .recover { SlackService.Response(error: $0) }
+            .flatMapThrowing { response in
+                request.client
+                    .post(URI(string: responseURL)) {
+                        do {
+                            try $0.content.encode(response)
+                        } catch {
+                            throw ThrowError(error: error, sourceLocation: .capture())
+                        }
                     }
-                    .catchError(.capture())
         }
 
-        return container.eventLoop.future(now)
+        return request.eventLoop.future(now)
     }
 }
 

@@ -49,7 +49,6 @@ private let jiraProjects = [
 
 /// Called before your application initializes.
 public func configure(_ app: Application) throws {
-
     app.slack = .init(
         verificationToken: try attempt { Environment.slackToken },
         oauthToken: try attempt { Environment.slackOAuthToken }
@@ -80,47 +79,4 @@ public func configure(_ app: Application) throws {
             .crp(app.jira, app.github)
         ]
     )
-}
-
-extension Application {
-    var slack: SlackService {
-        get {
-            self.storage[SlackServiceKey.self]
-        }
-        set {
-            self.storage[SlackServiceKey.self] = newValue
-        }
-    }
-
-    var ci: CircleCIService {
-        get {
-            self.storage[CircleCIServiceKey.self]
-        }
-        set {
-            self.storage[CircleCIServiceKey.self] = newValue
-        }
-    }
-
-    var jira: JiraService {
-        get {
-            self.storage[JiraServiceKey.self]
-        }
-        set {
-            self.storage[JiraServiceKey.self] = newValue
-        }
-    }
-
-    var github: GitHubService {
-        get {
-            self.storage[GitHubServiceKey.self]
-        }
-        set {
-            self.storage[GitHubServiceKey.self] = newValue
-        }
-    }
-
-    // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
-    var slowClient: SlowClient {
-        .init()
-    }
 }

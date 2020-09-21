@@ -1,5 +1,16 @@
 import Vapor
 
+extension Application {
+    var ci: CircleCIService {
+        get {
+            self.storage[CircleCIServiceKey.self]
+        }
+        set {
+            self.storage[CircleCIServiceKey.self] = newValue
+        }
+    }
+}
+
 struct CircleCIServiceKey: StorageKey {
     typealias Value = CircleCIService
 }
