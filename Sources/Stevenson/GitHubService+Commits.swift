@@ -63,18 +63,26 @@ extension GitHubService {
         try releases(
             in: release.repository,
             request: request
-        ).flatMapThrowing { (tags: [String]) in
+        )
+        .flatMapThrowing { (tags: [String]) -> String in
             guard let latestAppTag = tags.first(where: release.isMatchingTag) else {
                 throw ServiceError(message: "Failed to find previous tag matching '\(release.appName)/*' to build the CHANGELOG")
             }
 
-            return try self.commitList(
-                in: release.repository,
-                from: latestAppTag,
-                to: release.branch,
-                request: request
-            ).map {
-                $0.allMessages(includeDetails: false)
+            return latestAppTag
+        }
+        .flatMap { (latestAppTag: String) -> EventLoopFuture<[String]> in
+            do {
+                return try self.commitList(
+                    in: release.repository,
+                    from: latestAppTag,
+                    to: release.branch,
+                    request: request
+                ).map {
+                    $0.allMessages(includeDetails: false)
+                }
+            } catch {
+                return request.eventLoop.makeFailedFuture(error)
             }
         }
     }
