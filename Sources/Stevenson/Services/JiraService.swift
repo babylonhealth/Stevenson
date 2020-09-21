@@ -122,7 +122,7 @@ extension JiraService {
         let logMessage = "Creating a new issue <\(issue.fields.summary)> on board #\(issue.fields.project.id)"
         self.logInfo(logMessage)
 
-        return try request.slowClient.post(
+        let response = try request.slowClient.post(
             fullURL,
             headers: self.headers,
             on: request.application
@@ -131,13 +131,13 @@ extension JiraService {
             self.logRequest(logMessage, request)
         }
         .catchError(.capture())
-        .flatMapThrowing {
-            try $0.content.decode(CreatedIssue.self)
+
+        response.whenSuccess { response in
+            self.logResponse(logMessage, response)
         }
-        #warning("TODO log success")
-//        .whenSuccess { response in
-//            self.logResponse(logMessage, response)
-//        }
+
+        return response
+            .flatMapThrowing { try $0.content.decode(CreatedIssue.self) }
     }
 }
 
@@ -177,7 +177,7 @@ extension JiraService {
         let logMessage = "Fetching JIRA versions for board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return try request.slowClient.get(
+        let response = try request.slowClient.get(
             fullURL,
             headers: self.headers,
             on: request.application
@@ -185,13 +185,13 @@ extension JiraService {
             self.logRequest(logMessage, request)
         }
         .catchError(.capture())
-        .flatMapThrowing {
-            try $0.content.decode([Version].self)
+
+        response.whenSuccess { response in
+            self.logResponse(logMessage, response)
         }
-        #warning("TODO log success")
-//        .whenSuccess { response in
-//            self.logResponse(logMessage, response)
-//        }
+
+        return response
+            .flatMapThrowing { try $0.content.decode([Version].self) }
     }
 
     public func createVersion(
@@ -206,7 +206,7 @@ extension JiraService {
         let logMessage = "Creating a new JIRA version <\(version.name)> on board <\(projectKey)>"
         self.logInfo(logMessage)
 
-        return try request.slowClient.get(
+        let response = try request.slowClient.get(
             fullURL,
             headers: self.headers,
             on: request.application
@@ -215,13 +215,13 @@ extension JiraService {
             self.logRequest(logMessage, request)
         }
         .catchError(.capture())
-        .flatMapThrowing {
-            try $0.content.decode(Version.self)
+
+        response.whenSuccess { response in
+            self.logResponse(logMessage, response)
         }
-        #warning("TODO log success")
-//        .whenSuccess { response in
-//            self.logResponse(logMessage, response)
-//        }
+
+        return response
+            .flatMapThrowing { try $0.content.decode(Version.self) }
     }
 }
 
@@ -255,7 +255,7 @@ extension JiraService {
         let logMessage = "Setting Fix Version field to <ID \(version.id ?? "nil")> (<\(version.name)>) for ticket <\(ticket)>"
         self.logInfo(logMessage)
 
-        return try request.slowClient.put(
+        let response = try request.slowClient.put(
             fullURL,
             headers: self.headers,
             on: request.application
@@ -264,11 +264,13 @@ extension JiraService {
             self.logRequest(logMessage, request)
         }
         .catchError(.capture())
-        .map { _ in () }
-        #warning("TODO log success")
-//        .whenSuccess { response in
-//            self.logResponse(logMessage, response)
-//        }
+
+        response.whenSuccess { response in
+            self.logResponse(logMessage, response)
+        }
+
+        return response
+            .map { _ in () }
     }
 }
 
@@ -290,9 +292,9 @@ extension JiraService {
 
 extension JiraService {
     public func browseURL(issue: CreatedIssue) -> String {
-        return self.browseURL(issue: issue.key)
+        self.browseURL(issue: issue.key)
     }
     public func browseURL(issue: String) -> String {
-        return "\(self.baseURL)/browse/\(issue)"
+        "\(self.baseURL)/browse/\(issue)"
     }
 }
