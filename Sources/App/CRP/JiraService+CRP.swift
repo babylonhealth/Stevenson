@@ -89,14 +89,18 @@ extension JiraService {
 
         return try self.create(issue: crpIssue, on: request)
             .catchError(.capture())
-            .flatMapThrowing { (crpIssue: JiraService.CreatedIssue) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
+            .flatMap { (crpIssue: JiraService.CreatedIssue) -> EventLoopFuture<(JiraService.CreatedIssue, JiraService.FixVersionReport)> in
                 // Create JIRA versions on each board then set Fixed Versions to that new version on each board's ticket included in Changelog
-                return try self.createAndSetFixVersions(
-                    changelogSections: changelogSections,
-                    versionName: jiraVersionName,
-                    on: request
-                ).map { (crpIssue, $0) }
-        }
+                do {
+                    return try self.createAndSetFixVersions(
+                        changelogSections: changelogSections,
+                        versionName: jiraVersionName,
+                        on: request
+                    ).map { (crpIssue, $0) }
+                } catch {
+                    return request.eventLoop.makeFailedFuture(error)
+                }
+            }
     }
 }
 
@@ -336,15 +340,15 @@ extension JiraService {
     ) throws -> EventLoopFuture<FixVersionReport> {
         try changelogSections
             .compactMap { $0.tickets() }
-            .map { (project: (key: String, tickets: [String])) -> EventLoopFuture<FixVersionReport> in
-                guard let projectID = self.knownProjects[project.key] else {
-                    return container.future(
-                        FixVersionReport(.notInWhitelist(project: project.key))
+            .compactMap { (key: String, tickets: [String]) -> EventLoopFuture<FixVersionReport> in
+                guard let projectID = self.knownProjects[key] else {
+                    return request.eventLoop.future(
+                        FixVersionReport(.notInWhitelist(project: key))
                     )
                 }
 
                 return try self.getVersions(project: projectID, on: request)
-                    .flatMap { allVersions in
+                    .flatMapThrowing { allVersions -> EventLoopFuture<Version> in
                         if let existingVersion = allVersions.first(where: { $0.name == versionName }) {
                             return request.eventLoop.future(existingVersion)
                         } else {
@@ -357,30 +361,36 @@ extension JiraService {
                             return try self.createVersion(version, on: request)
                         }
                     }
-                    .flatMapThrowing { try self.batchSetFixVersions($0, tickets: project.tickets, on: request) }
-                    .mapIfError { error in
-                        return FixVersionReport(.releaseCreationFailed(project: project.key, error: error))
+                    .flatMap {
+                        $0.flatMap { version in
+                            self.batchSetFixVersions(version, tickets: tickets, on: request)
+                        }
+                    }.recover { error in
+                        FixVersionReport(.releaseCreationFailed(project: key, error: error))
                     }
             }
-            .map(to: FixVersionReport.self, on: request, FixVersionReport.init) // collect an array of reports into a single one
+            .flatten(on: request.eventLoop)
+            .map(FixVersionReport.init(reports:)) // collect an array of reports into a single one
     }
 
     func batchSetFixVersions(
         _ version: JiraService.Version,
         tickets: [String],
         on request: Request
-    ) throws -> EventLoopFuture<FixVersionReport> {
-        try tickets
+    ) -> EventLoopFuture<FixVersionReport> {
+        tickets
             .map { (ticket: String) -> EventLoopFuture<FixVersionReport> in
                 do {
-                    try self.setFixVersion(version, for: ticket, on: request)
+                    return try self.setFixVersion(version, for: ticket, on: request)
                         .map { _ in FixVersionReport() }
                 } catch {
                     let url = self.browseURL(issue: ticket)
-                    return FixVersionReport(.updateFixVersionFailed(ticket: ticket, url: url, error: error))
+                    let failure = FixVersionReport(.updateFixVersionFailed(ticket: ticket, url: url, error: error))
+                    return request.eventLoop.makeSucceededFuture(failure)
                 }
             }
-            .map(to: FixVersionReport.self, on: request, FixVersionReport.init) // collect an array of reports into a single one
+            .flatten(on: request.eventLoop)
+            .map(FixVersionReport.init(reports:)) // collect an array of reports into a single one
     }
 }
 
