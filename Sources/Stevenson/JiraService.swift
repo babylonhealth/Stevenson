@@ -1,7 +1,7 @@
 import Vapor
 
 extension Application {
-    var jira: JiraService {
+    public var jira: JiraService {
         get {
             self.storage[JiraServiceKey.self]
         }

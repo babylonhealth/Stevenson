@@ -8,9 +8,9 @@ extension JiraService {
             // See spec at: https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
 
             public struct Document: Content {
-                let type = "doc"
+                var type: String { "doc" }
                 let content: [DocContent]
-                let version = 1
+                var version: Int { 1 }
                 public init(content: [DocContent]) {
                     self.content = content
                 }
