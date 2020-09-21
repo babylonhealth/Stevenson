@@ -50,17 +50,21 @@ extension SlackCommand {
                         )
                     }
                     .catchError(.capture())
-                    .map { (crpIssue, report) -> SlackService.Response in
-                        let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
-                        return SlackService.Response("""
-                            ✅ CRP Ticket \(crpIssue.key) created.
-                            \(jira.baseURL)/browse/\(crpIssue.key)
-                            \(status)
-                            """,
-                            attachments: report.asSlackAttachments(),
-                            visibility: .channel
-                        )
-                    }.replyLater(
+                    .flatMap {
+                        $0.map { (crpIssue, report) -> SlackService.Response in
+                            let status = report.statusText(releaseName: repoMapping.crp.jiraVersionName(release))
+
+                            return SlackService.Response("""
+                                ✅ CRP Ticket \(crpIssue.key) created.
+                                \(jira.baseURL)/browse/\(crpIssue.key)
+                                \(status)
+                                """,
+                                attachments: report.asSlackAttachments(),
+                                visibility: .channel
+                            )
+                        }
+                    }
+                    .replyLater(
                         withImmediateResponse: SlackService.Response("🎫 Creating ticket...", visibility: .channel),
                         responseURL: metadata.responseURL,
                         on: request
