@@ -29,8 +29,7 @@ extension SlackService {
     }
 }
 
-#warning("TODO")
-protocol FailableService { //: Service {
+protocol FailableService {
     associatedtype ServiceError: Error & Decodable & DebuggableError
 }
 
