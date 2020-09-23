@@ -8,6 +8,7 @@ private let jiraProjects = [
     "ANDRP" : 17264, // Android Platform
     "APPTS" : 16875, // Booking/Appointments
     "AV"    : 16942, // Onboarding and Navigation (ex Core Experience / Avalon)
+    "AVC"   : 16852, // Audio Video Call (formerly Multimedia "MUL" project)
     "CE"    : 16937, // Consultation Experience
     "CNSMR" : 16968, // Consumer Apps (Native/Core)
     "COCO"  : 17344, // Continuous Compliance
@@ -25,7 +26,6 @@ private let jiraProjects = [
     "MP"    : 17494, // Monitor Product
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
-    "MUL"   : 16852, // Multimedia
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
     "PAYE"  : 17510, // Payments & Eligibility
