@@ -23,6 +23,7 @@ private let jiraProjects = [
     "IOSP"  : 17263, // iOS Native Apps Platform
     "LANG"  : 17168, // Language Services
     "MC"    : 17006, // Member Communications (next-gen)
+    "MERC"  : 17568, // Mercury Team
     "MP"    : 17494, // Monitor Product
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
