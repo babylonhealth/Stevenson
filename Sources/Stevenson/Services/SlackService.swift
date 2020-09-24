@@ -96,7 +96,7 @@ public struct SlackCommandMetadata: Content {
             channelName:    container.decode(String.self, forKey: .channelName),
             command:        container.decode(String.self, forKey: .command),
             text:           container.decode(String.self, forKey: .text),
-            responseURL:    container.decode(String.self, forKey: .responseURL)
+            responseURL:    container.decodeIfPresent(String.self, forKey: .responseURL)
         )
     }
 }
