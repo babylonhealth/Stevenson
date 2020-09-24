@@ -537,7 +537,7 @@ extension AppTests {
                   "content" : [
                     {
                       "type" : "text",
-                      "text" : "There are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:"
+                      "text" : "The headlines for this release are: \nThere are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:"
                     }
                   ]
                 }

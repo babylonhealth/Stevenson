@@ -207,7 +207,7 @@ extension JiraService {
             self.environments = environments
             self.releaseType = releaseType
             self.targetDate = targetDate
-            self.changeScope = FieldType.TextArea.Document(text: "There are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:")
+            self.changeScope = FieldType.TextArea.Document(text: "The headlines for this release are: \nThere are a number of tickets from the Changelog that are yet to be moved to a completed status or resolution in their respective workflow. Each of these have been reviewed and commented on with why they do not impact the release, yet are in the codebase. These tickets are:")
             self.jiraReleaseURL = "\(jiraBaseURL)/secure/Dashboard.jspa?selectPageId=15452"
             self.githubReleaseURL = "https://github.com/\(release.repository.fullName)/releases/tag/\(release.appName)/\(release.version)"
 
