@@ -8,8 +8,8 @@ public func routes(
     app.get { req in
         return "It works!"
     }
-    
-    app.post("github/comment") { (request) -> EventLoopFuture<Response> in
+
+    app.post("github", "comment") { (request) -> EventLoopFuture<Response> in
         guard let github = app.github,
               let ci = app.ci else {
             fatalError("GitHub and CI are not set up")
@@ -17,7 +17,7 @@ public func routes(
         return try github.issueComment(on: request, ci: ci)
     }
 
-    app.post("api/crp") { (request) -> EventLoopFuture<Response> in
+    app.post("api", "crp") { (request) -> EventLoopFuture<Response> in
         guard let github = app.github,
               let jira = app.jira,
               let slack = app.slack else {
