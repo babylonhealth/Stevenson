@@ -19,10 +19,10 @@ public func routes(
 
     app.post("github", "pr") { (request) -> EventLoopFuture<Response> in
         guard let github = app.github,
-              let ci = app.ci else {
-            fatalError("GitHub and CI are not set up")
+              let jira = app.jira else {
+            fatalError("GitHub, Jira are not set up")
         }
-        try github.pullrequestEvent(on: request, jira: jira)
+        return try github.pullRequestEvent(on: request, jira: jira)
     }
 
     app.post("api", "crp") { (request) -> EventLoopFuture<Response> in

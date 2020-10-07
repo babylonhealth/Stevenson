@@ -1,10 +1,6 @@
 import Vapor
 import Stevenson
 
-struct PingAction: Content {
-    let zen: String
-}
-
 struct CommentAction: Content {
     let action: String
     let comment: Comment
@@ -21,21 +17,6 @@ struct CommentAction: Content {
 
     struct Repository: Content {
         let full_name: String
-    }
-}
-
-extension GitHubService {
-    func webhook<T: Decodable>(from request: Request) throws -> EventLoopFuture<T> {
-        let headers = request.headers
-
-        guard
-            headers.first(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
-        else {
-            throw Abort(.badRequest)
-        }
-
-        let requestContent = try request.content.decode(T.self)
-        return request.eventLoop.future(requestContent)
     }
 }
 

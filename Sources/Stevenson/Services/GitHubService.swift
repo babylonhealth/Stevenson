@@ -176,15 +176,12 @@ extension GitHubService {
 }
 
 extension GitHubService {
-    public func webhook<T: Decodable>(from request: Request) throws -> Future<T> {
-        let headers = request.http.headers
-
-        guard
-            headers.firstValue(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true
-            else {
-                throw Abort(.badRequest)
+    public func webhook<T: Decodable>(from request: Request) throws -> EventLoopFuture<T> {
+        guard request.headers.first(name: .userAgent)?.hasPrefix("GitHub-Hookshot/") == true else {
+            throw Abort(.badRequest)
         }
 
-        return try request.content.decode(T.self)
+        let requestContent = try request.content.decode(T.self)
+        return request.eventLoop.future(requestContent)
     }
 }

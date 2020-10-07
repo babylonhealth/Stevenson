@@ -43,11 +43,12 @@ extension GitHubService {
 }
 
 extension GitHubService {
-    func pullrequestEvent(
+    func pullRequestEvent(
         on request: Request,
         jira: JiraService
-    ) throws -> Future<Response> {
-        try webhook(from: request).flatMap { (action: CommentAction) in
+    ) throws -> EventLoopFuture<Response> {
+        try webhook(from: request)
+            .flatMapThrowing { (action: CommentAction) in
             let headers = request.http.headers
 
             #warning("TODO check for `action`")
@@ -72,10 +73,10 @@ extension GitHubService {
                 )
                 return request.future(request.response(http: .init(status: .ok)))
             }
-        }.catchFlatMap { error -> Future<Response> in
+        }.catchFlatMap { error -> EventLoopFuture<Response> in
             try request.content.decode(PingAction.self)
-                .map { _ in HTTPResponse(status: .ok) }
-                .catchMap { _ in HTTPResponse(status: .badRequest) }
+                .map { _ in HTTPResponseStatus.ok }
+                .catchMap { _ in HTTPResponseStatus.badRequest }
                 .encode(for: request)
         }
     }
