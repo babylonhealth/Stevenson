@@ -46,7 +46,7 @@ extension JiraService {
             jiraBaseURL: jiraBaseURL,
             crpProjectID: crpProjectID,
             summary: crpConfig.jiraSummary(release),
-            environments: [crpConfig.environment],
+            environments: crpConfig.environment,
             release: release,
             releaseType: .init(version: release.version),
             targetDate: targetDate ?? guessTargetDate(),

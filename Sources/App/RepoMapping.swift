@@ -6,7 +6,7 @@ struct RepoMapping {
     let crp: CRP
 
     struct CRP {
-        let environment: JiraService.CRPIssueFields.Environment
+        let environment: [JiraService.CRPIssueFields.Environment]
         let jiraVersionName: (GitHubService.Release) -> String
         let jiraSummary: (GitHubService.Release) -> String
     }
@@ -20,7 +20,7 @@ extension RepoMapping {
             baseBranch: "develop"
         ),
         crp: CRP(
-            environment: .appStore,
+            environment: [.appStore],
             jiraVersionName: {
                 let appName = $0.isSDK ? $0.appName.uppercased() : $0.appName
                 return "iOS \(appName) \($0.version)"
@@ -41,7 +41,7 @@ extension RepoMapping {
             baseBranch: "master"
         ),
         crp: CRP(
-            environment: .playStore,
+            environment: [.playStore],
             jiraVersionName: {
                 let appName = $0.isSDK ? $0.appName.uppercased() : $0.appName
                 return "Android \(appName) \($0.version)"
