@@ -8,6 +8,7 @@ private let jiraProjects = [
     "ANDRP" : 17264, // Android Platform
     "APPTS" : 16875, // Booking/Appointments
     "AV"    : 16942, // Onboarding and Navigation (ex Core Experience / Avalon)
+    "AVC"   : 16852, // Audio Video Call (formerly Multimedia "MUL" project)
     "CE"    : 16937, // Consultation Experience
     "CNSMR" : 16968, // Consumer Apps (Native/Core)
     "COCO"  : 17344, // Continuous Compliance
@@ -22,10 +23,10 @@ private let jiraProjects = [
     "IOSP"  : 17263, // iOS Native Apps Platform
     "LANG"  : 17168, // Language Services
     "MC"    : 17006, // Member Communications (next-gen)
+    "MERC"  : 17568, // Mercury Team
     "MP"    : 17494, // Monitor Product
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
-    "MUL"   : 16852, // Multimedia
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
     "PAYE"  : 17510, // Payments & Eligibility
@@ -48,38 +49,36 @@ private let jiraProjects = [
 ]
 
 /// Called before your application initializes.
-public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
-    let logger = PrintLogger()
-
-    let slack = SlackService(
+public func configure(_ app: Application) throws {
+    app.slack = .init(
         verificationToken: try attempt { Environment.slackToken },
         oauthToken: try attempt { Environment.slackOAuthToken }
     )
 
-    let ci = CircleCIService(
-        token: try attempt { Environment.circleciToken }
-    )
+    app.ci = .init(token: try attempt { Environment.circleciToken })
 
-    let jira = JiraService(
+    app.jira = .init(
         baseURL: try attempt { Environment.jiraBaseURL.flatMap(URL.init(string:)) },
         username: try attempt { Environment.jiraUsername },
         password: try attempt { Environment.jiraToken },
         knownProjects: jiraProjects,
-        logger: logger
+        logger: app.logger
     )
 
-    let github = GitHubService(
+    app.github = .init(
         username: try attempt { Environment.githubUsername },
         token: try attempt { Environment.githubToken }
     )
 
-    let router = EngineRouter.default()
+    guard app.slack != nil,
+          let ci = app.ci,
+          let jira = app.jira,
+          let github = app.github else {
+        fatalError("Services are not set up")
+    }
+
     try routes(
-        router: router,
-        github: github,
-        ci: ci,
-        slack: slack,
-        jira: jira,
+        app,
         commands: [
             .stevenson(ci, jira, github),
             .fastlane(ci),
@@ -88,13 +87,23 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
             .crp(jira, github)
         ]
     )
-    services.register(router, as: Router.self)
+}
 
-    var middlewares = MiddlewareConfig()
-    middlewares.use(ErrorMiddleware.self)
-    services.register(middlewares)
-
-    // Some services (like JIRA) might need a slower client which handles rate-limiting APIs and quotas
-    let slowClient = SlowClient()
-    services.register(slowClient)
+extension Environment {
+    /// Verification Token (see SlackBot App settings)
+    static let slackToken       = Environment.get("SLACK_TOKEN")
+    /// Bot User OAuth Access Token (see SlackBot App settings)
+    static let slackOAuthToken  = Environment.get("SLACK_OAUTH_TOKEN")
+    /// GitHub Bot Username
+    static let githubUsername   = Environment.get("GITHUB_USERNAME")
+    /// GitHub Bot Access Token
+    static let githubToken      = Environment.get("GITHUB_TOKEN")
+    /// CircleCI Access Token
+    static let circleciToken    = Environment.get("CIRCLECI_TOKEN")
+    /// JIRA Base URL, e.g. "https://yourorg.atlassian.net"
+    static let jiraBaseURL      = Environment.get("JIRA_BASEURL")
+    /// JIRA Bot Username
+    static let jiraUsername     = Environment.get("JIRA_USERNAME")
+    /// JIRA Bot Access Token
+    static let jiraToken        = Environment.get("JIRA_TOKEN")
 }
