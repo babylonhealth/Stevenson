@@ -71,7 +71,7 @@ final class AppTests: XCTestCase {
         let changelogDoc = JiraService.document(from: entries, jiraBaseURL: jiraBaseURL)
 
         let crpConfig = RepoMapping.CRP(
-            environment: .appStore,
+            environment: [.appStore, .playStore],
             jiraVersionName: { _ in "Dummy Version 1.2.3" },
             jiraSummary: { _ in "Fake-Publish Dummy App v1.2.3" }
         )
@@ -521,6 +521,9 @@ extension AppTests {
             "customfield_12592" : [
               {
                 "id" : "12395"
+              },
+              {
+                "id" : "12394"
               }
             ],
             "customfield_12527" : {
