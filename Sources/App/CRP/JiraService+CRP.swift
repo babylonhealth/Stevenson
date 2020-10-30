@@ -155,6 +155,11 @@ extension JiraService {
 
         struct AccountableDept: Content {
             let id: String
+            static let mobileChapter = AccountableDept(id: "13998")
+        }
+
+        struct AccountableDeptSubvalue: Content {
+            let id: String
             static let reactNativeApps = AccountableDept(id: "14011")
             static let nativeApps = AccountableDept(id: "14012")
         }
@@ -180,7 +185,8 @@ extension JiraService {
         var regulatoryApproval: RegulatoryApprovalType
         let rollbackPlan = FieldType.TextArea.Document(text: rollbackMessage)
         let maintenanceWindow = MaintenanceWindowRequirment.notRequired
-        let accountableDept = AccountableDept.nativeApps
+        let accountableDept = AccountableDept.mobileChapter
+        let accountableDeptSubvalue = AccountableDeptSubvalue.nativeApps
 
         // MARK: Content keys
 
@@ -204,6 +210,7 @@ extension JiraService {
             case rollbackPlan = "customfield_13434"       // required
             case maintenanceWindow = "customfield_13435"  // required
             case accountableDept = "customfield_13428"    // required
+            case accountableDeptSubvalue = "customfield_13428:1" //required if accountableDept == MobileChapter
         }
 
         // MARK: Inits
