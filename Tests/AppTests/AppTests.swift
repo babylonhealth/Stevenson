@@ -566,11 +566,8 @@ extension AppTests {
                 "id": "14050"
             },
             "customfield_13428": {
-              "id": "13998",
-              "customfield_13428:1": {
-                "id": "14012"
-              }
-            },
+              "id": "13998"
+            }
           }
         }
         """#

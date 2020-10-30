@@ -153,45 +153,10 @@ extension JiraService {
             static let required = MaintenanceWindowRequirment(id: "14051")
         }
 
-        enum AccountableDept: Content {
-            private enum CodingKeys: String, CodingKey {
-                case id
-                case subvalue = "customfield_13428:1"
-            }
-
-            case mobileChapter(MobileChapterSubvalue)
-
-            struct MobileChapterSubvalue: Content {
-                let id: String
-                static let reactNativeApps = MobileChapterSubvalue(id: "14011")
-                static let nativeApps = MobileChapterSubvalue(id: "14012")
-            }
-
-            var id: String {
-                switch self {
-                case .mobileChapter: return "13998"
-                }
-            }
-
-            func encode(to encoder: Encoder) throws {
-                var container = encoder.container(keyedBy: CodingKeys.self)
-                try container.encode(id, forKey: .id)
-                switch self {
-                case let .mobileChapter(subvalue):
-                    try container.encode(subvalue, forKey: .subvalue)
-                }
-            }
-
-            init(from decoder: Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                if let subvalue = try container.decodeIfPresent(MobileChapterSubvalue.self, forKey: .subvalue) {
-                    self = .mobileChapter(subvalue)
-                } else {
-                    throw DecodingError.valueNotFound(String.self, DecodingError.Context(codingPath: [CodingKeys.id], debugDescription: "unkown value"))
-                }
-            }
+        struct AccountableDept: Content {
+            let id: String
+            static let mobileChapter = AccountableDept(id: "13998")
         }
-
 
         // MARK: Fields
 
@@ -214,7 +179,7 @@ extension JiraService {
         var regulatoryApproval: RegulatoryApprovalType
         let rollbackPlan = FieldType.TextArea.Document(text: rollbackMessage)
         let maintenanceWindow = MaintenanceWindowRequirment.notRequired
-        let accountableDept = AccountableDept.mobileChapter(.nativeApps)
+        let accountableDept = AccountableDept.mobileChapter
 
         // MARK: Content keys
 
@@ -238,7 +203,6 @@ extension JiraService {
             case rollbackPlan = "customfield_13434"       // required
             case maintenanceWindow = "customfield_13435"  // required
             case accountableDept = "customfield_13428"    // required
-
         }
 
         // MARK: Inits
