@@ -546,6 +546,27 @@ extension AppTests {
                 }
               ],
               "version" : 1
+            },
+            "customfield_13434": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "None.\nThis is not an option with respect to mobile app releases, the mobile OS does not allow downgrades to previous versions/revert updates. Due to this we have to fix-forward by means of hotfix."
+                    }
+                  ]
+                }
+              ],
+              "version": 1
+            },
+            "customfield_13435": {
+                "id": "14050"
+            },
+            "customfield_13428": {
+              "id": "14012"
             }
           }
         }
