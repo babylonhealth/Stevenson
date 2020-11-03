@@ -1,5 +1,14 @@
 # 🤖 Stevenson Bot
 
+<p>
+    <a href="https://vapor.codes">
+        <img src="https://img.shields.io/badge/Vapor-3-orange.svg" alt="Version 3">
+    </a>
+    <a href="https://swift.org">
+        <img src="https://img.shields.io/badge/swift-5.1-brightgreen.svg" alt="Swift 5.1">
+    </a>
+</p>
+
 `Stevenson` is a Vapor framework designed to build integrations between Slack apps, GitHub, JIRA and CI services (CircleCI).
 This project also contains implementation of the Slack app used by Babylon iOS team (if you want to know more about how our team works, check our [playbook](https://github.com/babylonhealth/ios-playbook))
 
