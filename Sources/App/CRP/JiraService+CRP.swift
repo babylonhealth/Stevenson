@@ -147,6 +147,17 @@ extension JiraService {
             static let notRequired = RegulatoryApprovalType(id: "12570")
         }
 
+        struct MaintenanceWindowRequirment: Content {
+            let id: String
+            static let notRequired = MaintenanceWindowRequirment(id: "14050")
+            static let required = MaintenanceWindowRequirment(id: "14051")
+        }
+
+        struct AccountableDept: Content {
+            let id: String
+            static let mobileChapter = AccountableDept(id: "13998")
+        }
+
         // MARK: Fields
 
         var project: FieldType.ObjectID
@@ -166,6 +177,9 @@ extension JiraService {
         var serviceChanges: FieldType.TextArea.Document
         var clinicalApproval: ClinicalApprovalType
         var regulatoryApproval: RegulatoryApprovalType
+        let rollbackPlan = FieldType.TextArea.Document(text: rollbackMessage)
+        let maintenanceWindow = MaintenanceWindowRequirment.notRequired
+        let accountableDept = AccountableDept.mobileChapter
 
         // MARK: Content keys
 
@@ -186,6 +200,9 @@ extension JiraService {
             case serviceChanges = "customfield_13350"     // required
             case clinicalApproval = "customfield_12762"   // required
             case regulatoryApproval = "customfield_12763" // required
+            case rollbackPlan = "customfield_13434"       // required
+            case maintenanceWindow = "customfield_13435"  // required
+            case accountableDept = "customfield_13428"    // required
         }
 
         // MARK: Inits
@@ -427,3 +444,9 @@ extension Error {
         return message.map({ "\($0) (\(error.code.rawValue))" }) ?? error.localizedDescription
     }
 }
+
+
+fileprivate let rollbackMessage = """
+None.
+This is not an option with respect to mobile app releases, the mobile OS does not allow downgrades to previous versions/revert updates. Due to this we have to fix-forward by means of hotfix.
+"""
