@@ -274,6 +274,24 @@ extension JiraService {
     }
 }
 
+// MARK: - Search API
+extension JiraService {
+//    public struct Issue: Content {
+//        public enum IssueType: Content {
+//            case subtask
+//            case other
+//        }
+//
+//        public struct Fields: Content {
+//            let summary: String
+//            let issuetype: IssueType
+//        }
+//
+//        public let key: String
+//        public let fields: Fields
+//    }
+}
+
 // MARK: Helpers
 
 extension JiraService {

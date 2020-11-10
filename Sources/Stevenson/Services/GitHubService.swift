@@ -147,15 +147,6 @@ extension GitHubService {
             }
     }
 
-    public struct PullRequest: Content {
-        public struct Ref: Content {
-            public let ref: String
-        }
-
-        public let head: Ref
-        public let base: Ref
-    }
-
     public func pullRequest(
         number: Int,
         in repo: Repository,

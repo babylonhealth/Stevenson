@@ -21,8 +21,8 @@ struct CommentAction: Content {
 }
 
 extension GitHubService {
-    // Handle incoming webhook for issue or PR comment
-    // https://developer.github.com/v3/activity/events/types/#issuecommentevent
+    /// Handle incoming webhook for issue or PR comment
+    /// - See also: [GitHub Docs](https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/webhook-events-and-payloads#issue_comment)
     func issueComment(
         on request: Request,
         ci: CircleCIService
