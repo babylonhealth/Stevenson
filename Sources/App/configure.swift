@@ -16,6 +16,7 @@ private let jiraProjects = [
     "COVIDBUGS": 17459, // COVID-19 hotfix bugs
     "CW"    : 16832, // Consumer Web
     "EXPCORE"   : 17372, // Experience Tribe - Core Apps
+    "GAA"   : 17581,  // Global Aftercare & Actions
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
     "HCS"   : 17373, // HealthCheck Backend Support (next-gen)
