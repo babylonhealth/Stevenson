@@ -39,6 +39,7 @@ private let jiraProjects = [
     "SA"    : 17439, // SaaS App
     "SDK"   : 16975, // SDK
     "SDKS"  : 17288, // SDK UI (next-gen)
+    "TASS"  : 17331, // The Assistant
     "TC"    : 17353, // Triage Comprehension (next-gen)
     "TCN"   : 17431, // Triage comprehension (new)
     "TEL"   : 16857, // Telus
