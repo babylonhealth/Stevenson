@@ -16,6 +16,7 @@ private let jiraProjects = [
     "COVIDBUGS": 17459, // COVID-19 hotfix bugs
     "CW"    : 16832, // Consumer Web
     "EXPCORE"   : 17372, // Experience Tribe - Core Apps
+    "FM"    : 17630, // First Mile
     "GAA"   : 17581,  // Global Aftercare & Actions
     "GW"    : 16949, // Triage UI
     "HC"    : 17251, // HealthCheck (next-gen)
@@ -28,12 +29,14 @@ private let jiraProjects = [
     "MP"    : 17494, // Monitor Product
     "MS"    : 17233, // Monitor
     "MON"   : 10103, // HealthCheck
+    "NAT"   : 17747, // Native Apps Team
     "NRX"   : 16911, // GP@Hand Registrations (ex Enrolment and Integrity)
     "PAR"   : 17098, // Partnerships
     "PAYE"  : 17510, // Payments & Eligibility
     "PDT"   : 17501, // Partner Development
     "PRO"   : 16980, // Professional Services
     "PRSCR" : 16840, // Prescriptions
+    "PTS"   : 17599, // Partner Tech Solutions
     "REFER" : 17244, // Referrals (next-gen)
     "RM"    : 17403,  // Real-Time Matching
     "SA"    : 17439, // SaaS App
